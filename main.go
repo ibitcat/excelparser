@@ -17,7 +17,7 @@ func myFunc(i interface{}) {
 	fmt.Printf("run with %d\n", n)
 }
 
-func main(){
+func main() {
 	defer ants.Release()
 
 	fmt.Println("hello")
@@ -39,24 +39,24 @@ func main(){
 	fmt.Printf("finish all tasks, result is %d\n", sum)
 
 	f, err := excelize.OpenFile("task.xlsx")
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer func() {
-        // Close the spreadsheet.
-        if err := f.Close(); err != nil {
-            fmt.Println(err)
-        }
-    }()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer func() {
+		// Close the spreadsheet.
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
-    rows, err := f.GetRows("Sheet1")
-    if err != nil {
-        fmt.Println(err)
-        return
+	rows, err := f.GetRows("Sheet1")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	rootField := parseHeader(rows[1], rows[2], rows[3])
 
-	xlsx := &Xlsx{Name:"task", RootField: rootField}
+	xlsx := &Xlsx{Name: "task", RootField: rootField}
 	xlsx.parseRows(rootField, rows)
 }
