@@ -38,7 +38,6 @@ func main(){
 	fmt.Printf("running goroutines: %d\n", p.Running())
 	fmt.Printf("finish all tasks, result is %d\n", sum)
 
-
 	f, err := excelize.OpenFile("task.xlsx")
     if err != nil {
         fmt.Println(err)
@@ -55,6 +54,9 @@ func main(){
     if err != nil {
         fmt.Println(err)
         return
-    }
-	parseHeader(rows[1], rows[2], rows[3])
+	}
+	rootField := parseHeader(rows[1], rows[2], rows[3])
+
+	xlsx := &Xlsx{Name:"task", RootField: rootField}
+	xlsx.parseRows(rootField, rows)
 }

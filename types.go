@@ -19,8 +19,14 @@ type FieldInfo struct {
 	Fields []*FieldInfo // 成员
 }
 
+type Xlsx struct {
+	Name        string
+	Comments 	[]string
+	RootField   *FieldInfo
+}
+
 // 解析头部
-func parseHeader(names []string, defs []string, modes []string){
+func parseHeader(names []string, defs []string, modes []string) *FieldInfo{
 	// 字段名是否重复
 	// 是否有id
 	keyName := names[0]
@@ -43,7 +49,8 @@ func parseHeader(names []string, defs []string, modes []string){
 		index := parseField(rootField, idx, names, defs, modes)
 		idx = index + 1
 	}
-	fmt.Println(rootField)
+	//fmt.Println(rootField)
+	return rootField
 }
 
 /*
@@ -120,30 +127,34 @@ func parseField(parent *FieldInfo, index int, names, defs, modes []string) int{
 // 字段名冲突（同层）
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
-func parseRows(rootField *FieldInfo, rows [][]string) {
+func (x *Xlsx)parseRows(rootField *FieldInfo, rows [][]string) {
 	// comment
-	comments := make([]string, 0)
-	_parseComment := func(f *FieldInfo) {
-		comments = append(comments, fmt.Sprintf("-- %s %s", f.Name, f.Type))
-	}
+	x.Comments = make([]string, 0)
 	for _, field := range rootField.Fields {
-		_parseComment(field)
-		if field.Type == "dict" {
-			// 递归
-
-		}
+		x.parseComment(field, 0)
 	}
-	for line := 4; line < len(rows); line++ {
-		row := rows[line]
-		if strings.HasPrefix(row[0], "//") || row[0] == "" {
-			continue
-		}
+	fmt.Println(strings.Join(x.Comments, "\n"))
 
-		strs := make([]string, 0)
-		for _, field := range rootField.Fields {
-			strs = append(strs, fmt.Sprintf("%s = %s", field.Name, row[field.Index]))
+	// for line := 4; line < len(rows); line++ {
+	// 	row := rows[line]
+	// 	if strings.HasPrefix(row[0], "//") || row[0] == "" {
+	// 		continue
+	// 	}
+
+	// 	strs := make([]string, 0)
+	// 	for _, field := range rootField.Fields {
+	// 		strs = append(strs, fmt.Sprintf("%s = %s", field.Name, row[field.Index]))
+	// 	}
+	// 	fmt.Println(strs)
+	// }
+}
+
+func (x *Xlsx)parseComment(f *FieldInfo, deepth int) {
+	x.Comments = append(x.Comments, fmt.Sprintf("--%s %s %s", strings.Repeat(" ", deepth * 4), f.Name, f.Type))
+	if len(f.Fields) > 0 {
+		for _, field := range f.Fields {
+			x.parseComment(field, deepth+1)
 		}
-		fmt.Println(strs)
 	}
 }
 
