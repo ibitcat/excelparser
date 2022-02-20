@@ -14,7 +14,7 @@ var sum int32
 func myFunc(i interface{}) {
 	n := i.(int32)
 	atomic.AddInt32(&sum, n)
-	fmt.Printf("run with %d\n", n)
+	//fmt.Printf("run with %d\n", n)
 }
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	rootField := parseHeader(rows[1], rows[2], rows[3])
+	rootField := parseHeader(rows[0], rows[1], rows[2], rows[3])
 
 	xlsx := &Xlsx{Name: "task", RootField: rootField}
 	xlsx.parseRows(rootField, rows)
