@@ -55,8 +55,14 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	rootField := parseHeader(rows[0], rows[1], rows[2], rows[3])
 
-	xlsx := &Xlsx{Name: "task", RootField: rootField}
-	xlsx.parseRows(rootField, rows)
+	xlsx := &Xlsx{
+		Name:  "task",
+		Descs: rows[0],
+		Names: rows[1],
+		Types: rows[2],
+		Modes: rows[3],
+	}
+	xlsx.parseHeader()
+	xlsx.parseRows(rows)
 }

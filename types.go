@@ -16,8 +16,7 @@ type FieldInfo struct {
 	Type    string       // 字段数据类型
 	RawType string       // 原始字段数据类型
 	Mode    string       // 生成方式(s=server,c=client,b=both)
-	Count   int          // 成员数量
-	Array   []int        // 数组维度（1d, 2d）
+	Array   bool         // 数组索引
 	Parent  *FieldInfo   // 父字段
 	Fields  []*FieldInfo // 成员
 }
@@ -27,18 +26,21 @@ type Xlsx struct {
 	Comments  []string
 	Data      []string
 	RootField *FieldInfo
+	Descs     []string
+	Names     []string
+	Types     []string
+	Modes     []string
 }
 
 // 解析头部
-func parseHeader(descs, names, defs, modes []string) *FieldInfo {
-	// 字段名是否重复
+func (x *Xlsx) parseHeader() {
 	// 是否有id
-	keyName := names[0]
+	keyName := x.Names[0]
 	if keyName != "id" {
-		// key 必须以 id 命名
 		fmt.Println(keyName)
+		panic("key 必须以 id 命名")
 	}
-	for i, def := range defs {
+	for i, def := range x.Types {
 		if len(strings.TrimSpace(def)) == 0 {
 			panic(fmt.Sprintf("列[%d]数据类型为空", i))
 		}
@@ -46,89 +48,65 @@ func parseHeader(descs, names, defs, modes []string) *FieldInfo {
 
 	rootField := new(FieldInfo)
 	rootField.Index = -1
-	rootField.Fields = make([]*FieldInfo, 0, len(names))
+	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
+	x.RootField = rootField
 
-	for idx := 0; idx < len(defs); {
-		index := parseField(rootField, idx, descs, names, defs, modes)
+	for idx := 0; idx < len(x.Types); {
+		index := x.parseField(rootField, idx, x.Types[idx])
 		idx = index + 1
 	}
-	//fmt.Println(rootField)
-	return rootField
+	fmt.Println(rootField)
 }
 
-/*
-dict<2>
-dict[2]
-dict[2][3]
-int[3]
-*/
-func parseField(parent *FieldInfo, index int, descs, names, defs, modes []string) int {
-	rawType := strings.TrimSpace(defs[index])
-
-	var fieldType string = rawType
-	var fieldNum int
-	var array []int
-	if arrayBegin := strings.Index(rawType, "["); arrayBegin != -1 {
-		// array
-		fieldType = rawType[:arrayBegin]
-
-		array = make([]int, 0)
-		tmp := rawType[arrayBegin:]
-		arrayBegin = strings.Index(tmp, "[")
-		arrayEnd := strings.Index(tmp, "]")
-		for arrayBegin != -1 && arrayEnd != -1 {
-			dims, _ := strconv.Atoi(tmp[(arrayBegin + 1):arrayEnd])
-			array = append(array, dims)
-			tmp = tmp[arrayBegin+1:]
-
-			arrayBegin = strings.Index(tmp, "[")
-			arrayEnd = strings.Index(tmp, "]")
-		}
-	} else if dictBegin := strings.Index(rawType, "<"); dictBegin != -1 {
-		// dict
-		fieldType = rawType[:dictBegin]
-		dictEnd := strings.Index(rawType, ">")
-		fieldNum, _ = strconv.Atoi(rawType[(dictBegin + 1):dictEnd])
-	}
+func (x *Xlsx) parseField(parent *FieldInfo, index int, def string) int {
+	def = strings.TrimSpace(def)
 
 	field := new(FieldInfo)
 	field.Index = index
-	field.Type = fieldType
-	field.RawType = rawType
-	field.Array = array
+	field.RawType = def
 	field.Parent = parent
-	if len(descs) > index {
-		field.Desc = descs[index]
+	if len(x.Descs) > index {
+		field.Desc = x.Descs[index]
 	}
-	if len(names) > index {
-		field.Name = names[index]
+	if len(x.Names) > index {
+		field.Name = x.Names[index]
 	}
-	if len(modes) > index {
-		field.Mode = modes[index]
+	if len(x.Modes) > index {
+		field.Mode = x.Modes[index]
 	}
 	parent.Fields = append(parent.Fields, field)
-	if len(parent.Array) > 0 {
-		if field.Type != parent.Type {
-			panic(errors.New("类型不匹配"))
-		}
-	}
 
-	// array
-	if len(array) > 0 {
-		count := 1
-		for _, v := range array {
-			count = v * count
-		}
-		field.Count = count
+	if arrayBegin := strings.Index(def, "["); arrayBegin != -1 {
+		// array
+		field.Type = def[:arrayBegin]
+		field.Array = true
 
-		for i := 0; i < count; i++ {
-			index = parseField(field, index+1, descs, names, defs, modes)
+		arrayEnd := strings.Index(def, "]")
+		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
+		def = field.Type + def[arrayEnd+1:]
+		recursion := strings.Contains(def, "[")
+		for i := 0; i < fieldNum; i++ {
+			if recursion {
+				index = x.parseField(field, index, def)
+			} else {
+				index = x.parseField(field, index+1, def)
+			}
 		}
 	} else {
-		if fieldType == "dict" {
-			field.Count = fieldNum
+		field.Type = def
+
+		isDict := strings.HasPrefix(def, "dict")
+		if isDict {
+			dictBegin := strings.Index(def, "<")
+			dictEnd := strings.Index(def, ">")
+			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
 			for i := 0; i < fieldNum; i++ {
-				index = parseField(field, index+1, descs, names, defs, modes)
+				index = x.parseField(field, index+1, x.Types[index+1])
+			}
+		}
+		if parent.Array {
+			if field.Type != parent.Type {
+				panic(errors.New("类型不匹配"))
 			}
 		}
 	}
@@ -140,10 +118,10 @@ func parseField(parent *FieldInfo, index int, descs, names, defs, modes []string
 // 字段名冲突（同层）
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
-func (x *Xlsx) parseRows(rootField *FieldInfo, rows [][]string) {
+func (x *Xlsx) parseRows(rows [][]string) {
 	// comment
 	x.Comments = make([]string, 0)
-	for _, field := range rootField.Fields {
+	for _, field := range x.RootField.Fields {
 		x.parseComment(field, 0)
 	}
 	fmt.Println(strings.Join(x.Comments, "\n"))
@@ -154,7 +132,7 @@ func (x *Xlsx) parseRows(rootField *FieldInfo, rows [][]string) {
 		if strings.HasPrefix(row[0], "//") || row[0] == "" {
 			continue
 		}
-		x.parseRow(rootField, row, -1, 0)
+		x.parseRow(x.RootField, row, -1, 0)
 	}
 	fmt.Println(strings.Join(x.Data, "\n"))
 }
@@ -177,7 +155,7 @@ func (x *Xlsx) parseRow(f *FieldInfo, row []string, index, deepth int) {
 			// dict or array
 			x.Data = append(x.Data, fmt.Sprintf("%s%s = {", strings.Repeat(" ", deepth*2), f.Name))
 		} else {
-			if f.Parent != nil && len(f.Parent.Array) > 0 {
+			if f.Parent.Array {
 				x.Data = append(x.Data, fmt.Sprintf("%s[%d] = %s,", strings.Repeat(" ", deepth*2), index, row[f.Index]))
 			} else {
 				x.Data = append(x.Data, fmt.Sprintf("%s%s = %s,", strings.Repeat(" ", deepth*2), f.Name, row[f.Index]))
