@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -30,6 +29,7 @@ type Xlsx struct {
 	Names     []string
 	Types     []string
 	Modes     []string
+	Index     int
 }
 
 // 解析头部
@@ -51,16 +51,20 @@ func (x *Xlsx) parseHeader() {
 	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
 	x.RootField = rootField
 
-	for idx := 0; idx < len(x.Types); {
-		index := x.parseField(rootField, idx, x.Types[idx])
-		idx = index + 1
+	for x.Index < len(x.Types) {
+		x.parseField(rootField, x.Types[x.Index])
+		x.Index++
 	}
 	fmt.Println(rootField)
 }
 
-func (x *Xlsx) parseField(parent *FieldInfo, index int, def string) int {
-	def = strings.TrimSpace(def)
+func (x *Xlsx) parseField(parent *FieldInfo, def string) {
+	if x.Index >= len(x.Types) {
+		return
+	}
 
+	def = strings.TrimSpace(def)
+	index := x.Index
 	field := new(FieldInfo)
 	field.Index = index
 	field.RawType = def
@@ -83,14 +87,18 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int, def string) int {
 
 		arrayEnd := strings.Index(def, "]")
 		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
-		def = field.Type + def[arrayEnd+1:]
-		recursion := strings.Contains(def, "[")
+		tailStr := def[arrayEnd+1:]
+
+		// sub array
+		def = field.Type + tailStr
 		for i := 0; i < fieldNum; i++ {
-			if recursion {
-				index = x.parseField(field, index, def)
+			if len(tailStr) == 0 {
+				x.Index++
+				x.parseField(field, x.Types[x.Index])
 			} else {
-				index = x.parseField(field, index+1, def)
+				x.parseField(field, def)
 			}
+
 		}
 	} else {
 		field.Type = def
@@ -101,16 +109,16 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int, def string) int {
 			dictEnd := strings.Index(def, ">")
 			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
 			for i := 0; i < fieldNum; i++ {
-				index = x.parseField(field, index+1, x.Types[index+1])
+				x.Index++
+				x.parseField(field, x.Types[x.Index])
 			}
 		}
 		if parent.Array {
 			if field.Type != parent.Type {
-				panic(errors.New("类型不匹配"))
+				//panic(errors.New("类型不匹配"))
 			}
 		}
 	}
-	return index
 }
 
 // id 必须是int
@@ -138,7 +146,7 @@ func (x *Xlsx) parseRows(rows [][]string) {
 }
 
 func (x *Xlsx) parseComment(f *FieldInfo, deepth int) {
-	x.Comments = append(x.Comments, fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+f.Name, f.Type, f.Desc))
+	x.Comments = append(x.Comments, fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+f.Name, f.RawType, f.Desc))
 	if len(f.Fields) > 0 {
 		for _, field := range f.Fields {
 			x.parseComment(field, deepth+1)
@@ -152,15 +160,17 @@ func (x *Xlsx) parseRow(f *FieldInfo, row []string, index, deepth int) {
 		x.Data = append(x.Data, fmt.Sprintf("[%s] = {", row[0]))
 	} else {
 		if len(f.Fields) > 0 {
-			// dict or array
-			x.Data = append(x.Data, fmt.Sprintf("%s%s = {", strings.Repeat(" ", deepth*2), f.Name))
+			if f.Parent.Array {
+				x.Data = append(x.Data, fmt.Sprintf("%s[%d] = {", strings.Repeat(" ", deepth*2), index))
+			} else {
+				x.Data = append(x.Data, fmt.Sprintf("%s%s = {", strings.Repeat(" ", deepth*2), f.Name))
+			}
 		} else {
 			if f.Parent.Array {
 				x.Data = append(x.Data, fmt.Sprintf("%s[%d] = %s,", strings.Repeat(" ", deepth*2), index, row[f.Index]))
 			} else {
 				x.Data = append(x.Data, fmt.Sprintf("%s%s = %s,", strings.Repeat(" ", deepth*2), f.Name, row[f.Index]))
 			}
-
 		}
 	}
 	for idx, field := range f.Fields {
