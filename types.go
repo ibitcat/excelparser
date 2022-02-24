@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -29,7 +30,6 @@ type Xlsx struct {
 	Names     []string
 	Types     []string
 	Modes     []string
-	Index     int
 }
 
 // 解析头部
@@ -51,11 +51,10 @@ func (x *Xlsx) parseHeader() {
 	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
 	x.RootField = rootField
 
-	for idx := 0; idx < len(x.Types); {
+	for idx := 0; idx < len(x.Types); idx++ {
 		idx = x.parseField1(rootField, idx)
-		idx += 1
 	}
-	fmt.Println(rootField)
+	fmt.Println(rootField, math.MaxInt)
 }
 
 func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
@@ -111,69 +110,6 @@ func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
 	return index
 }
 
-func (x *Xlsx) parseField(parent *FieldInfo, def string) {
-	if x.Index >= len(x.Types) {
-		return
-	}
-
-	def = strings.TrimSpace(def)
-	index := x.Index
-	field := new(FieldInfo)
-	field.Index = index
-	field.RawType = def
-	field.Parent = parent
-	if len(x.Descs) > index {
-		field.Desc = x.Descs[index]
-	}
-	if len(x.Names) > index {
-		field.Name = x.Names[index]
-	}
-	if len(x.Modes) > index {
-		field.Mode = x.Modes[index]
-	}
-	parent.Fields = append(parent.Fields, field)
-
-	if arrayBegin := strings.Index(def, "["); arrayBegin != -1 {
-		// array
-		field.Type = def[:arrayBegin]
-		field.Array = true
-
-		arrayEnd := strings.Index(def, "]")
-		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
-		tailStr := def[arrayEnd+1:]
-
-		// sub array
-		def = field.Type + tailStr
-		for i := 0; i < fieldNum; i++ {
-			if len(tailStr) == 0 {
-				x.Index++
-				x.parseField(field, x.Types[x.Index])
-			} else {
-				x.parseField(field, def)
-			}
-
-		}
-	} else {
-		field.Type = def
-
-		isDict := strings.HasPrefix(def, "dict")
-		if isDict {
-			dictBegin := strings.Index(def, "<")
-			dictEnd := strings.Index(def, ">")
-			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
-			for i := 0; i < fieldNum; i++ {
-				x.Index++
-				x.parseField(field, x.Types[x.Index])
-			}
-		}
-		if parent.Array {
-			if field.Type != parent.Type {
-				//panic(errors.New("类型不匹配"))
-			}
-		}
-	}
-}
-
 // id 必须是int
 // id 冲突
 // 字段名冲突（同层）
@@ -183,7 +119,7 @@ func (x *Xlsx) parseRows(rows [][]string) {
 	// comment
 	x.Comments = make([]string, 0)
 	for _, field := range x.RootField.Fields {
-		x.parseComment(field, 0)
+		x.parseComment(field, 0, 0)
 	}
 	fmt.Println(strings.Join(x.Comments, "\n"))
 
@@ -198,11 +134,17 @@ func (x *Xlsx) parseRows(rows [][]string) {
 	fmt.Println(strings.Join(x.Data, "\n"))
 }
 
-func (x *Xlsx) parseComment(f *FieldInfo, deepth int) {
-	x.Comments = append(x.Comments, fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+f.Name, f.RawType, f.Desc))
+func (x *Xlsx) parseComment(f *FieldInfo, index, deepth int) {
+	var comment string
+	if f.Parent.Array {
+		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+"["+strconv.Itoa(index)+"]", f.RawType, f.Desc)
+	} else {
+		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+f.Name, f.RawType, f.Desc)
+	}
+	x.Comments = append(x.Comments, comment)
 	if len(f.Fields) > 0 {
-		for _, field := range f.Fields {
-			x.parseComment(field, deepth+1)
+		for idx, field := range f.Fields {
+			x.parseComment(field, idx, deepth+1)
 		}
 	}
 }
