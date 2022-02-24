@@ -51,11 +51,64 @@ func (x *Xlsx) parseHeader() {
 	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
 	x.RootField = rootField
 
-	for x.Index < len(x.Types) {
-		x.parseField(rootField, x.Types[x.Index])
-		x.Index++
+	for idx := 0; idx < len(x.Types); {
+		idx = x.parseField1(rootField, idx)
+		idx += 1
 	}
 	fmt.Println(rootField)
+}
+
+func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
+	if index >= len(x.Types) {
+		return index
+	}
+
+	def := strings.TrimSpace(x.Types[index])
+	field := new(FieldInfo)
+	field.Index = index
+	field.RawType = def
+	field.Parent = parent
+	if len(x.Descs) > index {
+		field.Desc = x.Descs[index]
+	}
+	if len(x.Names) > index {
+		field.Name = x.Names[index]
+	}
+	if len(x.Modes) > index {
+		field.Mode = x.Modes[index]
+	}
+	parent.Fields = append(parent.Fields, field)
+
+	if arrayBegin := strings.Index(def, "["); arrayBegin != -1 {
+		// array
+		field.Type = def[:arrayBegin]
+		field.Array = true
+
+		// sub array
+		arrayEnd := strings.Index(def, "]")
+		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
+		for i := 0; i < fieldNum; i++ {
+			index = x.parseField1(field, index+1)
+		}
+	} else {
+		field.Type = def
+
+		isDict := strings.HasPrefix(def, "dict")
+		if isDict {
+			dictBegin := strings.Index(def, "<")
+			dictEnd := strings.Index(def, ">")
+			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
+			for i := 0; i < fieldNum; i++ {
+				index = x.parseField1(field, index+1)
+			}
+		}
+		if parent.Array {
+			if field.Type != parent.Type {
+				//panic(errors.New("类型不匹配"))
+			}
+		}
+	}
+	return index
 }
 
 func (x *Xlsx) parseField(parent *FieldInfo, def string) {
