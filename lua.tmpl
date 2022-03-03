@@ -1,0 +1,62 @@
+-- auto generate by excelparser, don't edit!!!
+
+{{- define "formatKey"}}
+    {{- if ge .ArrayIdx 0 }}
+{{- printf "%s[%d]" (indent .Deepth "") (plus .ArrayIdx 1)}}
+    {{- else}}
+{{- printf "%s%s" (indent .Deepth "") .Name}}
+    {{- end}}
+{{- end}}
+
+{{- define "formatVal"}}
+    {{- if gt (len .Fields) 0 -}}
+{
+    {{- else -}}
+        {{- if eq .Type "string" -}}
+            "{{index .Root.Row .Index}}",
+        {{- else -}}
+            {{index .Root.Row .Index}},
+        {{- end -}}
+    {{- end}}
+{{- end}}
+
+{{- define "parseComment"}}
+    {{- if ge .ArrayIdx 0 }}
+        {{- printf "-- %-30s %-10s %s" (indent .Deepth (printf "[%d]" .ArrayIdx)) .RawType .Desc}}
+    {{- else}}
+        {{- printf "-- %-30s %-10s %s" (indent .Deepth .Name) .RawType .Desc}}
+    {{- end}}
+    {{- if gt (len .Fields) 0 }}
+        {{- range .Fields}}
+{{template "parseComment" . }}
+        {{- end}}
+    {{- end}}
+{{- end}}
+
+{{define "parseData"}}
+    {{- if eq .Index -1 -}}
+        {{- printf "[%s] = {" (index .Row 0)}}
+    {{- else -}}
+        {{- template "formatKey" .}} = {{- template "formatVal" .}}
+    {{- end}}
+    {{- range .Fields}}
+{{template "parseData" .}}
+    {{- end -}}
+    {{- if gt (len .Fields) 0}}
+{{indent .Deepth ""}}},
+    {{- end -}}
+{{end}}
+
+{{range .RootField.Fields}}
+{{template "parseComment" .}}
+{{- end}}
+
+return {
+{{$rootField := .RootField}}
+{{- range $idx,$row := .Rows }}
+{{- if ge $idx 4}}
+    {{- setRootRow $rootField $row -}}
+    {{template "parseData" $rootField}}
+{{end}}
+{{- end -}}
+}

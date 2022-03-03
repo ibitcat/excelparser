@@ -10,15 +10,19 @@ import (
 )
 
 type FieldInfo struct {
-	Index   int          // 对应的excel列序号
-	Desc    string       // 字段描述
-	Name    string       // 字段名
-	Type    string       // 字段数据类型
-	RawType string       // 原始字段数据类型
-	Mode    string       // 生成方式(s=server,c=client,b=both)
-	Array   bool         // 数组索引
-	Parent  *FieldInfo   // 父字段
-	Fields  []*FieldInfo // 成员
+	Index    int          // 对应的excel列序号
+	Desc     string       // 字段描述
+	Name     string       // 字段名
+	Type     string       // 字段数据类型
+	RawType  string       // 原始字段数据类型
+	Mode     string       // 生成方式(s=server,c=client,b=both)
+	Deepth   int          // 字段深度
+	Array    bool         // 是否是数组字段
+	ArrayIdx int          // 数组索引
+	Parent   *FieldInfo   // 父字段
+	Root     *FieldInfo   // 根字段
+	Fields   []*FieldInfo // 成员
+	Row      []string     // 解析是
 }
 
 type Xlsx struct {
@@ -30,6 +34,7 @@ type Xlsx struct {
 	Names     []string
 	Types     []string
 	Modes     []string
+	Rows      [][]string
 }
 
 // 解析头部
@@ -52,12 +57,12 @@ func (x *Xlsx) parseHeader() {
 	x.RootField = rootField
 
 	for idx := 0; idx < len(x.Types); idx++ {
-		idx = x.parseField1(rootField, idx)
+		idx = x.parseField(rootField, idx, -1)
 	}
 	fmt.Println(rootField, math.MaxInt)
 }
 
-func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
+func (x *Xlsx) parseField(parent *FieldInfo, index, arrayIdx int) int {
 	if index >= len(x.Types) {
 		return index
 	}
@@ -67,6 +72,12 @@ func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
 	field.Index = index
 	field.RawType = def
 	field.Parent = parent
+	field.Deepth = parent.Deepth + 1
+	field.ArrayIdx = arrayIdx
+	field.Root = parent.Root
+	if field.Root == nil && parent.Index == -1 {
+		field.Root = parent
+	}
 	if len(x.Descs) > index {
 		field.Desc = x.Descs[index]
 	}
@@ -87,7 +98,7 @@ func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
 		arrayEnd := strings.Index(def, "]")
 		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
 		for i := 0; i < fieldNum; i++ {
-			index = x.parseField1(field, index+1)
+			index = x.parseField(field, index+1, i)
 		}
 	} else {
 		field.Type = def
@@ -98,7 +109,7 @@ func (x *Xlsx) parseField1(parent *FieldInfo, index int) int {
 			dictEnd := strings.Index(def, ">")
 			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
 			for i := 0; i < fieldNum; i++ {
-				index = x.parseField1(field, index+1)
+				index = x.parseField(field, index+1, -1)
 			}
 		}
 		if parent.Array {
@@ -119,10 +130,11 @@ func (x *Xlsx) parseRows(rows [][]string) {
 	// comment
 	x.Comments = make([]string, 0)
 	for _, field := range x.RootField.Fields {
-		x.parseComment(field, 0, 0)
+		x.parseComment(field)
 	}
 	fmt.Println(strings.Join(x.Comments, "\n"))
 
+	// data
 	x.Data = make([]string, 0)
 	for line := 4; line < len(rows); line++ {
 		row := rows[line]
@@ -134,17 +146,17 @@ func (x *Xlsx) parseRows(rows [][]string) {
 	fmt.Println(strings.Join(x.Data, "\n"))
 }
 
-func (x *Xlsx) parseComment(f *FieldInfo, index, deepth int) {
+func (x *Xlsx) parseComment(f *FieldInfo) {
 	var comment string
 	if f.Parent.Array {
-		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+"["+strconv.Itoa(index)+"]", f.RawType, f.Desc)
+		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", f.Deepth*2)+"["+strconv.Itoa(f.ArrayIdx)+"]", f.RawType, f.Desc)
 	} else {
-		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", deepth*2)+f.Name, f.RawType, f.Desc)
+		comment = fmt.Sprintf("-- %-30s %-10s %s", strings.Repeat(" ", f.Deepth*2)+f.Name, f.RawType, f.Desc)
 	}
 	x.Comments = append(x.Comments, comment)
 	if len(f.Fields) > 0 {
-		for idx, field := range f.Fields {
-			x.parseComment(field, idx, deepth+1)
+		for _, field := range f.Fields {
+			x.parseComment(field)
 		}
 	}
 }

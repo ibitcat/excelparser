@@ -62,7 +62,9 @@ func main() {
 		Names: rows[1],
 		Types: rows[2],
 		Modes: rows[3],
+		Rows:  rows,
 	}
 	xlsx.parseHeader()
-	xlsx.parseRows(rows)
+	//xlsx.parseRows(rows)
+	ExportLua(xlsx)
 }
