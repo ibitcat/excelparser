@@ -59,6 +59,10 @@ func (x *Xlsx) parseHeader() {
 	for idx := 0; idx < len(x.Types); idx++ {
 		idx = x.parseField(rootField, idx, -1)
 	}
+
+	// check
+	// id 类型检查(int 和 string)
+	// 字段名冲突
 	fmt.Println(rootField, math.MaxInt)
 }
 
