@@ -4,23 +4,23 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"log"
 	"strconv"
 	"strings"
 )
 
 type FieldInfo struct {
-	Index    int          // 对应的excel列序号
-	Desc     string       // 字段描述
-	Name     string       // 字段名
-	Type     string       // 字段数据类型
-	RawType  string       // 原始字段数据类型
-	Mode     string       // 生成方式(s=server,c=client,b=both)
-	Deepth   int          // 字段深度
-	Array    bool         // 是否是数组字段
-	ArrayIdx int          // 数组索引
-	Parent   *FieldInfo   // 父字段
-	Fields   []*FieldInfo // 成员
+	Index     int          // 对应的excel列序号
+	Desc      string       // 字段描述
+	Name      string       // 字段名
+	Type      string       // 字段数据类型
+	RawType   string       // 原始字段数据类型
+	Mode      string       // 生成方式(s=server,c=client,b=both)
+	Commented bool         // 字段是否被注释
+	Deepth    int          // 字段深度
+	ArrayIdx  int          // 数组索引
+	Parent    *FieldInfo   // 父字段
+	Fields    []*FieldInfo // 成员
 }
 
 type Xlsx struct {
@@ -38,20 +38,43 @@ type Xlsx struct {
 	Rows      [][]string
 }
 
-// 解析头部
-func (x *Xlsx) parseHeader() {
-	// 是否有id
-	keyName := x.Names[0]
-	if keyName != "id" {
-		fmt.Println(keyName)
-		panic("key 必须以 id 命名")
+func (x *Xlsx) appendError(errMsg string) {
+	x.Errors = append(x.Errors, errMsg)
+}
+
+func (x *Xlsx) checkKeyField() {
+	keyField := x.RootField.Fields[0]
+	if keyField.Name != "id" {
+		x.appendError("key 必须以 id 命名")
 	}
-	for i, def := range x.Types {
-		if len(strings.TrimSpace(def)) == 0 {
-			panic(fmt.Sprintf("列[%d]数据类型为空", i))
+	if !(isNumberType(keyField.Type) || keyField.Type == "string") {
+		x.appendError("key 字段数据类型必须为定点整数或字符串")
+	}
+	if keyField.Commented {
+		x.appendError("key 字段不能注释")
+	}
+}
+
+func (x *Xlsx) checkDupField(parent *FieldInfo) {
+	if len(parent.Fields) == 0 {
+		return
+	} else {
+		tmpMap := map[string]int{}
+		for _, field := range parent.Fields {
+			if field.ArrayIdx < 0 {
+				index, ok := tmpMap[field.Name]
+				if ok {
+					x.appendError(fmt.Sprintf("字段名【%s】冲突：#%d<-->#%d ", field.Name, index, field.Index))
+				} else {
+					tmpMap[field.Name] = field.Index
+				}
+			}
+			x.checkDupField(field)
 		}
 	}
+}
 
+func (x *Xlsx) parseHeader() {
 	rootField := new(FieldInfo)
 	rootField.Index = -1
 	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
@@ -62,9 +85,8 @@ func (x *Xlsx) parseHeader() {
 	}
 
 	// check
-	// id 类型检查(int 和 string)
-	// 字段名冲突
-	fmt.Println(rootField, math.MaxInt)
+	x.checkKeyField()
+	x.checkDupField(rootField)
 }
 
 func (x *Xlsx) parseField(parent *FieldInfo, index, arrayIdx int) int {
@@ -88,12 +110,16 @@ func (x *Xlsx) parseField(parent *FieldInfo, index, arrayIdx int) int {
 	if len(x.Modes) > index {
 		field.Mode = x.Modes[index]
 	}
+	if parent.Commented {
+		field.Commented = parent.Commented
+	} else {
+		field.Commented = strings.HasPrefix(field.Name, "//")
+	}
 	parent.Fields = append(parent.Fields, field)
 
 	if arrayBegin := strings.Index(def, "["); arrayBegin != -1 {
 		// array
 		field.Type = def[:arrayBegin]
-		field.Array = true
 
 		// sub array
 		arrayEnd := strings.Index(def, "]")
@@ -113,11 +139,12 @@ func (x *Xlsx) parseField(parent *FieldInfo, index, arrayIdx int) int {
 				index = x.parseField(field, index+1, -1)
 			}
 		}
-		if parent.Array {
-			if field.Type != parent.Type {
-				//panic(errors.New("类型不匹配"))
-			}
-		}
 	}
 	return index
+}
+
+func (x *Xlsx) printResult() {
+	for _, err := range x.Errors {
+		log.Println(err)
+	}
 }

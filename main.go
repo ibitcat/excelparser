@@ -70,6 +70,22 @@ func loadLastModTime() {
 	}
 }
 
+func createOutput() {
+	outDir, err := filepath.Abs(out)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = os.Stat(outDir)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+}
+
 func walkFunc(path string, f os.FileInfo, err error) error {
 	if f == nil {
 		return err
@@ -86,7 +102,7 @@ func walkFunc(path string, f os.FileInfo, err error) error {
 			// 检查文件名
 			task := &Xlsx{
 				PathName: path,
-				FileName: f.Name(),
+				FileName: getFileName(f.Name()),
 				Errors:   make([]string, 0),
 				TimeCost: 0,
 			}
@@ -120,10 +136,12 @@ func parseExcel(i interface{}) {
 	xlsx.Modes = rows[3]
 
 	xlsx.parseHeader()
-	exportRows(xlsx)
-	//xlsx.parseRows(rows)
+	if len(xlsx.Errors) == 0 {
+		exportRows(xlsx)
+		writeToFile(xlsx)
+	}
+	xlsx.printResult()
 	//ExportLua(xlsx)
-	//fmt.Printf("run with %d\n", n)
 }
 
 func main() {
@@ -143,6 +161,9 @@ func main() {
 		panic("excel path not exist.")
 	}
 
+	// output
+	createOutput()
+
 	// walk
 	loadLastModTime()
 	XlsxList = make([]*Xlsx, 0)
@@ -150,6 +171,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// exporter
+	// TODO
 
 	// parse
 	var wg sync.WaitGroup
