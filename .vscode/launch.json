@@ -14,7 +14,9 @@
             "env": {
                 //"GOPATH": "D:/Develop/vscodegolang"
             },
-            "args": [] // 启动参数
+            "args": [
+                "--path=./xlsx"
+            ] // 启动参数
         }
     ]
 }

@@ -31,7 +31,7 @@ var funcs = template.FuncMap{
 		return a + b
 	},
 	"setRootRow": func(f *FieldInfo, row []string) string {
-		f.Row = row
+		//f.Row = row
 		return ""
 	},
 }
