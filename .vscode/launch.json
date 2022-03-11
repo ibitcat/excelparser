@@ -15,7 +15,8 @@
                 //"GOPATH": "D:/Develop/vscodegolang"
             },
             "args": [
-                "--path=./xlsx"
+                "--path=./xlsx",
+                "--out=./lua"
             ] // 启动参数
         }
     ]

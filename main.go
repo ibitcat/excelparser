@@ -190,4 +190,6 @@ func main() {
 	wg.Wait()
 
 	fmt.Printf("running goroutines: %d\n", p.Running())
+
+	formatJson(`{"a":{"a1":1, "a2":2}}`)
 }

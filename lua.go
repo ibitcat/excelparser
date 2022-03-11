@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,9 +12,9 @@ import (
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
 func exportRows(x *Xlsx) {
-	cap := len(x.Types) * (len(x.Rows) - 2)
-	fmt.Println(cap, len(x.Types))
-	x.Data = make([]string, 0, cap)
+	//cap := len(x.Types) * (len(x.Rows) - 2)
+	//fmt.Println(cap, len(x.Types))
+	x.Data = make([]string, 0)
 	// comment
 	for _, field := range x.RootField.Fields {
 		exportComment(x, field)
@@ -48,13 +49,66 @@ func exportComment(x *Xlsx, f *FieldInfo) {
 	}
 }
 
+func formatString(val string) string {
+	val = strings.Replace(val, "\"", "\\\"", -1)
+	return fmt.Sprintf("\"%s\"", val)
+}
+
 func formatValue(f *FieldInfo, val string) string {
 	if f.Type == "string" {
-		val = strings.Replace(val, "\"", "\\\"", -1)
-		return fmt.Sprintf("\"%s\"", val)
+		return formatString(val)
 	} else {
 		return val
 	}
+}
+
+func formatJsonKey(key interface{}) string {
+	var keystr string
+	switch key.(type) {
+	case int, uint:
+		keystr = fmt.Sprintf("[%v]", key)
+	default:
+		keystr = fmt.Sprintf("%v", key)
+	}
+	return keystr
+}
+
+func formatJsonValue(obj interface{}, key interface{}) {
+	switch obj.(type) {
+	case map[interface{}]interface{}:
+		fmt.Printf("%s = {", formatJsonKey(key))
+		for k, v := range obj.(map[interface{}]interface{}) {
+			formatJsonValue(v, k)
+		}
+		fmt.Println("}")
+	case map[string]interface{}:
+		fmt.Printf("%s = {", formatJsonKey(key))
+		for k, v := range obj.(map[string]interface{}) {
+			formatJsonValue(v, k)
+		}
+		fmt.Println("}")
+	case []interface{}:
+		fmt.Printf("%s = {", formatJsonKey(key))
+		for i, v := range obj.([]interface{}) {
+			formatJsonValue(v, i)
+		}
+		fmt.Println("},")
+	case string:
+		fmt.Printf("%s = \"%v\",", formatJsonKey(key), obj)
+	default:
+		fmt.Printf("%s = %v,", formatJsonKey(key), obj)
+	}
+}
+
+func formatJson(jsonStr string) error {
+	var result interface{}
+	err := json.Unmarshal([]byte(jsonStr), &result)
+	if err != nil {
+		return err
+	}
+
+	formatJsonValue(result, "aaaa")
+	return nil
 }
 
 func exportRow(x *Xlsx, f *FieldInfo, row []string, index, deepth int) {
