@@ -16,7 +16,7 @@
             },
             "args": [
                 "--path=./xlsx",
-                "--out=./lua"
+                "--client=./clua"
             ] // 启动参数
         }
     ]

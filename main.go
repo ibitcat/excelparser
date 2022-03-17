@@ -17,11 +17,11 @@ import (
 
 // flags
 var (
-	help      bool
-	excelpath string // excel路径
-	out       string // 输出路径
-	tag       string // 解析标签
-	mode      string // 输出模式（lua、json）
+	Flaghelp   bool
+	Flagpath   string // excel路径
+	FlagLang   string // 输出语言（lua、json）
+	FlagClient string // client 输出路径
+	FlagServer string // server 输出路径
 )
 
 // global vars
@@ -31,11 +31,11 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&help, "help", false, "Excelparser help.")
-	flag.StringVar(&excelpath, "path", "", "excel input path.")
-	flag.StringVar(&out, "out", "", "export output path.")
-	flag.StringVar(&tag, "tag", "", "parse tag.")
-	flag.StringVar(&mode, "mode", "", "parse mode.")
+	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
+	flag.StringVar(&Flagpath, "path", "", "excel input path.")
+	flag.StringVar(&FlagClient, "client", "", "client export path.")
+	flag.StringVar(&FlagServer, "server", "", "server export path.")
+	flag.StringVar(&FlagLang, "lang", "", "target language for parsing.")
 
 	flag.Usage = usage
 }
@@ -43,7 +43,7 @@ func init() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `ex version: 2022.0.0-M1
 	Usage: excelparser [OPTIONS]
-		eg.: excelparser --path=../xlsx out=../lua --tag=c --mode=lua
+		eg.: excelparser --path=./xlsx --lang=lua server=./slua --client=./clua
 	Options:
 `)
 	flag.PrintDefaults()
@@ -70,8 +70,8 @@ func loadLastModTime() {
 	}
 }
 
-func createOutput() {
-	outDir, err := filepath.Abs(out)
+func createOutput(outpath string) {
+	outDir, err := filepath.Abs(outpath)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,6 @@ func createOutput() {
 			panic(err)
 		}
 	}
-
 }
 
 func walkFunc(path string, f os.FileInfo, err error) error {
@@ -137,8 +136,13 @@ func parseExcel(i interface{}) {
 
 	xlsx.parseHeader()
 	if len(xlsx.Errors) == 0 {
-		exportRows(xlsx)
-		writeToFile(xlsx)
+		xlsx.Datas = make([]string, 0)
+		if len(FlagClient) > 0 {
+			exportRows(xlsx, "c")
+		}
+		if len(FlagServer) > 0 {
+			exportRows(xlsx, "s")
+		}
 	}
 	xlsx.printResult()
 	//ExportLua(xlsx)
@@ -146,12 +150,12 @@ func parseExcel(i interface{}) {
 
 func main() {
 	flag.Parse()
-	if help {
+	if Flaghelp || flag.NFlag() <= 0 {
 		flag.Usage()
 		return
 	}
 
-	xlsxPath, err := filepath.Abs(excelpath)
+	xlsxPath, err := filepath.Abs(Flagpath)
 	if err != nil {
 		panic(err)
 	}
@@ -162,7 +166,17 @@ func main() {
 	}
 
 	// output
-	createOutput()
+	fmt.Println(len(FlagClient), len(FlagServer))
+	if len(FlagClient) == 0 && len(FlagServer) == 0 {
+		panic("You must specify an output path.")
+	} else {
+		if len(FlagClient) > 0 {
+			createOutput(FlagClient)
+		}
+		if len(FlagServer) > 0 {
+			createOutput(FlagServer)
+		}
+	}
 
 	// walk
 	loadLastModTime()
@@ -171,9 +185,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// exporter
-	// TODO
 
 	// parse
 	var wg sync.WaitGroup
@@ -190,6 +201,4 @@ func main() {
 	wg.Wait()
 
 	fmt.Printf("running goroutines: %d\n", p.Running())
-
-	formatJson(`{"a":{"a1":1, "a2":2}}`)
 }

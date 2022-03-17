@@ -11,40 +11,104 @@ import (
 // id 冲突
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
-func exportRows(x *Xlsx) {
+func exportRows(x *Xlsx, mode string) {
 	//cap := len(x.Types) * (len(x.Rows) - 2)
 	//fmt.Println(cap, len(x.Types))
-	x.Data = make([]string, 0)
+	x.Datas = x.Datas[0:0]
+
 	// comment
-	for _, field := range x.RootField.Fields {
-		exportComment(x, field)
-	}
+	exportComments(x, x.RootField, mode)
 
 	// data
-	x.Data = append(x.Data, "\nreturn {")
+	x.appendData("\nreturn {\n")
 	for line := 4; line < len(x.Rows); line++ {
 		row := x.Rows[line]
 		if strings.HasPrefix(row[0], "//") || row[0] == "" {
 			continue
 		}
-		exportRow(x, x.RootField, row, -1, 0)
+		exportRow(x, x.RootField, row, -1, mode)
 	}
-	x.Data = append(x.Data, "}")
+	x.trimData("}\n")
+	x.appendData("}\n")
+
+	writeToFile(x, mode)
 }
 
-func exportComment(x *Xlsx, f *FieldInfo) {
-	var keyName string
-	if f.ArrayIdx < 0 {
-		keyName = strings.Repeat(" ", f.Deepth*2) + f.Name
-	} else {
-		keyName = strings.Repeat(" ", f.Deepth*2) + "[" + strconv.Itoa(f.ArrayIdx) + "]"
+func exportComments(x *Xlsx, f *FieldInfo, mode string) {
+	var idx int
+	for _, field := range f.Fields {
+		if field.Mode == mode || field.Mode == "b" {
+			exportComment(x, idx, field, mode)
+			idx++
+		}
 	}
-	x.Data = append(x.Data, fmt.Sprintf("-- %-30s %-10s %s", keyName, f.RawType, f.Desc))
+}
+
+func exportComment(x *Xlsx, idx int, f *FieldInfo, mode string) {
+	var keyName string
+	if f.Parent.IsArray {
+		keyName = getIndent(f.Deepth) + "[" + strconv.Itoa(idx+1) + "]"
+	} else {
+		keyName = getIndent(f.Deepth) + f.Name
+	}
+	x.appendData(fmt.Sprintf("-- %-30s %-10s %s\n", keyName, f.RawType, f.Desc))
 
 	// recursive
 	if len(f.Fields) > 0 {
-		for _, field := range f.Fields {
-			exportComment(x, field)
+		exportComments(x, f, mode)
+	}
+}
+
+func exportChildRow(x *Xlsx, f *FieldInfo, row []string, mode string) {
+	var idx int
+	for _, field := range f.Fields {
+		if field.Mode == mode || field.Mode == "b" {
+			exportRow(x, field, row, idx, mode)
+			idx++
+		}
+	}
+	x.trimData("\n")
+}
+
+func exportRow(x *Xlsx, f *FieldInfo, row []string, index int, mode string) {
+	deepth := f.Deepth + 1
+	indent := getIndent(deepth)
+
+	if f.Index == -1 {
+		// root, eg.: [1001] = {
+		x.appendData(indent)
+		x.appendData("[")
+		x.appendData(row[0])
+		x.appendData("] = {\n")
+		exportChildRow(x, f, row, mode)
+		x.appendData(indent)
+		x.appendData("},\n")
+	} else {
+		if f.Type == "json" {
+			// json 格式化
+			val := formatValue(f, row[f.Index])
+			formatJson(x, f, index+1, val)
+		} else {
+			x.appendData(indent)
+			if f.Parent.IsArray {
+				x.appendData("[")
+				x.appendData(strconv.Itoa(index + 1))
+				x.appendData("] = ")
+			} else {
+				x.appendData(f.Name)
+				x.appendData(" = ")
+			}
+			if len(f.Fields) > 0 {
+				x.appendData("{\n")
+				exportChildRow(x, f, row, mode)
+				x.appendData(indent)
+				x.appendData("}")
+				x.appendData(",\n")
+			} else {
+				val := formatValue(f, row[f.Index])
+				x.appendData(val)
+				x.appendData(",\n")
+			}
 		}
 	}
 }
@@ -73,84 +137,80 @@ func formatJsonKey(key interface{}) string {
 	return keystr
 }
 
-func formatJsonValue(obj interface{}, key interface{}) {
+func formatJsonValue(x *Xlsx, key interface{}, obj interface{}, deepth int) {
+	indent := getIndent(deepth + 1)
+	x.appendData(indent)
+	x.appendData(formatJsonKey(key))
+	x.appendData(" = ")
+
 	switch obj.(type) {
 	case map[interface{}]interface{}:
-		fmt.Printf("%s = {", formatJsonKey(key))
+		x.appendData("{\n")
 		for k, v := range obj.(map[interface{}]interface{}) {
-			formatJsonValue(v, k)
+			formatJsonValue(x, k, v, deepth+1)
 		}
-		fmt.Println("}")
+		x.trimData("\n")
+		x.appendData(indent)
+		x.appendData("}")
+		x.appendData(",\n")
 	case map[string]interface{}:
-		fmt.Printf("%s = {", formatJsonKey(key))
+		x.appendData("{\n")
 		for k, v := range obj.(map[string]interface{}) {
-			formatJsonValue(v, k)
+			formatJsonValue(x, k, v, deepth+1)
 		}
-		fmt.Println("}")
+		x.trimData("\n")
+		x.appendData(indent)
+		x.appendData("}")
+		x.appendData(",\n")
 	case []interface{}:
-		fmt.Printf("%s = {", formatJsonKey(key))
+		x.appendData("{\n")
 		for i, v := range obj.([]interface{}) {
-			formatJsonValue(v, i)
+			formatJsonValue(x, i+1, v, deepth+1)
 		}
-		fmt.Println("},")
+		x.trimData("\n")
+		x.appendData(indent)
+		x.appendData("}")
+		x.appendData(",\n")
 	case string:
-		fmt.Printf("%s = \"%v\",", formatJsonKey(key), obj)
+		x.appendData(formatString(obj.(string)))
+		x.appendData(",\n")
 	default:
-		fmt.Printf("%s = %v,", formatJsonKey(key), obj)
+		x.appendData(fmt.Sprintf("%v", obj))
+		x.appendData(",\n")
 	}
 }
 
-func formatJson(jsonStr string) error {
+func formatJson(x *Xlsx, f *FieldInfo, index int, jsonStr string) error {
 	var result interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
 		return err
 	}
 
-	formatJsonValue(result, "aaaa")
+	var key interface{}
+	if f.Parent.IsArray {
+		key = index
+	} else {
+		key = f.Name
+	}
+	formatJsonValue(x, key, result, f.Deepth)
 	return nil
 }
 
-func exportRow(x *Xlsx, f *FieldInfo, row []string, index, deepth int) {
-	var str string
-	indent := getIndent(deepth)
-
-	if f.Index == -1 {
-		// root
-		str = fmt.Sprintf("[%s] = {", row[0])
-	} else {
-		if len(f.Fields) > 0 {
-			if f.ArrayIdx < 0 {
-				str = fmt.Sprintf("%s%s = {", indent, f.Name)
-			} else {
-				str = fmt.Sprintf("%s[%d] = {", indent, index)
-			}
-		} else {
-			val := formatValue(f, row[f.Index])
-			if f.ArrayIdx < 0 {
-				str = fmt.Sprintf("%s%s = %s,", indent, f.Name, val)
-			} else {
-				str = fmt.Sprintf("%s[%d] = %s,", indent, index, val)
-			}
-		}
+func writeToFile(x *Xlsx, mode string) {
+	var outpath string
+	if mode == "c" {
+		outpath = FlagClient
+	} else if mode == "s" {
+		outpath = FlagServer
 	}
-	x.Data = append(x.Data, str)
-	for idx, field := range f.Fields {
-		exportRow(x, field, row, idx+1, deepth+1)
-	}
-	if len(f.Fields) > 0 {
-		x.Data = append(x.Data, fmt.Sprintf("%s},", indent))
-	}
-}
-
-func writeToFile(x *Xlsx) {
-	file := fmt.Sprintf("%s/%s.lua", out, x.FileName)
+	file := fmt.Sprintf("%s/%s.lua", outpath, x.FileName)
 	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 	if operr != nil {
 		return
 	}
 	defer outFile.Close()
 
-	outFile.WriteString(strings.Join(x.Data, "\n"))
+	outFile.WriteString(strings.Join(x.Datas, ""))
 	outFile.Sync()
 }
