@@ -37,6 +37,7 @@ task                | 46   ms
 - server，指定 server 端生成约束，格式："配置格式:导出路径"，例如：--server=json:./sjson
 - client, 指定 client 端生成约束，格式同上
 - indent, 生成含有 json 类型的配置时，是否格式化(美化) json
+- force, 强制重新导出所有配置（默认关闭）
 
 ## 示例
 
