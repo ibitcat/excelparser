@@ -82,12 +82,12 @@ return {
           url = "www.runoob.com"
         },
         [2] = {
-          url = "www.google.com",
-          name = "google"
+          name = "google",
+          url = "www.google.com"
         },
         [3] = {
-          url = "www.weibo.com",
-          name = "微博"
+          name = "微博",
+          url = "www.weibo.com"
         }
       }
     },

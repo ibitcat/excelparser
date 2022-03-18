@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var indentStr map[int]string
@@ -43,4 +44,21 @@ func getIndent(num int) string {
 	} else {
 		return strings.Repeat(" ", num*2)
 	}
+}
+
+func formatString(val string) string {
+	val = strings.Replace(val, "\"", "\\\"", -1)
+	return fmt.Sprintf("\"%s\"", val)
+}
+
+func formatValue(f *FieldInfo, val string) string {
+	if f.Type == "string" {
+		return formatString(val)
+	} else {
+		return val
+	}
+}
+
+func getDurationMs(t time.Time) int {
+	return int(time.Since(t).Nanoseconds() / 1e6)
 }

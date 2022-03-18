@@ -9,19 +9,30 @@ return {
     name = "获得\"传\"承",
     need = 1,
     need1 = {
-      [0] = 1,
-      [1] = 2,
-      [2] = 3,
-    },
+      [1] = 1,
+      [2] = 2,
+      [3] = 3
+    }
   },
   [2] = {
     id = 2,
     name = "获得传承",
     need = 1,
     need1 = {
-      [0] = 1,
-      [1] = 2,
-      [2] = 3,
-    },
-  },
+      sites = {
+        [1] = {
+          name = "菜鸟教程",
+          url = "www.runoob.com"
+        },
+        [2] = {
+          name = "google",
+          url = "www.google.com"
+        },
+        [3] = {
+          url = "www.weibo.com",
+          name = "微博"
+        }
+      }
+    }
+  }
 }

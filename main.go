@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -10,32 +11,58 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/xuri/excelize/v2"
 )
 
+// types
+type FlagOutput struct {
+	OutLang string // 输出语言
+	OutPath string // 输出路径
+}
+
+func (f *FlagOutput) String() string {
+	return fmt.Sprintf("%s:%s", f.OutLang, f.OutPath)
+}
+
+func (f *FlagOutput) Set(value string) error {
+	strs := strings.Split(value, ":")
+	if len(strs) != 2 {
+		return errors.New("导出参数错误")
+	}
+
+	f.OutLang = strs[0]
+	f.OutPath = strs[1]
+	return nil
+}
+
+func (f *FlagOutput) IsVaild() bool {
+	return len(f.OutLang) > 0 && len(f.OutPath) > 0
+}
+
 // flags
 var (
 	Flaghelp   bool
-	Flagpath   string // excel路径
-	FlagLang   string // 输出语言（lua、json）
-	FlagClient string // client 输出路径
-	FlagServer string // server 输出路径
+	Flagpath   string     // excel路径
+	FlagServer FlagOutput // server 输出路径
+	FlagClient FlagOutput
 )
 
 // global vars
 var (
 	LastModifyTime map[string]uint64 //文件的最后修改时间
 	XlsxList       []*Xlsx
+	Splitline      string
 )
 
 func init() {
+	Splitline = fmt.Sprintf("%s+%s", strings.Repeat("-", 20), strings.Repeat("-", 50))
 	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
 	flag.StringVar(&Flagpath, "path", "", "excel input path.")
-	flag.StringVar(&FlagClient, "client", "", "client export path.")
-	flag.StringVar(&FlagServer, "server", "", "server export path.")
-	flag.StringVar(&FlagLang, "lang", "", "target language for parsing.")
+	flag.Var(&FlagClient, "client", "client export info")
+	flag.Var(&FlagServer, "server", "server export info")
 
 	flag.Usage = usage
 }
@@ -43,7 +70,7 @@ func init() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `ex version: 2022.0.0-M1
 	Usage: excelparser [OPTIONS]
-		eg.: excelparser --path=./xlsx --lang=lua server=./slua --client=./clua
+		eg.: excelparser --path=./xlsx --server=lua:./slua --client=lua:./clua
 	Options:
 `)
 	flag.PrintDefaults()
@@ -115,6 +142,7 @@ func walkFunc(path string, f os.FileInfo, err error) error {
 
 func parseExcel(i interface{}) {
 	xlsx := i.(*Xlsx)
+	startTime := time.Now()
 	f, err := excelize.OpenFile(xlsx.PathName)
 	if err != nil {
 		log.Println(err)
@@ -137,14 +165,18 @@ func parseExcel(i interface{}) {
 	xlsx.parseHeader()
 	if len(xlsx.Errors) == 0 {
 		xlsx.Datas = make([]string, 0)
-		if len(FlagClient) > 0 {
-			exportRows(xlsx, "c")
+
+		var exporter iExporter
+		if FlagClient.IsVaild() {
+			exporter = NewExporter(xlsx, FlagClient.OutLang, "c")
+			exporter.exportRows()
 		}
-		if len(FlagServer) > 0 {
-			exportRows(xlsx, "s")
+		if FlagClient.IsVaild() {
+			exporter = NewExporter(xlsx, FlagClient.OutLang, "s")
+			exporter.exportRows()
 		}
 	}
-	xlsx.printResult()
+	xlsx.TimeCost = getDurationMs(startTime)
 	//ExportLua(xlsx)
 }
 
@@ -166,15 +198,14 @@ func main() {
 	}
 
 	// output
-	fmt.Println(len(FlagClient), len(FlagServer))
-	if len(FlagClient) == 0 && len(FlagServer) == 0 {
-		panic("You must specify an output path.")
+	if !FlagClient.IsVaild() && !FlagServer.IsVaild() {
+		panic("You must specify an output info.")
 	} else {
-		if len(FlagClient) > 0 {
-			createOutput(FlagClient)
+		if FlagClient.IsVaild() {
+			createOutput(FlagClient.OutPath)
 		}
-		if len(FlagServer) > 0 {
-			createOutput(FlagServer)
+		if FlagServer.IsVaild() {
+			createOutput(FlagServer.OutPath)
 		}
 	}
 
@@ -200,5 +231,15 @@ func main() {
 	}
 	wg.Wait()
 
-	fmt.Printf("running goroutines: %d\n", p.Running())
+	// result
+	results := make([]string, 0)
+	results = append(results, Splitline)
+	results = append(results, fmt.Sprintf("%-20s| %s", "FileName", "Result"))
+	for _, xlsx := range XlsxList {
+		result := xlsx.printResult()
+		results = append(results, result...)
+	}
+	results = append(results, Splitline)
+	fmt.Println(strings.Join(results, "\n"))
+	//fmt.Printf("running goroutines: %d\n", p.Running())
 }

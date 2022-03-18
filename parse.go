@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -33,7 +32,7 @@ type Xlsx struct {
 	Rows      [][]string
 	Datas     []string
 	Errors    []string // 错误信息
-	TimeCost  int64    // 耗时
+	TimeCost  int      // 耗时
 }
 
 func (x *Xlsx) appendError(errMsg string) {
@@ -167,8 +166,24 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
 	return index
 }
 
-func (x *Xlsx) printResult() {
-	for _, err := range x.Errors {
-		log.Println(err)
+func (x *Xlsx) printResult() []string {
+	results := make([]string, 0)
+	results = append(results, Splitline)
+
+	errNum := len(x.Errors)
+	if errNum == 0 {
+		results = append(results, fmt.Sprintf("%-20s| %-5dms", x.FileName, x.TimeCost))
+	} else if errNum == 1 {
+		results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, x.Errors[0]))
+	} else {
+		mid := len(x.Errors) / 2
+		for i, err := range x.Errors {
+			if mid == (i + 1) {
+				results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, err))
+			} else {
+				results = append(results, fmt.Sprintf("%-20s| %s", "", err))
+			}
+		}
 	}
+	return results
 }

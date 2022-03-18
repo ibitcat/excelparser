@@ -8,125 +8,126 @@ import (
 	"strings"
 )
 
+type LuaExporter struct {
+	x    *Xlsx
+	mode string
+}
+
+func (l *LuaExporter) appendData(str string) {
+	l.x.Datas = append(l.x.Datas, str)
+}
+
+func (l *LuaExporter) trimData(str string) {
+	l.x.Datas[len(l.x.Datas)-1] = str
+}
+
 // id 冲突
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
-func exportRows(x *Xlsx, mode string) {
-	//cap := len(x.Types) * (len(x.Rows) - 2)
-	//fmt.Println(cap, len(x.Types))
-	x.Datas = x.Datas[0:0]
+func (l *LuaExporter) exportRows() {
+	// 复用 datas
+	l.x.Datas = l.x.Datas[0:0]
 
 	// comment
-	exportComments(x, x.RootField, mode)
+	l.exportComments(l.x.RootField)
 
 	// data
-	x.appendData("\nreturn {\n")
-	for line := 4; line < len(x.Rows); line++ {
-		row := x.Rows[line]
+	l.appendData("\nreturn {\n")
+	for line := 4; line < len(l.x.Rows); line++ {
+		row := l.x.Rows[line]
 		if strings.HasPrefix(row[0], "//") || row[0] == "" {
 			continue
 		}
-		exportRow(x, x.RootField, row, -1, mode)
+		l.exportRow(l.x.RootField, row, -1)
 	}
-	x.trimData("}\n")
-	x.appendData("}\n")
-
-	writeToFile(x, mode)
+	l.trimData("}\n")
+	l.appendData("}\n")
+	l.writeToFile()
 }
 
-func exportComments(x *Xlsx, f *FieldInfo, mode string) {
+/// comments
+func (l *LuaExporter) exportComments(f *FieldInfo) {
 	var idx int
 	for _, field := range f.Fields {
-		if field.Mode == mode || field.Mode == "b" {
-			exportComment(x, idx, field, mode)
+		if field.Mode == l.mode || field.Mode == "b" {
+			l.exportComment(idx, field)
 			idx++
 		}
 	}
 }
 
-func exportComment(x *Xlsx, idx int, f *FieldInfo, mode string) {
+func (l *LuaExporter) exportComment(idx int, f *FieldInfo) {
 	var keyName string
 	if f.Parent.IsArray {
 		keyName = getIndent(f.Deepth) + "[" + strconv.Itoa(idx+1) + "]"
 	} else {
 		keyName = getIndent(f.Deepth) + f.Name
 	}
-	x.appendData(fmt.Sprintf("-- %-30s %-10s %s\n", keyName, f.RawType, f.Desc))
+	l.appendData(fmt.Sprintf("-- %-30s %-10s %s\n", keyName, f.RawType, f.Desc))
 
 	// recursive
 	if len(f.Fields) > 0 {
-		exportComments(x, f, mode)
+		l.exportComments(f)
 	}
 }
 
-func exportChildRow(x *Xlsx, f *FieldInfo, row []string, mode string) {
+/// datas
+func (l *LuaExporter) exportChildRow(f *FieldInfo, row []string) {
 	var idx int
 	for _, field := range f.Fields {
-		if field.Mode == mode || field.Mode == "b" {
-			exportRow(x, field, row, idx, mode)
+		if field.Mode == l.mode || field.Mode == "b" {
+			l.exportRow(field, row, idx)
 			idx++
 		}
 	}
-	x.trimData("\n")
+	l.trimData("\n")
 }
 
-func exportRow(x *Xlsx, f *FieldInfo, row []string, index int, mode string) {
+func (l *LuaExporter) exportRow(f *FieldInfo, row []string, index int) {
 	deepth := f.Deepth + 1
 	indent := getIndent(deepth)
 
 	if f.Index == -1 {
 		// root, eg.: [1001] = {
-		x.appendData(indent)
-		x.appendData("[")
-		x.appendData(row[0])
-		x.appendData("] = {\n")
-		exportChildRow(x, f, row, mode)
-		x.appendData(indent)
-		x.appendData("},\n")
+		l.appendData(indent)
+		l.appendData("[")
+		l.appendData(row[0])
+		l.appendData("] = {\n")
+		l.exportChildRow(f, row)
+		l.appendData(indent)
+		l.appendData("},\n")
 	} else {
 		if f.Type == "json" {
 			// json 格式化
 			val := formatValue(f, row[f.Index])
-			formatJson(x, f, index+1, val)
+			l.formatJson(f, index+1, val)
 		} else {
-			x.appendData(indent)
+			l.appendData(indent)
 			if f.Parent.IsArray {
-				x.appendData("[")
-				x.appendData(strconv.Itoa(index + 1))
-				x.appendData("] = ")
+				l.appendData("[")
+				l.appendData(strconv.Itoa(index + 1))
+				l.appendData("] = ")
 			} else {
-				x.appendData(f.Name)
-				x.appendData(" = ")
+				l.appendData(f.Name)
+				l.appendData(" = ")
 			}
 			if len(f.Fields) > 0 {
-				x.appendData("{\n")
-				exportChildRow(x, f, row, mode)
-				x.appendData(indent)
-				x.appendData("}")
-				x.appendData(",\n")
+				l.appendData("{\n")
+				l.exportChildRow(f, row)
+				l.appendData(indent)
+				l.appendData("}")
+				l.appendData(",\n")
 			} else {
 				val := formatValue(f, row[f.Index])
-				x.appendData(val)
-				x.appendData(",\n")
+				l.appendData(val)
+				l.appendData(",\n")
 			}
 		}
 	}
 }
 
-func formatString(val string) string {
-	val = strings.Replace(val, "\"", "\\\"", -1)
-	return fmt.Sprintf("\"%s\"", val)
-}
-
-func formatValue(f *FieldInfo, val string) string {
-	if f.Type == "string" {
-		return formatString(val)
-	} else {
-		return val
-	}
-}
-
-func formatJsonKey(key interface{}) string {
+/// json
+func (l *LuaExporter) formatJsonKey(key interface{}) string {
 	var keystr string
 	switch key.(type) {
 	case int, uint:
@@ -137,50 +138,50 @@ func formatJsonKey(key interface{}) string {
 	return keystr
 }
 
-func formatJsonValue(x *Xlsx, key interface{}, obj interface{}, deepth int) {
+func (l *LuaExporter) formatJsonValue(key interface{}, obj interface{}, deepth int) {
 	indent := getIndent(deepth + 1)
-	x.appendData(indent)
-	x.appendData(formatJsonKey(key))
-	x.appendData(" = ")
+	l.appendData(indent)
+	l.appendData(l.formatJsonKey(key))
+	l.appendData(" = ")
 
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case map[interface{}]interface{}:
-		x.appendData("{\n")
-		for k, v := range obj.(map[interface{}]interface{}) {
-			formatJsonValue(x, k, v, deepth+1)
+		l.appendData("{\n")
+		for k, v := range obj {
+			l.formatJsonValue(k, v, deepth+1)
 		}
-		x.trimData("\n")
-		x.appendData(indent)
-		x.appendData("}")
-		x.appendData(",\n")
+		l.trimData("\n")
+		l.appendData(indent)
+		l.appendData("}")
+		l.appendData(",\n")
 	case map[string]interface{}:
-		x.appendData("{\n")
-		for k, v := range obj.(map[string]interface{}) {
-			formatJsonValue(x, k, v, deepth+1)
+		l.appendData("{\n")
+		for k, v := range obj {
+			l.formatJsonValue(k, v, deepth+1)
 		}
-		x.trimData("\n")
-		x.appendData(indent)
-		x.appendData("}")
-		x.appendData(",\n")
+		l.trimData("\n")
+		l.appendData(indent)
+		l.appendData("}")
+		l.appendData(",\n")
 	case []interface{}:
-		x.appendData("{\n")
-		for i, v := range obj.([]interface{}) {
-			formatJsonValue(x, i+1, v, deepth+1)
+		l.appendData("{\n")
+		for i, v := range obj {
+			l.formatJsonValue(i+1, v, deepth+1)
 		}
-		x.trimData("\n")
-		x.appendData(indent)
-		x.appendData("}")
-		x.appendData(",\n")
+		l.trimData("\n")
+		l.appendData(indent)
+		l.appendData("}")
+		l.appendData(",\n")
 	case string:
-		x.appendData(formatString(obj.(string)))
-		x.appendData(",\n")
+		l.appendData(formatString(obj))
+		l.appendData(",\n")
 	default:
-		x.appendData(fmt.Sprintf("%v", obj))
-		x.appendData(",\n")
+		l.appendData(fmt.Sprintf("%v", obj))
+		l.appendData(",\n")
 	}
 }
 
-func formatJson(x *Xlsx, f *FieldInfo, index int, jsonStr string) error {
+func (l *LuaExporter) formatJson(f *FieldInfo, index int, jsonStr string) error {
 	var result interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
@@ -193,24 +194,25 @@ func formatJson(x *Xlsx, f *FieldInfo, index int, jsonStr string) error {
 	} else {
 		key = f.Name
 	}
-	formatJsonValue(x, key, result, f.Deepth)
+	l.formatJsonValue(key, result, f.Deepth)
 	return nil
 }
 
-func writeToFile(x *Xlsx, mode string) {
+/// write
+func (l *LuaExporter) writeToFile() {
 	var outpath string
-	if mode == "c" {
-		outpath = FlagClient
-	} else if mode == "s" {
-		outpath = FlagServer
+	if l.mode == "c" {
+		outpath = FlagClient.OutPath
+	} else if l.mode == "s" {
+		outpath = FlagServer.OutPath
 	}
-	file := fmt.Sprintf("%s/%s.lua", outpath, x.FileName)
+	file := fmt.Sprintf("%s/%s.lua", outpath, l.x.FileName)
 	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
 	if operr != nil {
 		return
 	}
 	defer outFile.Close()
 
-	outFile.WriteString(strings.Join(x.Datas, ""))
+	outFile.WriteString(strings.Join(l.x.Datas, ""))
 	outFile.Sync()
 }
