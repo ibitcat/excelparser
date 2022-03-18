@@ -2,17 +2,29 @@
   {
     "id":1,
     "name":"获得\"传\"承",
-    "need":1,
-    "need1":[1,2,3],
-    "showProgress":3.14,
+    "intVal":1,
+    "jsonVal":[
+      1,
+      2,
+      3
+    ],
+    "floatVal":3.14,
     "dict":{
       "key1":3.14,
-      "key2":3.14,
-      "key3":{
-        "key21":3.14,
-        "key22":3.14
-      }
+      "key2":3.14
     },
+    "nestedDict":{
+      "nestedKey1":3.14,
+      "nestedKey2":3.14,
+      "childDict":3.14
+    },
+    "childKey1":3.14,
+    "childKey2":3.14,
+    "baseList":[
+      1111,
+      2222,
+      2222
+    ],
     "list":[
       [
         1111,
@@ -27,7 +39,7 @@
         444
       ]
     ],
-    "list1":[
+    "dictList":[
       {
         "a":1,
         "b":2
@@ -41,17 +53,40 @@
   {
     "id":2,
     "name":"获得传承",
-    "need":1,
-    "need1":{"sites":[{"name":"菜鸟教程","url":"www.runoob.com"},{"name":"google","url":"www.google.com"},{"name":"微博","url":"www.weibo.com"}]},
-    "showProgress":3.14,
+    "intVal":1,
+    "jsonVal":{
+      "sites": [
+        {
+          "name": "菜鸟教程",
+          "url": "www.runoob.com"
+        },
+        {
+          "name": "google",
+          "url": "www.google.com"
+        },
+        {
+          "name": "微博",
+          "url": "www.weibo.com"
+        }
+      ]
+    },
+    "floatVal":3.14,
     "dict":{
       "key1":3.14,
-      "key2":3.14,
-      "key3":{
-        "key21":3.14,
-        "key22":3.14
-      }
+      "key2":3.14
     },
+    "nestedDict":{
+      "nestedKey1":3.14,
+      "nestedKey2":3.14,
+      "childDict":3.14
+    },
+    "childKey1":3.14,
+    "childKey2":3.14,
+    "baseList":[
+      1111,
+      2222,
+      2222
+    ],
     "list":[
       [
         1111,
@@ -66,7 +101,7 @@
         444
       ]
     ],
-    "list1":[
+    "dictList":[
       {
         "a":1,
         "b":2

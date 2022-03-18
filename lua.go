@@ -12,7 +12,6 @@ type LuaFormater struct {
 	mode string
 }
 
-// id 冲突
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
 func (l *LuaFormater) formatRows() {

@@ -55,40 +55,62 @@ func (x *Xlsx) clearData() {
 func (x *Xlsx) checkKeyField() {
 	keyField := x.RootField.Fields[0]
 	if keyField.Index != 0 {
-		x.appendError("key 字段不能注释")
+		x.appendError("Key 字段不能注释")
 	} else if keyField.Name != "id" {
-		x.appendError("key 必须以 id 命名")
+		x.appendError("Key 字段必须以 id 命名")
 	}
 	if !(isNumberType(keyField.Type) || keyField.Type == "string") {
-		x.appendError("key 字段数据类型必须为定点整数或字符串")
+		x.appendError("Key 字段数据类型必须为定点整数或字符串")
+	}
+	if keyField.Mode != "b" {
+		x.appendError("Key 字段生成模式必须为 [b](both)")
+	}
+
+	idMap := make(map[string]int)
+	for line := 4; line < len(x.Rows); line++ {
+		row := x.Rows[line]
+		key := row[0]
+		if strings.HasPrefix(key, "//") || key == "" {
+			continue
+		}
+		idMap[key] += 1
+	}
+	for key, num := range idMap {
+		if num > 1 {
+			x.appendError(fmt.Sprintf("Id [%s] 重复 %d 次", key, num-1))
+		}
 	}
 }
 
-func (x *Xlsx) checkDupField(parent *FieldInfo) {
-	if len(parent.Fields) == 0 {
-		return
-	} else {
+func (x *Xlsx) checkFields(f *FieldInfo) {
+	if f.Index >= 0 {
+		if !f.Parent.IsArray && len(f.Name) == 0 {
+			x.appendError(fmt.Sprintf("字段名为空：[%s#%d@%s]", f.Name, f.Index+1, f.Desc))
+		}
+	}
+
+	if len(f.Fields) > 0 {
 		tmpMap := map[string]int{}
-		for i, field := range parent.Fields {
-			if !parent.IsArray {
+		for _, field := range f.Fields {
+			if f.IsArray {
+				if f.Type == "dict" {
+					if field.Type != f.Type {
+						x.appendError(fmt.Sprintf("结构体数组元素类型错误：[%s#%d@%s] ", field.Name, field.Index+1, field.Desc))
+					}
+				} else {
+					if field.RawType != f.Type {
+						x.appendError(fmt.Sprintf("数组元素类型错误：[%s#%d@%s] ", field.Name, field.Index+1, field.Desc))
+					}
+				}
+			} else {
 				index, ok := tmpMap[field.Name]
 				if ok {
-					x.appendError(fmt.Sprintf("字段名【%s】冲突：#%d<-->#%d ", field.Name, index, field.Index))
+					x.appendError(fmt.Sprintf("字段名[%s@%s]冲突：#%d<-->#%d ", field.Name, field.Desc, index+1, field.Index+1))
 				} else {
 					tmpMap[field.Name] = field.Index
 				}
-			} else {
-				if parent.Type == "dict" {
-					if field.Type != parent.Type {
-						x.appendError(fmt.Sprintf("结构体数组元素类型错误：%s[%d] ", parent.Name, i))
-					}
-				} else {
-					if field.RawType != parent.Type {
-						x.appendError(fmt.Sprintf("数组元素类型错误：%s[%d] ", parent.Name, i))
-					}
-				}
 			}
-			x.checkDupField(field)
+			x.checkFields(field)
 		}
 	}
 }
@@ -105,7 +127,7 @@ func (x *Xlsx) parseHeader() {
 
 	// check
 	x.checkKeyField()
-	x.checkDupField(rootField)
+	x.checkFields(rootField)
 }
 
 func (x *Xlsx) parseField(parent *FieldInfo, index int) int {

@@ -45,6 +45,7 @@ func (f *FlagOutput) IsVaild() bool {
 // flags
 var (
 	Flaghelp   bool
+	FlagIndent bool       // json格式化
 	Flagpath   string     // excel路径
 	FlagServer FlagOutput // server 输出路径
 	FlagClient FlagOutput
@@ -60,18 +61,21 @@ var (
 func init() {
 	Splitline = fmt.Sprintf("%s+%s", strings.Repeat("-", 20), strings.Repeat("-", 50))
 	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
-	flag.StringVar(&Flagpath, "path", "", "excel input path.")
-	flag.Var(&FlagClient, "client", "client export info")
-	flag.Var(&FlagServer, "server", "server export info")
+	flag.BoolVar(&FlagIndent, "indent", false, "Json indent flag.")
+	flag.StringVar(&Flagpath, "path", "", "Excel input path.")
+	flag.Var(&FlagClient, "client", "Client export info.")
+	flag.Var(&FlagServer, "server", "Server export info.")
 
 	flag.Usage = usage
 }
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `ex version: 2022.0.0-M1
-	Usage: excelparser [OPTIONS]
-		eg.: excelparser --path=./xlsx --server=lua:./slua --client=lua:./clua
-	Options:
+    Usage: excelparser [OPTIONS]
+    eg.: excelparser --path=./xlsx --server=lua:./slua --client=lua:./clua
+         excelparser --path=./xlsx --server=json:./sjson --client=json:./cjson --indent
+         excelparser --path=./xlsx --server=lua:./slua --client=json:./cjson --indent
+    Options:
 `)
 	flag.PrintDefaults()
 }

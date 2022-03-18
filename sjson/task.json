@@ -2,13 +2,32 @@
   {
     "id":1,
     "name":"获得\"传\"承",
-    "need":1,
-    "need1":[1,2,3]
+    "intVal":1,
+    "jsonVal":[
+      1,
+      2,
+      3
+    ]
   },
   {
     "id":2,
     "name":"获得传承",
-    "need":1,
-    "need1":{"sites":[{"name":"菜鸟教程","url":"www.runoob.com"},{"name":"google","url":"www.google.com"},{"name":"微博","url":"www.weibo.com"}]}
+    "intVal":1,
+    "jsonVal":{
+      "sites": [
+        {
+          "name": "菜鸟教程",
+          "url": "www.runoob.com"
+        },
+        {
+          "name": "google",
+          "url": "www.google.com"
+        },
+        {
+          "name": "微博",
+          "url": "www.weibo.com"
+        }
+      ]
+    }
   }
 ]

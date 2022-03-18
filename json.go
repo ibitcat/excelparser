@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -10,9 +12,6 @@ type JsonFormater struct {
 	mode string
 }
 
-// id 冲突
-// 类型检查(例如: int 类型的字段填了 string， 耗性能)
-// 高级特性：id公式，数值范围检查，字段注释，配置行注释
 func (j *JsonFormater) formatRows() {
 	// 复用 datas
 	j.clearData()
@@ -21,7 +20,8 @@ func (j *JsonFormater) formatRows() {
 	j.appendData("[\n")
 	for line := 4; line < len(j.Rows); line++ {
 		row := j.Rows[line]
-		if strings.HasPrefix(row[0], "//") || row[0] == "" {
+		key := row[0]
+		if strings.HasPrefix(key, "//") || key == "" {
 			continue
 		}
 		j.formatRow(j.RootField, row, -1)
@@ -32,51 +32,61 @@ func (j *JsonFormater) formatRows() {
 }
 
 /// datas
-func (l *JsonFormater) formatChildRow(f *FieldInfo, row []string) {
+func (j *JsonFormater) formatChildRow(f *FieldInfo, row []string) {
 	var idx int
 	for _, field := range f.Fields {
-		if field.Mode == l.mode || field.Mode == "b" {
-			l.formatRow(field, row, idx)
+		if field.Mode == j.mode || field.Mode == "b" {
+			j.formatRow(field, row, idx)
 			idx++
 		}
 	}
-	l.trimData("\n")
+	j.trimData("\n")
 }
 
-func (l *JsonFormater) formatRow(f *FieldInfo, row []string, index int) {
+func (j *JsonFormater) formatRow(f *FieldInfo, row []string, index int) {
 	deepth := f.Deepth + 1
 	indent := getIndent(deepth)
 
 	if f.Index == -1 {
 		// root, eg.: [1001] = {
-		l.appendData(indent)
-		l.appendData("{\n")
-		l.formatChildRow(f, row)
-		l.appendData(indent)
-		l.appendData("},\n")
+		j.appendData(indent)
+		j.appendData("{\n")
+		j.formatChildRow(f, row)
+		j.appendData(indent)
+		j.appendData("},\n")
 	} else {
-		l.appendData(indent)
+		j.appendData(indent)
 		if !f.Parent.IsArray {
-			l.appendData("\"" + f.Name + "\":")
+			j.appendData("\"" + f.Name + "\":")
 		}
 		if len(f.Fields) > 0 {
 			if f.IsArray {
-				l.appendData("[\n")
+				j.appendData("[\n")
 			} else {
-				l.appendData("{\n")
+				j.appendData("{\n")
 			}
-			l.formatChildRow(f, row)
-			l.appendData(indent)
+			j.formatChildRow(f, row)
+			j.appendData(indent)
 			if f.IsArray {
-				l.appendData("]")
+				j.appendData("]")
 			} else {
-				l.appendData("}")
+				j.appendData("}")
 			}
-			l.appendData(",\n")
+			j.appendData(",\n")
 		} else {
 			val := formatValue(f, row[f.Index])
-			l.appendData(val)
-			l.appendData(",\n")
+			if f.Type == "json" && FlagIndent {
+				var out bytes.Buffer
+				err := json.Indent(&out, []byte(val), indent, "  ")
+				if err != nil {
+					j.appendError(fmt.Sprintf("[%s] json 格式错误：[%s#%d@%s]", j.mode, f.Name, f.Index+1, f.Desc))
+				} else {
+					j.appendData(out.String())
+				}
+			} else {
+				j.appendData(val)
+			}
+			j.appendData(",\n")
 		}
 	}
 }
