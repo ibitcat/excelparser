@@ -3,60 +3,51 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
 
-type LuaExporter struct {
-	x    *Xlsx
+type LuaFormater struct {
+	*Xlsx
 	mode string
-}
-
-func (l *LuaExporter) appendData(str string) {
-	l.x.Datas = append(l.x.Datas, str)
-}
-
-func (l *LuaExporter) trimData(str string) {
-	l.x.Datas[len(l.x.Datas)-1] = str
 }
 
 // id 冲突
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
-func (l *LuaExporter) exportRows() {
+func (l *LuaFormater) formatRows() {
 	// 复用 datas
-	l.x.Datas = l.x.Datas[0:0]
+	l.clearData()
 
 	// comment
-	l.exportComments(l.x.RootField)
+	l.formatComments(l.RootField)
 
 	// data
 	l.appendData("\nreturn {\n")
-	for line := 4; line < len(l.x.Rows); line++ {
-		row := l.x.Rows[line]
+	for line := 4; line < len(l.Rows); line++ {
+		row := l.Rows[line]
 		if strings.HasPrefix(row[0], "//") || row[0] == "" {
 			continue
 		}
-		l.exportRow(l.x.RootField, row, -1)
+		l.exportRow(l.RootField, row, -1)
 	}
 	l.trimData("}\n")
 	l.appendData("}\n")
-	l.writeToFile()
+	l.exportToFile()
 }
 
 /// comments
-func (l *LuaExporter) exportComments(f *FieldInfo) {
+func (l *LuaFormater) formatComments(f *FieldInfo) {
 	var idx int
 	for _, field := range f.Fields {
 		if field.Mode == l.mode || field.Mode == "b" {
-			l.exportComment(idx, field)
+			l.formatComment(idx, field)
 			idx++
 		}
 	}
 }
 
-func (l *LuaExporter) exportComment(idx int, f *FieldInfo) {
+func (l *LuaFormater) formatComment(idx int, f *FieldInfo) {
 	var keyName string
 	if f.Parent.IsArray {
 		keyName = getIndent(f.Deepth) + "[" + strconv.Itoa(idx+1) + "]"
@@ -67,12 +58,12 @@ func (l *LuaExporter) exportComment(idx int, f *FieldInfo) {
 
 	// recursive
 	if len(f.Fields) > 0 {
-		l.exportComments(f)
+		l.formatComments(f)
 	}
 }
 
 /// datas
-func (l *LuaExporter) exportChildRow(f *FieldInfo, row []string) {
+func (l *LuaFormater) formatChildRow(f *FieldInfo, row []string) {
 	var idx int
 	for _, field := range f.Fields {
 		if field.Mode == l.mode || field.Mode == "b" {
@@ -83,7 +74,7 @@ func (l *LuaExporter) exportChildRow(f *FieldInfo, row []string) {
 	l.trimData("\n")
 }
 
-func (l *LuaExporter) exportRow(f *FieldInfo, row []string, index int) {
+func (l *LuaFormater) exportRow(f *FieldInfo, row []string, index int) {
 	deepth := f.Deepth + 1
 	indent := getIndent(deepth)
 
@@ -93,7 +84,7 @@ func (l *LuaExporter) exportRow(f *FieldInfo, row []string, index int) {
 		l.appendData("[")
 		l.appendData(row[0])
 		l.appendData("] = {\n")
-		l.exportChildRow(f, row)
+		l.formatChildRow(f, row)
 		l.appendData(indent)
 		l.appendData("},\n")
 	} else {
@@ -113,7 +104,7 @@ func (l *LuaExporter) exportRow(f *FieldInfo, row []string, index int) {
 			}
 			if len(f.Fields) > 0 {
 				l.appendData("{\n")
-				l.exportChildRow(f, row)
+				l.formatChildRow(f, row)
 				l.appendData(indent)
 				l.appendData("}")
 				l.appendData(",\n")
@@ -127,7 +118,7 @@ func (l *LuaExporter) exportRow(f *FieldInfo, row []string, index int) {
 }
 
 /// json
-func (l *LuaExporter) formatJsonKey(key interface{}) string {
+func (l *LuaFormater) formatJsonKey(key interface{}) string {
 	var keystr string
 	switch key.(type) {
 	case int, uint:
@@ -138,7 +129,7 @@ func (l *LuaExporter) formatJsonKey(key interface{}) string {
 	return keystr
 }
 
-func (l *LuaExporter) formatJsonValue(key interface{}, obj interface{}, deepth int) {
+func (l *LuaFormater) formatJsonValue(key interface{}, obj interface{}, deepth int) {
 	indent := getIndent(deepth + 1)
 	l.appendData(indent)
 	l.appendData(l.formatJsonKey(key))
@@ -181,7 +172,7 @@ func (l *LuaExporter) formatJsonValue(key interface{}, obj interface{}, deepth i
 	}
 }
 
-func (l *LuaExporter) formatJson(f *FieldInfo, index int, jsonStr string) error {
+func (l *LuaFormater) formatJson(f *FieldInfo, index int, jsonStr string) error {
 	var result interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
@@ -198,21 +189,14 @@ func (l *LuaExporter) formatJson(f *FieldInfo, index int, jsonStr string) error 
 	return nil
 }
 
-/// write
-func (l *LuaExporter) writeToFile() {
+/// export
+func (l *LuaFormater) exportToFile() {
 	var outpath string
 	if l.mode == "c" {
 		outpath = FlagClient.OutPath
 	} else if l.mode == "s" {
 		outpath = FlagServer.OutPath
 	}
-	file := fmt.Sprintf("%s/%s.lua", outpath, l.x.FileName)
-	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
-	if operr != nil {
-		return
-	}
-	defer outFile.Close()
-
-	outFile.WriteString(strings.Join(l.x.Datas, ""))
-	outFile.Sync()
+	fileName := fmt.Sprintf("%s/%s.lua", outpath, l.FileName)
+	l.writeToFile(fileName)
 }

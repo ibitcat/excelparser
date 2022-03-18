@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -45,6 +46,10 @@ func (x *Xlsx) appendData(str string) {
 
 func (x *Xlsx) trimData(str string) {
 	x.Datas[len(x.Datas)-1] = str
+}
+
+func (x *Xlsx) clearData() {
+	x.Datas = x.Datas[0:0]
 }
 
 func (x *Xlsx) checkKeyField() {
@@ -186,4 +191,15 @@ func (x *Xlsx) printResult() []string {
 		}
 	}
 	return results
+}
+
+func (x *Xlsx) writeToFile(outFileName string) {
+	outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
+	if operr != nil {
+		return
+	}
+	defer outFile.Close()
+
+	outFile.WriteString(strings.Join(x.Datas, ""))
+	outFile.Sync()
 }

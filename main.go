@@ -166,14 +166,14 @@ func parseExcel(i interface{}) {
 	if len(xlsx.Errors) == 0 {
 		xlsx.Datas = make([]string, 0)
 
-		var exporter iExporter
+		var formater iFormater
 		if FlagClient.IsVaild() {
-			exporter = NewExporter(xlsx, FlagClient.OutLang, "c")
-			exporter.exportRows()
+			formater = NewFormater(xlsx, FlagClient.OutLang, "c")
+			formater.formatRows()
 		}
-		if FlagClient.IsVaild() {
-			exporter = NewExporter(xlsx, FlagClient.OutLang, "s")
-			exporter.exportRows()
+		if FlagServer.IsVaild() {
+			formater = NewFormater(xlsx, FlagServer.OutLang, "s")
+			formater.formatRows()
 		}
 	}
 	xlsx.TimeCost = getDurationMs(startTime)

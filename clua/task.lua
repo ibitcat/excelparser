@@ -86,8 +86,8 @@ return {
           url = "www.google.com"
         },
         [3] = {
-          name = "微博",
-          url = "www.weibo.com"
+          url = "www.weibo.com",
+          name = "微博"
         }
       }
     },

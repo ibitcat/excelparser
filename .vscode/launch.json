@@ -16,7 +16,7 @@
             },
             "args": [
                 "--path=./xlsx",
-                "--client=./clua"
+                "--server=json:./cjson"
             ] // 启动参数
         }
     ]

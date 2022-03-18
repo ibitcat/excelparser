@@ -10,19 +10,6 @@ import (
 	"text/template"
 )
 
-type iExporter interface {
-	exportRows()
-}
-
-func NewExporter(x *Xlsx, lang, mode string) iExporter {
-	switch lang {
-	case "lua":
-		return &LuaExporter{x: x, mode: mode}
-	default:
-		return nil
-	}
-}
-
 /// 模板方式生成配置（已废弃，耗性能）
 var funcs = template.FuncMap{
 	"join":   strings.Join,

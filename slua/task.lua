@@ -25,12 +25,12 @@ return {
           url = "www.runoob.com"
         },
         [2] = {
-          name = "google",
-          url = "www.google.com"
+          url = "www.google.com",
+          name = "google"
         },
         [3] = {
-          url = "www.weibo.com",
-          name = "微博"
+          name = "微博",
+          url = "www.weibo.com"
         }
       }
     }
