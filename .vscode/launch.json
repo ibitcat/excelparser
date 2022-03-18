@@ -16,7 +16,7 @@
             },
             "args": [
                 "--path=./xlsx",
-                "--server=json:./cjson"
+                "--client=json:./cjson"
             ] // 启动参数
         }
     ]

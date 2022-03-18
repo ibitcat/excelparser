@@ -13,6 +13,8 @@ golang 实现的 Excel 解析器。
 - [x] 配置错误详情输出
 - [x] json 输出格式化
 - [x] 支持生成标签(s=server, c=client, b=both)
+- [x] 字段数据类型检查(支持 int，string，float，json，dict，数组)
+- [x] 未修改的文件忽略生成(可以加速生成速度，不需要每次都全部生成一次)
 - [ ] 数值类型范围检查
 - [ ] id 公式检查
 

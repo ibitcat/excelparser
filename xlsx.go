@@ -10,19 +10,21 @@ import (
 )
 
 type FieldInfo struct {
-	Index   int          // 对应的excel列序号
-	Desc    string       // 字段描述
-	Name    string       // 字段名
-	Type    string       // 字段数据类型
-	RawType string       // 原始字段数据类型
-	Mode    string       // 生成方式(s=server,c=client,b=both)
-	Deepth  int          // 字段深度
-	IsArray bool         // 是否是数组
-	Parent  *FieldInfo   // 父字段
-	Fields  []*FieldInfo // 成员
+	Index    int          // 对应的excel列序号
+	Desc     string       // 字段描述
+	Name     string       // 字段名
+	Type     string       // 字段数据类型
+	RawType  string       // 原始字段数据类型
+	Mode     string       // 生成方式(s=server,c=client,b=both)
+	Deepth   int          // 字段深度
+	IsArray  bool         // 是否是数组
+	Parent   *FieldInfo   // 父字段
+	Fields   []*FieldInfo // 成员
+	FieldNum int          // 成员数
 }
 
 type Xlsx struct {
+	Name      string // 文件名（带文件扩展名）
 	PathName  string // 文件完整路径
 	FileName  string // 文件名
 	Descs     []string
@@ -36,6 +38,36 @@ type Xlsx struct {
 	TimeCost  int      // 耗时
 }
 
+/// FieldInfo
+func (f *FieldInfo) isHitMode(tMode string) bool {
+	if f.Mode == tMode || f.Mode == "b" {
+		return true
+	}
+	return false
+}
+
+func (f *FieldInfo) IsVaildType() bool {
+	def := f.Type
+	if len(f.Fields) > 0 {
+		// map or array
+		if f.IsArray {
+			arrayBegin := strings.Index(f.RawType, "[")
+			def = f.RawType[:arrayBegin]
+		} else {
+			if f.Type == "dict" {
+				return true
+			}
+		}
+	}
+
+	switch def {
+	case "string", "int", "float", "json", "dict":
+		return true
+	}
+	return false
+}
+
+/// Xlsx
 func (x *Xlsx) appendError(errMsg string) {
 	x.Errors = append(x.Errors, errMsg)
 }
@@ -52,6 +84,10 @@ func (x *Xlsx) clearData() {
 	x.Datas = x.Datas[0:0]
 }
 
+func (x *Xlsx) getKeyField() *FieldInfo {
+	return x.RootField.Fields[0]
+}
+
 func (x *Xlsx) checkKeyField() {
 	keyField := x.RootField.Fields[0]
 	if keyField.Index != 0 {
@@ -61,9 +97,6 @@ func (x *Xlsx) checkKeyField() {
 	}
 	if !(isNumberType(keyField.Type) || keyField.Type == "string") {
 		x.appendError("Key 字段数据类型必须为定点整数或字符串")
-	}
-	if keyField.Mode != "b" {
-		x.appendError("Key 字段生成模式必须为 [b](both)")
 	}
 
 	idMap := make(map[string]int)
@@ -85,7 +118,14 @@ func (x *Xlsx) checkKeyField() {
 func (x *Xlsx) checkFields(f *FieldInfo) {
 	if f.Index >= 0 {
 		if !f.Parent.IsArray && len(f.Name) == 0 {
-			x.appendError(fmt.Sprintf("字段名为空：[%s#%d@%s]", f.Name, f.Index+1, f.Desc))
+			x.appendError(fmt.Sprintf("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+		}
+
+		if len(f.Fields) != f.FieldNum {
+			x.appendError(fmt.Sprintf("字段元素个数不匹配：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+		}
+		if !f.IsVaildType() {
+			x.appendError(fmt.Sprintf("字段类型错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
 		}
 	}
 
@@ -95,17 +135,17 @@ func (x *Xlsx) checkFields(f *FieldInfo) {
 			if f.IsArray {
 				if f.Type == "dict" {
 					if field.Type != f.Type {
-						x.appendError(fmt.Sprintf("结构体数组元素类型错误：[%s#%d@%s] ", field.Name, field.Index+1, field.Desc))
+						x.appendError(fmt.Sprintf("结构体数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc))
 					}
 				} else {
 					if field.RawType != f.Type {
-						x.appendError(fmt.Sprintf("数组元素类型错误：[%s#%d@%s] ", field.Name, field.Index+1, field.Desc))
+						x.appendError(fmt.Sprintf("数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc))
 					}
 				}
 			} else {
 				index, ok := tmpMap[field.Name]
 				if ok {
-					x.appendError(fmt.Sprintf("字段名[%s@%s]冲突：#%d<-->#%d ", field.Name, field.Desc, index+1, field.Index+1))
+					x.appendError(fmt.Sprintf("字段名[%s@%s]冲突：(列%d)<->(列%d)", field.Name, field.Desc, index+1, field.Index+1))
 				} else {
 					tmpMap[field.Name] = field.Index
 				}
@@ -173,6 +213,7 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
 		// sub array
 		arrayEnd := strings.LastIndex(def, "]")
 		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
+		field.FieldNum = fieldNum
 		for i := 0; i < fieldNum; i++ {
 			index = x.parseField(field, index+1)
 		}
@@ -185,6 +226,7 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
 			dictEnd := strings.Index(def, ">")
 			field.Type = def[:dictBegin]
 			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
+			field.FieldNum = fieldNum
 			for i := 0; i < fieldNum; i++ {
 				index = x.parseField(field, index+1)
 			}

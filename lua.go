@@ -24,11 +24,11 @@ func (l *LuaFormater) formatRows() {
 	// data
 	l.appendData("\nreturn {\n")
 	for line := 4; line < len(l.Rows); line++ {
-		row := l.Rows[line]
-		if strings.HasPrefix(row[0], "//") || row[0] == "" {
+		key := l.Rows[line][0]
+		if strings.HasPrefix(key, "//") || key == "" {
 			continue
 		}
-		l.exportRow(l.RootField, row, -1)
+		l.exportRow(l.RootField, line, -1)
 	}
 	l.trimData("}\n")
 	l.appendData("}\n")
@@ -39,7 +39,7 @@ func (l *LuaFormater) formatRows() {
 func (l *LuaFormater) formatComments(f *FieldInfo) {
 	var idx int
 	for _, field := range f.Fields {
-		if field.Mode == l.mode || field.Mode == "b" {
+		if field.isHitMode(l.mode) {
 			l.formatComment(idx, field)
 			idx++
 		}
@@ -62,34 +62,43 @@ func (l *LuaFormater) formatComment(idx int, f *FieldInfo) {
 }
 
 /// datas
-func (l *LuaFormater) formatChildRow(f *FieldInfo, row []string) {
+func (l *LuaFormater) formatChildRow(f *FieldInfo, line int) {
 	var idx int
 	for _, field := range f.Fields {
-		if field.Mode == l.mode || field.Mode == "b" {
-			l.exportRow(field, row, idx)
+		if field.isHitMode(l.mode) {
+			l.exportRow(field, line, idx)
 			idx++
 		}
 	}
 	l.trimData("\n")
 }
 
-func (l *LuaFormater) exportRow(f *FieldInfo, row []string, index int) {
+func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 	deepth := f.Deepth + 1
 	indent := getIndent(deepth)
 
+	row := l.Rows[line]
 	if f.Index == -1 {
 		// root, eg.: [1001] = {
 		l.appendData(indent)
 		l.appendData("[")
 		l.appendData(row[0])
 		l.appendData("] = {\n")
-		l.formatChildRow(f, row)
+		l.formatChildRow(f, line)
 		l.appendData(indent)
 		l.appendData("},\n")
 	} else {
+		if f.Index >= len(row) {
+			return
+		}
+
+		val := formatValue(f, row[f.Index])
+		if len(f.Fields) == 0 && len(val) == 0 {
+			return
+		}
+
 		if f.Type == "json" {
 			// json 格式化
-			val := formatValue(f, row[f.Index])
 			l.formatJson(f, index+1, val)
 		} else {
 			l.appendData(indent)
@@ -103,12 +112,11 @@ func (l *LuaFormater) exportRow(f *FieldInfo, row []string, index int) {
 			}
 			if len(f.Fields) > 0 {
 				l.appendData("{\n")
-				l.formatChildRow(f, row)
+				l.formatChildRow(f, line)
 				l.appendData(indent)
 				l.appendData("}")
 				l.appendData(",\n")
 			} else {
-				val := formatValue(f, row[f.Index])
 				l.appendData(val)
 				l.appendData(",\n")
 			}
