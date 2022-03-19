@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2"
-	"github.com/xuri/excelize/v2"
 )
 
 // types
@@ -149,39 +148,30 @@ func walkFunc(path string, f os.FileInfo, err error) error {
 
 func parseExcel(i interface{}) {
 	xlsx := i.(*Xlsx)
+
 	startTime := time.Now()
-	f, err := excelize.OpenFile(xlsx.PathName)
-	if err != nil {
-		xlsx.appendError("xlsx文件打开失败")
-		return
-	}
-	defer f.Close()
+	err := xlsx.openExcel()
+	if err == nil {
+		rows := xlsx.Rows
+		xlsx.Descs = rows[0]
+		xlsx.Names = rows[1]
+		xlsx.Types = rows[2]
+		xlsx.Modes = rows[3]
 
-	rows, err := f.GetRows("data")
-	if err != nil {
-		xlsx.appendError("data sheet 不存在")
-		return
-	}
+		xlsx.parseHeader()
+		if len(xlsx.Errors) == 0 {
+			xlsx.Datas = make([]string, 0)
 
-	xlsx.Rows = rows
-	xlsx.Descs = rows[0]
-	xlsx.Names = rows[1]
-	xlsx.Types = rows[2]
-	xlsx.Modes = rows[3]
-
-	xlsx.parseHeader()
-	if len(xlsx.Errors) == 0 {
-		xlsx.Datas = make([]string, 0)
-
-		var formater iFormater
-		keyField := xlsx.getKeyField()
-		if FlagClient.IsVaild() && keyField.isHitMode("c") {
-			formater = NewFormater(xlsx, FlagClient.OutLang, "c")
-			formater.formatRows()
-		}
-		if FlagServer.IsVaild() && keyField.isHitMode("s") {
-			formater = NewFormater(xlsx, FlagServer.OutLang, "s")
-			formater.formatRows()
+			var formater iFormater
+			keyField := xlsx.getKeyField()
+			if FlagClient.IsVaild() && keyField.isHitMode("c") {
+				formater = NewFormater(xlsx, FlagClient.OutLang, "c")
+				formater.formatRows()
+			}
+			if FlagServer.IsVaild() && keyField.isHitMode("s") {
+				formater = NewFormater(xlsx, FlagServer.OutLang, "s")
+				formater.formatRows()
+			}
 		}
 	}
 	xlsx.TimeCost = getDurationMs(startTime)
@@ -192,18 +182,12 @@ func parseExcel(i interface{}) {
 func processMsg() {
 	count := 0
 	total := len(XlsxList)
-	for {
-		select {
-		case <-LoadingChan:
-			count++
-			percent := float32(count) / float32(total)
-			fmt.Printf("\rProgress:[%-50s][%d%%]", strings.Repeat("█", int(percent*50)), int(percent*100))
-			if count == total {
-				fmt.Println()
-				printResult()
-			}
-		}
+	for range LoadingChan {
+		count++
+		percent := float32(count) / float32(total)
+		fmt.Printf("\rProgress:[%-50s][%d%%]", strings.Repeat("█", int(percent*50)), int(percent*100))
 	}
+	fmt.Println()
 }
 
 func printResult() {
@@ -302,10 +286,15 @@ func main() {
 			_ = p.Invoke(xlsx)
 		}
 		wg.Wait()
+
+		//注意 channel range 需要close channel https://segmentfault.com/a/1190000040399883?utm_source=sf-similar-article
+		close(LoadingChan)
+		saveConvTime()
+
+		time.Sleep(time.Millisecond * 100)
+		printResult()
 	} else {
 		printResult()
 	}
-
-	saveConvTime()
 	//fmt.Printf("running goroutines: %d\n", p.Running())
 }

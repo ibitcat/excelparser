@@ -1,5 +1,3 @@
-// types
-
 package main
 
 import (
@@ -7,21 +5,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-)
 
-type FieldInfo struct {
-	Index    int          // 对应的excel列序号
-	Desc     string       // 字段描述
-	Name     string       // 字段名
-	Type     string       // 字段数据类型
-	RawType  string       // 原始字段数据类型
-	Mode     string       // 生成方式(s=server,c=client,b=both)
-	Deepth   int          // 字段深度
-	IsArray  bool         // 是否是数组
-	Parent   *FieldInfo   // 父字段
-	Fields   []*FieldInfo // 成员
-	FieldNum int          // 成员数
-}
+	"github.com/xuri/excelize/v2"
+)
 
 type Xlsx struct {
 	Name      string // 文件名（带文件扩展名）
@@ -38,36 +24,24 @@ type Xlsx struct {
 	TimeCost  int      // 耗时
 }
 
-/// FieldInfo
-func (f *FieldInfo) isHitMode(tMode string) bool {
-	if f.Mode == tMode || f.Mode == "b" {
-		return true
+/// methods
+func (x *Xlsx) openExcel() error {
+	f, err := excelize.OpenFile(x.PathName)
+	if err != nil {
+		x.appendError("xlsx文件打开失败")
+		return err
 	}
-	return false
+	defer f.Close()
+
+	rows, err := f.GetRows("data")
+	if err != nil {
+		x.appendError("data sheet 不存在")
+		return err
+	}
+	x.Rows = rows
+	return nil
 }
 
-func (f *FieldInfo) IsVaildType() bool {
-	def := f.Type
-	if len(f.Fields) > 0 {
-		// map or array
-		if f.IsArray {
-			arrayBegin := strings.Index(f.RawType, "[")
-			def = f.RawType[:arrayBegin]
-		} else {
-			if f.Type == "dict" {
-				return true
-			}
-		}
-	}
-
-	switch def {
-	case "string", "int", "float", "json", "dict":
-		return true
-	}
-	return false
-}
-
-/// Xlsx
 func (x *Xlsx) appendError(errMsg string) {
 	x.Errors = append(x.Errors, errMsg)
 }
@@ -120,12 +94,14 @@ func (x *Xlsx) checkFields(f *FieldInfo) {
 		if !f.Parent.IsArray && len(f.Name) == 0 {
 			x.appendError(fmt.Sprintf("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
 		}
-
 		if len(f.Fields) != f.FieldNum {
 			x.appendError(fmt.Sprintf("字段元素个数不匹配：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
 		}
 		if !f.IsVaildType() {
 			x.appendError(fmt.Sprintf("字段类型错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+		}
+		if !f.IsVaildMode() {
+			x.appendError(fmt.Sprintf("字段标签错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
 		}
 	}
 
@@ -245,8 +221,13 @@ func (x *Xlsx) collectResult() []string {
 	} else if errNum == 1 {
 		results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, x.Errors[0]))
 	} else {
-		mid := len(x.Errors) / 2
-		for i, err := range x.Errors {
+		if errNum > 11 {
+			// 最多11条错误
+			errNum = 11
+		}
+		mid := errNum / 2
+		for i := 0; i < errNum; i++ {
+			err := x.Errors[i]
 			if mid == (i + 1) {
 				results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, err))
 			} else {
