@@ -235,7 +235,7 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
 	return index
 }
 
-func (x *Xlsx) printResult() []string {
+func (x *Xlsx) collectResult() []string {
 	results := make([]string, 0)
 	results = append(results, Splitline)
 

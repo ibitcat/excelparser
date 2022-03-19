@@ -56,6 +56,7 @@ var (
 	LastModifyTime map[string]uint64 //文件的最后修改时间
 	XlsxList       []*Xlsx
 	Splitline      string
+	LoadingChan    chan struct{}
 )
 
 func init() {
@@ -184,7 +185,43 @@ func parseExcel(i interface{}) {
 		}
 	}
 	xlsx.TimeCost = getDurationMs(startTime)
+	LoadingChan <- struct{}{}
 	//ExportLua(xlsx)
+}
+
+func processMsg() {
+	count := 0
+	total := len(XlsxList)
+	for {
+		select {
+		case <-LoadingChan:
+			count++
+			percent := float32(count) / float32(total)
+			fmt.Printf("\rProgress:[%-50s][%d%%]", strings.Repeat("█", int(percent*50)), int(percent*100))
+			if count == total {
+				fmt.Println()
+				printResult()
+			}
+		}
+	}
+}
+
+func printResult() {
+	results := make([]string, 0)
+	results = append(results, Splitline)
+	results = append(results, fmt.Sprintf("%-20s| %s", "FileName", "Result"))
+
+	if len(XlsxList) > 0 {
+		for _, xlsx := range XlsxList {
+			result := xlsx.collectResult()
+			results = append(results, result...)
+		}
+	} else {
+		results = append(results, Splitline)
+		results = append(results, fmt.Sprintf("%-20s| %s", "No files", "无需生成"))
+	}
+	results = append(results, Splitline)
+	fmt.Println(strings.Join(results, "\n"))
 }
 
 func saveConvTime() {
@@ -247,11 +284,11 @@ func main() {
 		panic(err)
 	}
 
-	// result
-	results := make([]string, 0)
-	results = append(results, Splitline)
-	results = append(results, fmt.Sprintf("%-20s| %s", "FileName", "Result"))
-	if len(XlsxList) > 0 {
+	xlsxCount := len(XlsxList)
+	if xlsxCount > 0 {
+		LoadingChan = make(chan struct{}, xlsxCount)
+		go processMsg()
+
 		// parse
 		var wg sync.WaitGroup
 		p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
@@ -265,18 +302,9 @@ func main() {
 			_ = p.Invoke(xlsx)
 		}
 		wg.Wait()
-
-		// export results
-		for _, xlsx := range XlsxList {
-			result := xlsx.printResult()
-			results = append(results, result...)
-		}
 	} else {
-		results = append(results, Splitline)
-		results = append(results, fmt.Sprintf("%-20s| %s", "No files", "无需生成"))
+		printResult()
 	}
-	results = append(results, Splitline)
-	fmt.Println(strings.Join(results, "\n"))
 
 	saveConvTime()
 	//fmt.Printf("running goroutines: %d\n", p.Running())
