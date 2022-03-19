@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -196,6 +197,7 @@ func printResult() {
 	results = append(results, fmt.Sprintf("%-20s| %s", "FileName", "Result"))
 
 	if len(XlsxList) > 0 {
+		sort.Slice(XlsxList, func(i, j int) bool { return len(XlsxList[i].Errors) > len(XlsxList[j].Errors) })
 		for _, xlsx := range XlsxList {
 			result := xlsx.collectResult()
 			results = append(results, result...)
