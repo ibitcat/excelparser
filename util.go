@@ -17,7 +17,6 @@ func init() {
 }
 
 // json decode
-// https://github.com/ChimeraCoder/gojson/blob/master/json-to-struct.go
 func isAsciiStr(str string) bool {
 	runes := []rune(str)
 	return len(runes) == len(str)
@@ -60,4 +59,19 @@ func formatValue(f *FieldInfo, val string) string {
 
 func getDurationMs(t time.Time) int {
 	return int(time.Since(t).Nanoseconds() / 1e6)
+}
+
+func rotateRows(rows [][]string) [][]string {
+	ret := make([][]string, 0)
+	for i := 0; i < len(rows[0]); i++ {
+		row := make([]string, 0)
+		row = append(row, rows[0][i])
+		ret = append(ret, row)
+	}
+	for i := 1; i < len(rows); i++ {
+		for j := 0; j < len(rows[i]); j++ {
+			ret[j] = append(ret[j], rows[i][j])
+		}
+	}
+	return ret
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ type Xlsx struct {
 	Name      string // 文件名（带文件扩展名）
 	PathName  string // 文件完整路径
 	FileName  string // 文件名
+	Vertical  bool   // 纵向表
 	Descs     []string
 	Names     []string
 	Types     []string
@@ -33,12 +35,33 @@ func (x *Xlsx) openExcel() error {
 	}
 	defer f.Close()
 
-	rows, err := f.GetRows("data")
+	var vertical bool
+	sheetIdx := f.GetSheetIndex("data")
+	if sheetIdx == -1 {
+		vertical = true
+		sheetIdx = f.GetSheetIndex("vdata")
+	}
+	if sheetIdx == -1 {
+		x.appendError("data/vdata sheet 不存在")
+		return errors.New("data/vdata not exist")
+	}
+
+	sheetName := f.GetSheetName(sheetIdx)
+	rows, err := f.GetRows(sheetName)
 	if err != nil {
-		x.appendError("data sheet 不存在")
+		x.appendError("data/vdata sheet 打开错误")
 		return err
 	}
-	x.Rows = rows
+	x.Vertical = vertical
+	if vertical {
+		if len(rows[0]) < 5 {
+			x.appendError("纵向表必须要5列")
+			return errors.New("vdata error")
+		}
+		x.Rows = rotateRows(rows)
+	} else {
+		x.Rows = rows
+	}
 	return nil
 }
 
@@ -66,11 +89,13 @@ func (x *Xlsx) checkKeyField() {
 	keyField := x.RootField.Fields[0]
 	if keyField.Index != 0 {
 		x.appendError("Key 字段不能注释")
-	} else if keyField.Name != "id" {
+	} else if keyField.Name != "id" && !x.Vertical {
 		x.appendError("Key 字段必须以 id 命名")
 	}
-	if !(isNumberType(keyField.Type) || keyField.Type == "string") {
-		x.appendError("Key 字段数据类型必须为定点整数或字符串")
+	if !x.Vertical {
+		if !(isNumberType(keyField.Type) || keyField.Type == "string") {
+			x.appendError("Key 字段数据类型必须为定点整数或字符串")
+		}
 	}
 
 	idMap := make(map[string]int)

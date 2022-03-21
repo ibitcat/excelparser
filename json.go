@@ -17,16 +17,21 @@ func (j *JsonFormater) formatRows() {
 	j.clearData()
 
 	// data
-	j.appendData("[\n")
-	for line := 4; line < len(j.Rows); line++ {
-		key := j.Rows[line][0]
-		if strings.HasPrefix(key, "//") || key == "" {
-			continue
+	if j.Vertical {
+		j.formatRow(j.RootField, 4, -1)
+		j.trimData("}\n")
+	} else {
+		j.appendData("[\n")
+		for line := 4; line < len(j.Rows); line++ {
+			key := j.Rows[line][0]
+			if strings.HasPrefix(key, "//") || key == "" {
+				continue
+			}
+			j.formatRow(j.RootField, line, -1)
 		}
-		j.formatRow(j.RootField, line, -1)
+		j.trimData("}\n")
+		j.appendData("]\n")
 	}
-	j.trimData("}\n")
-	j.appendData("]\n")
 	j.exportToFile()
 }
 
@@ -48,11 +53,15 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 
 	if f.Index == -1 {
 		// root, eg.: [1001] = {
-		j.appendData(indent)
-		j.appendData("{\n")
-		j.formatChildRow(f, line)
-		j.appendData(indent)
-		j.appendData("},\n")
+		if j.Vertical {
+			j.appendData(indent)
+			j.appendData("{\n")
+			j.formatChildRow(f, line)
+			j.appendData(indent)
+			j.appendData("},\n")
+		} else {
+			j.formatChildRow(f, line)
+		}
 	} else {
 		row := j.Rows[line]
 		if f.Index >= len(row) {

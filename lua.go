@@ -23,14 +23,18 @@ func (l *LuaFormater) formatRows() {
 
 	// data
 	l.appendData("\nreturn {\n")
-	for line := 4; line < len(l.Rows); line++ {
-		key := l.Rows[line][0]
-		if strings.HasPrefix(key, "//") || key == "" {
-			continue
+	if l.Vertical {
+		l.exportRow(l.RootField, 4, -1)
+	} else {
+		for line := 4; line < len(l.Rows); line++ {
+			key := l.Rows[line][0]
+			if strings.HasPrefix(key, "//") || key == "" {
+				continue
+			}
+			l.exportRow(l.RootField, line, -1)
 		}
-		l.exportRow(l.RootField, line, -1)
+		l.trimData("}\n")
 	}
-	l.trimData("}\n")
 	l.appendData("}\n")
 	l.exportToFile()
 }
@@ -79,14 +83,18 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 
 	row := l.Rows[line]
 	if f.Index == -1 {
-		// root, eg.: [1001] = {
-		l.appendData(indent)
-		l.appendData("[")
-		l.appendData(row[0])
-		l.appendData("] = {\n")
-		l.formatChildRow(f, line)
-		l.appendData(indent)
-		l.appendData("},\n")
+		if l.Vertical {
+			l.formatChildRow(f, line)
+		} else {
+			// root, eg.: [1001] = {
+			l.appendData(indent)
+			l.appendData("[")
+			l.appendData(row[0])
+			l.appendData("] = {\n")
+			l.formatChildRow(f, line)
+			l.appendData(indent)
+			l.appendData("},\n")
+		}
 	} else {
 		if f.Index >= len(row) {
 			return
@@ -179,6 +187,7 @@ func (l *LuaFormater) formatJsonValue(key interface{}, obj interface{}, deepth i
 	}
 }
 
+// https://github.com/ChimeraCoder/gojson/blob/master/json-to-struct.go
 func (l *LuaFormater) formatJson(f *FieldInfo, index int, jsonStr string) error {
 	var result interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
