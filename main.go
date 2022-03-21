@@ -56,11 +56,17 @@ var (
 	LastModifyTime map[string]uint64 //文件的最后修改时间
 	XlsxList       []*Xlsx
 	Splitline      string
+	CostFormat     string
+	InfoFormat     string
 	LoadingChan    chan struct{}
 )
 
 func init() {
-	Splitline = fmt.Sprintf("%s+%s", strings.Repeat("-", 20), strings.Repeat("-", 50))
+	CostFormat = "%-30s| %-5dms"
+	InfoFormat = "%-30s| %s"
+	Splitline = fmt.Sprintf("%s+%s", strings.Repeat("-", 30), strings.Repeat("-", 70))
+
+	// flag
 	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
 	flag.BoolVar(&FlagIndent, "indent", false, "Json indent flag.")
 	flag.BoolVar(&FlagForce, "force", false, "Force export all flag.")
@@ -194,7 +200,7 @@ func processMsg() {
 func printResult() {
 	results := make([]string, 0)
 	results = append(results, Splitline)
-	results = append(results, fmt.Sprintf("%-20s| %s", "FileName", "Result"))
+	results = append(results, fmt.Sprintf(InfoFormat, "FileName", "Result"))
 
 	if len(XlsxList) > 0 {
 		sort.Slice(XlsxList, func(i, j int) bool { return len(XlsxList[i].Errors) > len(XlsxList[j].Errors) })
@@ -204,7 +210,7 @@ func printResult() {
 		}
 	} else {
 		results = append(results, Splitline)
-		results = append(results, fmt.Sprintf("%-20s| %s", "No files", "无需生成"))
+		results = append(results, fmt.Sprintf(InfoFormat, "No files", "无需生成"))
 	}
 	results = append(results, Splitline)
 	fmt.Println(strings.Join(results, "\n"))

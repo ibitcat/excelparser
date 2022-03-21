@@ -18,8 +18,9 @@ func (j *JsonFormater) formatRows() {
 
 	// data
 	if j.Vertical {
+		j.appendData("{\n")
 		j.formatRow(j.RootField, 4, -1)
-		j.trimData("}\n")
+		j.appendData("}\n")
 	} else {
 		j.appendData("[\n")
 		for line := 4; line < len(j.Rows); line++ {
@@ -54,13 +55,13 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 	if f.Index == -1 {
 		// root, eg.: [1001] = {
 		if j.Vertical {
+			j.formatChildRow(f, line)
+		} else {
 			j.appendData(indent)
 			j.appendData("{\n")
 			j.formatChildRow(f, line)
 			j.appendData(indent)
 			j.appendData("},\n")
-		} else {
-			j.formatChildRow(f, line)
 		}
 	} else {
 		row := j.Rows[line]

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -242,21 +243,21 @@ func (x *Xlsx) collectResult() []string {
 
 	errNum := len(x.Errors)
 	if errNum == 0 {
-		results = append(results, fmt.Sprintf("%-20s| %-5dms", x.FileName, x.TimeCost))
+		results = append(results, fmt.Sprintf(CostFormat, x.FileName, x.TimeCost))
 	} else if errNum == 1 {
-		results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, x.Errors[0]))
+		results = append(results, fmt.Sprintf(InfoFormat, x.FileName, x.Errors[0]))
 	} else {
 		if errNum > 11 {
 			// 最多11条错误
 			errNum = 11
 		}
-		mid := errNum / 2
+		mid := int(math.Ceil(float64(errNum)/2)) - 1
 		for i := 0; i < errNum; i++ {
 			err := x.Errors[i]
-			if mid == (i + 1) {
-				results = append(results, fmt.Sprintf("%-20s| %s", x.FileName, err))
+			if mid == i {
+				results = append(results, fmt.Sprintf(InfoFormat, x.FileName, err))
 			} else {
-				results = append(results, fmt.Sprintf("%-20s| %s", "", err))
+				results = append(results, fmt.Sprintf(InfoFormat, "", err))
 			}
 		}
 	}
