@@ -67,7 +67,13 @@ func (x *Xlsx) openExcel() error {
 }
 
 func (x *Xlsx) appendError(errMsg string) {
-	x.Errors = append(x.Errors, errMsg)
+	errCnt := len(x.Errors)
+	if errCnt < MaxErrorCnt {
+		if errCnt == MaxErrorCnt-1 {
+			errMsg = "..."
+		}
+		x.Errors = append(x.Errors, errMsg)
+	}
 }
 
 func (x *Xlsx) appendData(str string) {
@@ -247,10 +253,6 @@ func (x *Xlsx) collectResult() []string {
 	} else if errNum == 1 {
 		results = append(results, fmt.Sprintf(InfoFormat, x.FileName, x.Errors[0]))
 	} else {
-		if errNum > 11 {
-			// 最多11条错误
-			errNum = 11
-		}
 		mid := int(math.Ceil(float64(errNum)/2)) - 1
 		for i := 0; i < errNum; i++ {
 			err := x.Errors[i]

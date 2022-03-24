@@ -59,6 +59,7 @@ var (
 	CostFormat     string
 	InfoFormat     string
 	LoadingChan    chan struct{}
+	MaxErrorCnt    int = 11
 )
 
 func init() {
