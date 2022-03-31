@@ -43,12 +43,13 @@ func (f *FlagOutput) IsVaild() bool {
 
 // flags
 var (
-	Flaghelp   bool
-	FlagIndent bool       // json格式化
-	FlagForce  bool       // 是否强制重新生成
-	Flagpath   string     // excel路径
-	FlagServer FlagOutput // server 输出路径
-	FlagClient FlagOutput
+	Flaghelp    bool
+	FlagIndent  bool       // json格式化
+	FlagForce   bool       // 是否强制重新生成
+	FlagDefault bool       // 字段配空时使用默认值填充
+	Flagpath    string     // excel路径
+	FlagServer  FlagOutput // server 输出路径
+	FlagClient  FlagOutput
 )
 
 // global vars
@@ -70,10 +71,11 @@ func init() {
 	// flag
 	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
 	flag.BoolVar(&FlagIndent, "indent", false, "Json indent flag.")
-	flag.BoolVar(&FlagForce, "force", false, "Force export all flag.")
+	flag.BoolVar(&FlagForce, "force", false, "Force export of all excel files.")
+	flag.BoolVar(&FlagDefault, "default", true, "Fields are filled with default values when they are empty.")
 	flag.StringVar(&Flagpath, "path", "", "Excel input path.")
-	flag.Var(&FlagClient, "client", "Client export info.")
-	flag.Var(&FlagServer, "server", "Server export info.")
+	flag.Var(&FlagClient, "client", "The client export information. Format like [file type]:[output path], eg. json:./outjson.")
+	flag.Var(&FlagServer, "server", "The slient export information. Like client flag.")
 
 	flag.Usage = usage
 }

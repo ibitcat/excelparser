@@ -39,7 +39,7 @@ func (f *FieldInfo) IsVaildType() bool {
 	}
 
 	switch def {
-	case "string", "int", "float", "json", "dict":
+	case "int", "float", "bool", "string", "json", "dict":
 		return true
 	}
 	return false
@@ -52,4 +52,22 @@ func (f *FieldInfo) IsVaildMode() bool {
 	default:
 		return false
 	}
+}
+
+func (f *FieldInfo) getValue(row []string) (bool, string) {
+	var val string
+	if f.Index >= len(row) {
+		if FlagDefault {
+			val = defaultValue(f.Type)
+		} else {
+			return false, val
+		}
+	} else {
+		val = formatValue(f, row[f.Index])
+	}
+
+	if len(f.Fields) == 0 && len(val) == 0 {
+		return false, val
+	}
+	return true, val
 }

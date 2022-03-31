@@ -65,12 +65,8 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 		}
 	} else {
 		row := j.Rows[line]
-		if f.Index >= len(row) {
-			return
-		}
-
-		val := formatValue(f, row[f.Index])
-		if len(f.Fields) == 0 && len(val) == 0 {
+		ok, val := f.getValue(row)
+		if !ok {
 			return
 		}
 
@@ -93,13 +89,18 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 			}
 			j.appendData(",\n")
 		} else {
-			if f.Type == "json" && FlagIndent {
-				var out bytes.Buffer
-				err := json.Indent(&out, []byte(val), indent, "  ")
-				if err != nil {
+			if f.Type == "json" {
+				if !json.Valid([]byte(val)) {
 					j.appendError(fmt.Sprintf("[%s] json 格式错误：(行%d,列%d)[%s@%s]", j.mode, line+1, f.Index+1, f.Name, f.Desc))
+					j.appendData("null")
 				} else {
-					j.appendData(out.String())
+					if FlagIndent {
+						var out bytes.Buffer
+						json.Indent(&out, []byte(val), indent, "  ")
+						j.appendData(out.String())
+					} else {
+						j.appendData(val)
+					}
 				}
 			} else {
 				j.appendData(val)

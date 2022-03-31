@@ -49,11 +49,31 @@ func formatString(val string) string {
 	return fmt.Sprintf("\"%s\"", val)
 }
 
+func defaultValue(ftype string) string {
+	switch ftype {
+	case "int":
+		return "0"
+	case "float":
+		return "0.0"
+	case "bool":
+		return "false"
+	case "string":
+		return "\"\""
+	default:
+		return ""
+	}
+}
+
 func formatValue(f *FieldInfo, val string) string {
-	if f.Type == "string" {
-		return formatString(val)
+	val = strings.TrimSpace(val)
+	if FlagDefault && len(val) == 0 {
+		return defaultValue(f.Type)
 	} else {
-		return val
+		if f.Type == "string" {
+			return formatString(val)
+		} else {
+			return val
+		}
 	}
 }
 

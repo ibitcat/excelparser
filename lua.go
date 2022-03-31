@@ -96,12 +96,9 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 			l.appendData("},\n")
 		}
 	} else {
-		if f.Index >= len(row) {
-			return
-		}
-
-		val := formatValue(f, row[f.Index])
-		if len(f.Fields) == 0 && len(val) == 0 {
+		var val string
+		ok, val := f.getValue(row)
+		if !ok {
 			return
 		}
 
