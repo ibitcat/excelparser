@@ -104,7 +104,9 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 
 		if f.Type == "json" {
 			// json 格式化
-			l.formatJson(f, index+1, val)
+			if err := l.formatJson(f, index+1, val); err != nil {
+				l.sprintfError("[%s] json 格式错误：(行%d,列%d)[%s@%s]", l.mode, line+1, f.Index+1, f.Name, f.Desc)
+			}
 		} else {
 			l.appendData(indent)
 			if f.Parent.IsArray {

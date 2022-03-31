@@ -76,6 +76,10 @@ func (x *Xlsx) appendError(errMsg string) {
 	}
 }
 
+func (x *Xlsx) sprintfError(format string, a ...interface{}) {
+	x.appendError(fmt.Sprintf(format, a...))
+}
+
 func (x *Xlsx) appendData(str string) {
 	x.Datas = append(x.Datas, str)
 }
@@ -116,7 +120,7 @@ func (x *Xlsx) checkKeyField() {
 	}
 	for key, num := range idMap {
 		if num > 1 {
-			x.appendError(fmt.Sprintf("Id [%s] 重复 %d 次", key, num-1))
+			x.sprintfError("Id [%s] 重复 %d 次", key, num-1)
 		}
 	}
 }
@@ -124,16 +128,16 @@ func (x *Xlsx) checkKeyField() {
 func (x *Xlsx) checkFields(f *FieldInfo) {
 	if f.Index >= 0 {
 		if !f.Parent.IsArray && len(f.Name) == 0 {
-			x.appendError(fmt.Sprintf("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+			x.sprintfError("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
 		if len(f.Fields) != f.FieldNum {
-			x.appendError(fmt.Sprintf("字段元素个数不匹配：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+			x.sprintfError("字段元素个数不匹配：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
 		if !f.IsVaildType() {
-			x.appendError(fmt.Sprintf("字段类型错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+			x.sprintfError("字段类型错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
 		if !f.IsVaildMode() {
-			x.appendError(fmt.Sprintf("字段标签错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc))
+			x.sprintfError("字段标签错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
 	}
 
@@ -143,17 +147,17 @@ func (x *Xlsx) checkFields(f *FieldInfo) {
 			if f.IsArray {
 				if f.Type == "dict" {
 					if field.Type != f.Type {
-						x.appendError(fmt.Sprintf("结构体数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc))
+						x.sprintfError("结构体数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc)
 					}
 				} else {
 					if field.RawType != f.Type {
-						x.appendError(fmt.Sprintf("数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc))
+						x.sprintfError("数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc)
 					}
 				}
 			} else {
 				index, ok := tmpMap[field.Name]
 				if ok {
-					x.appendError(fmt.Sprintf("字段名[%s@%s]冲突：(列%d)<->(列%d)", field.Name, field.Desc, index+1, field.Index+1))
+					x.sprintfError("字段名[%s@%s]冲突：(列%d)<->(列%d)", field.Name, field.Desc, index+1, field.Index+1)
 				} else {
 					tmpMap[field.Name] = field.Index
 				}

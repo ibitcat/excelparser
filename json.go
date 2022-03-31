@@ -91,7 +91,7 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 		} else {
 			if f.Type == "json" {
 				if !json.Valid([]byte(val)) {
-					j.appendError(fmt.Sprintf("[%s] json 格式错误：(行%d,列%d)[%s@%s]", j.mode, line+1, f.Index+1, f.Name, f.Desc))
+					j.sprintfError("[%s] json 格式错误：(行%d,列%d)[%s@%s]", j.mode, line+1, f.Index+1, f.Name, f.Desc)
 					j.appendData("null")
 				} else {
 					if FlagIndent {
