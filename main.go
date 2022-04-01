@@ -83,7 +83,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `excelparser version: 2022.0.0-M1
+	fmt.Fprintf(os.Stderr, `excelparser version: 2022.0.1
     Usage: excelparser [OPTIONS]
     eg.: excelparser.exe --path=./xlsx --server=lua:./slua --client=lua:./clua
          excelparser.exe --path=./xlsx --server=json:./sjson --client=json:./cjson --indent
