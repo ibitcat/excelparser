@@ -43,13 +43,14 @@ func (f *FlagOutput) IsVaild() bool {
 
 // flags
 var (
-	Flaghelp    bool
-	FlagIndent  bool       // json格式化
-	FlagForce   bool       // 是否强制重新生成
-	FlagDefault bool       // 字段配空时使用默认值填充
-	Flagpath    string     // excel路径
-	FlagServer  FlagOutput // server 输出路径
-	FlagClient  FlagOutput
+	Flaghelp     bool
+	FlagIndent   bool       // json格式化
+	FlagForce    bool       // 是否强制重新生成
+	FlagDefault  bool       // 字段配空时使用默认值填充
+	FlagCompress bool       // 是否压缩
+	Flagpath     string     // excel路径
+	FlagServer   FlagOutput // server 输出路径
+	FlagClient   FlagOutput
 )
 
 // global vars
@@ -73,6 +74,7 @@ func init() {
 	flag.BoolVar(&FlagIndent, "indent", false, "Json indent flag.")
 	flag.BoolVar(&FlagForce, "force", false, "Force export of all excel files.")
 	flag.BoolVar(&FlagDefault, "default", true, "Fields are filled with default values when they are empty.")
+	flag.BoolVar(&FlagCompress, "compress", false, "Toggle compressed field content.")
 	flag.StringVar(&Flagpath, "path", "", "Excel input path.")
 	flag.Var(&FlagClient, "client", "The client export information. Format like [file type]:[output path], eg. json:./outjson.")
 	flag.Var(&FlagServer, "server", "The slient export information. Like client flag.")
@@ -83,9 +85,9 @@ func init() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `excelparser version: 2022.0.0-M1
     Usage: excelparser [OPTIONS]
-    eg.: excelparser --path=./xlsx --server=lua:./slua --client=lua:./clua
-         excelparser --path=./xlsx --server=json:./sjson --client=json:./cjson --indent
-         excelparser --path=./xlsx --server=lua:./slua --client=json:./cjson --indent
+    eg.: excelparser.exe --path=./xlsx --server=lua:./slua --client=lua:./clua
+         excelparser.exe --path=./xlsx --server=json:./sjson --client=json:./cjson --indent
+         excelparser.exe --path=./xlsx --server=lua:./slua --client=json:./cjson --indent
     Options:
 `)
 	flag.PrintDefaults()

@@ -95,3 +95,10 @@ func rotateRows(rows [][]string) [][]string {
 	}
 	return ret
 }
+
+func ternaryString(b bool, trueStr, falseStr string) string {
+	if b {
+		return trueStr
+	}
+	return falseStr
+}

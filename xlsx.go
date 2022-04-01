@@ -81,11 +81,22 @@ func (x *Xlsx) sprintfError(format string, a ...interface{}) {
 }
 
 func (x *Xlsx) appendData(str string) {
-	x.Datas = append(x.Datas, str)
+	if len(str) > 0 {
+		x.Datas = append(x.Datas, str)
+	}
+}
+
+func (x *Xlsx) judgCompressAppend(str1, str2 string) {
+	str := ternaryString(FlagCompress && !x.Vertical, str1, str2)
+	x.appendData(str)
 }
 
 func (x *Xlsx) trimData(str string) {
 	x.Datas[len(x.Datas)-1] = str
+}
+
+func (x *Xlsx) judgCompressTrim(str1, str2 string) {
+	x.Datas[len(x.Datas)-1] = ternaryString(FlagCompress && !x.Vertical, str1, str2)
 }
 
 func (x *Xlsx) clearData() {

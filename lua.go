@@ -33,7 +33,7 @@ func (l *LuaFormater) formatRows() {
 			}
 			l.exportRow(l.RootField, line, -1)
 		}
-		l.trimData("}\n")
+		l.trimData("\n")
 	}
 	l.appendData("}\n")
 	l.exportToFile()
@@ -74,7 +74,7 @@ func (l *LuaFormater) formatChildRow(f *FieldInfo, line int) {
 			idx++
 		}
 	}
-	l.trimData("\n")
+	l.judgCompressTrim("", "\n")
 }
 
 func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
@@ -90,10 +90,12 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 			l.appendData(indent)
 			l.appendData("[")
 			l.appendData(row[0])
-			l.appendData("] = {\n")
+			l.appendData("] = {")
+			l.judgCompressAppend("", "\n")
 			l.formatChildRow(f, line)
-			l.appendData(indent)
-			l.appendData("},\n")
+			l.judgCompressAppend("", indent)
+			l.appendData("}")
+			l.appendData(",\n")
 		}
 	} else {
 		var val string
@@ -108,7 +110,7 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 				l.sprintfError("[%s] json 格式错误：(行%d,列%d)[%s@%s]", l.mode, line+1, f.Index+1, f.Name, f.Desc)
 			}
 		} else {
-			l.appendData(indent)
+			l.judgCompressAppend("", indent)
 			if f.Parent.IsArray {
 				l.appendData("[")
 				l.appendData(strconv.Itoa(index + 1))
@@ -118,15 +120,15 @@ func (l *LuaFormater) exportRow(f *FieldInfo, line, index int) {
 				l.appendData(" = ")
 			}
 			if len(f.Fields) > 0 {
-				l.appendData("{\n")
+				l.appendData("{")
+				l.judgCompressAppend("", "\n")
 				l.formatChildRow(f, line)
-				l.appendData(indent)
+				l.judgCompressAppend("", indent)
 				l.appendData("}")
-				l.appendData(",\n")
 			} else {
 				l.appendData(val)
-				l.appendData(",\n")
 			}
+			l.judgCompressAppend(",", ",\n")
 		}
 	}
 }
@@ -145,44 +147,47 @@ func (l *LuaFormater) formatJsonKey(key interface{}) string {
 
 func (l *LuaFormater) formatJsonValue(key interface{}, obj interface{}, deepth int) {
 	indent := getIndent(deepth + 1)
-	l.appendData(indent)
+	l.judgCompressAppend("", indent)
 	l.appendData(l.formatJsonKey(key))
 	l.appendData(" = ")
 
 	switch obj := obj.(type) {
 	case map[interface{}]interface{}:
-		l.appendData("{\n")
+		l.appendData("{")
+		l.judgCompressAppend("", "\n")
 		for k, v := range obj {
 			l.formatJsonValue(k, v, deepth+1)
 		}
-		l.trimData("\n")
-		l.appendData(indent)
+		l.judgCompressTrim("", "\n")
+		l.judgCompressAppend("", indent)
 		l.appendData("}")
-		l.appendData(",\n")
+		l.judgCompressAppend(",", ",\n")
 	case map[string]interface{}:
-		l.appendData("{\n")
+		l.appendData("{")
+		l.judgCompressAppend("", "\n")
 		for k, v := range obj {
 			l.formatJsonValue(k, v, deepth+1)
 		}
-		l.trimData("\n")
-		l.appendData(indent)
+		l.judgCompressTrim("", "\n")
+		l.judgCompressAppend("", indent)
 		l.appendData("}")
-		l.appendData(",\n")
+		l.judgCompressAppend(",", ",\n")
 	case []interface{}:
-		l.appendData("{\n")
+		l.appendData("{")
+		l.judgCompressAppend("", "\n")
 		for i, v := range obj {
 			l.formatJsonValue(i+1, v, deepth+1)
 		}
-		l.trimData("\n")
-		l.appendData(indent)
+		l.judgCompressTrim("", "\n")
+		l.judgCompressAppend("", indent)
 		l.appendData("}")
-		l.appendData(",\n")
+		l.judgCompressAppend(",", ",\n")
 	case string:
 		l.appendData(formatString(obj))
-		l.appendData(",\n")
+		l.judgCompressAppend(",", ",\n")
 	default:
 		l.appendData(fmt.Sprintf("%v", obj))
-		l.appendData(",\n")
+		l.judgCompressAppend(",", ",\n")
 	}
 }
 

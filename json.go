@@ -30,7 +30,7 @@ func (j *JsonFormater) formatRows() {
 			}
 			j.formatRow(j.RootField, line, -1)
 		}
-		j.trimData("}\n")
+		j.trimData("\n")
 		j.appendData("]\n")
 	}
 	j.exportToFile()
@@ -45,7 +45,7 @@ func (j *JsonFormater) formatChildRow(f *FieldInfo, line int) {
 			idx++
 		}
 	}
-	j.trimData("\n")
+	j.judgCompressTrim("", "\n")
 }
 
 func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
@@ -58,10 +58,12 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 			j.formatChildRow(f, line)
 		} else {
 			j.appendData(indent)
-			j.appendData("{\n")
+			j.appendData("{")
+			j.judgCompressAppend("", "\n")
 			j.formatChildRow(f, line)
-			j.appendData(indent)
-			j.appendData("},\n")
+			j.judgCompressAppend("", indent)
+			j.appendData("}")
+			j.appendData(",\n")
 		}
 	} else {
 		row := j.Rows[line]
@@ -70,32 +72,35 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 			return
 		}
 
-		j.appendData(indent)
+		j.judgCompressAppend("", indent)
 		if !f.Parent.IsArray {
 			j.appendData("\"" + f.Name + "\":")
 		}
 		if len(f.Fields) > 0 {
 			if f.IsArray {
-				j.appendData("[\n")
+				j.judgCompressAppend("[", "[\n")
 			} else {
-				j.appendData("{\n")
+				j.judgCompressAppend("{", "{\n")
 			}
 			j.formatChildRow(f, line)
-			j.appendData(indent)
+			j.judgCompressAppend("", indent)
 			if f.IsArray {
 				j.appendData("]")
 			} else {
 				j.appendData("}")
 			}
-			j.appendData(",\n")
+			j.judgCompressAppend(",", ",\n")
 		} else {
 			if f.Type == "json" {
 				if !json.Valid([]byte(val)) {
 					j.sprintfError("[%s] json 格式错误：(行%d,列%d)[%s@%s]", j.mode, line+1, f.Index+1, f.Name, f.Desc)
 					j.appendData("null")
 				} else {
-					if FlagIndent {
-						var out bytes.Buffer
+					var out bytes.Buffer
+					if FlagCompress {
+						json.Compact(&out, []byte(val))
+						j.appendData(out.String())
+					} else if FlagIndent {
 						json.Indent(&out, []byte(val), indent, "  ")
 						j.appendData(out.String())
 					} else {
@@ -105,7 +110,7 @@ func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
 			} else {
 				j.appendData(val)
 			}
-			j.appendData(",\n")
+			j.judgCompressAppend(",", ",\n")
 		}
 	}
 }
