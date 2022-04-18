@@ -77,7 +77,7 @@ func init() {
 	flag.BoolVar(&FlagCompress, "compress", false, "Toggle compressed field content.")
 	flag.StringVar(&Flagpath, "path", "", "Excel input path.")
 	flag.Var(&FlagClient, "client", "The client export information. Format like [file type]:[output path], eg. json:./outjson.")
-	flag.Var(&FlagServer, "server", "The slient export information. Like client flag.")
+	flag.Var(&FlagServer, "server", "The server export information. Like client flag.")
 
 	flag.Usage = usage
 }
