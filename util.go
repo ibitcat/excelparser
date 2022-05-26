@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -101,4 +102,27 @@ func ternaryString(b bool, trueStr, falseStr string) string {
 		return trueStr
 	}
 	return falseStr
+}
+
+func checkPathVaild(path string) (error, string) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err, ""
+	}
+	_, err = os.Stat(absPath)
+	notExist := os.IsNotExist(err)
+	if notExist {
+		return err, ""
+	}
+	return nil, absPath
+}
+
+func checkI18n(name string) (string, bool) {
+	if len(name) > 0 && len(FlagI18nPath) > 0 {
+		s := strings.Split(name, "#")
+		if len(s) == 2 {
+			return s[1], true
+		}
+	}
+	return name, false
 }

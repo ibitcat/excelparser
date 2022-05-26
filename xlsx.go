@@ -138,6 +138,7 @@ func (x *Xlsx) checkKeyField() {
 
 func (x *Xlsx) checkFields(f *FieldInfo) {
 	if f.Index >= 0 {
+		// 非key字段检查
 		if !f.Parent.IsArray && len(f.Name) == 0 {
 			x.sprintfError("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
@@ -149,6 +150,9 @@ func (x *Xlsx) checkFields(f *FieldInfo) {
 		}
 		if !f.IsVaildMode() {
 			x.sprintfError("字段标签错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
+		}
+		if !f.IsVaildI18n() {
+			x.sprintfError("字段国际化错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
 		}
 	}
 
@@ -198,18 +202,24 @@ func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
 		return index
 	}
 
-	def := strings.TrimSpace(x.Types[index])
+	var name, desc, def string
+	def = strings.TrimSpace(x.Types[index])
+	if len(x.Descs) > index {
+		desc = x.Descs[index]
+	}
+	if len(x.Names) > index {
+		name = x.Names[index]
+	}
+	name, i18n := checkI18n(name)
+
 	field := new(FieldInfo)
 	field.Index = index
 	field.RawType = def
 	field.Parent = parent
 	field.Deepth = parent.Deepth + 1
-	if len(x.Descs) > index {
-		field.Desc = x.Descs[index]
-	}
-	if len(x.Names) > index {
-		field.Name = x.Names[index]
-	}
+	field.Desc = desc
+	field.Name = name
+	field.I18n = i18n
 
 	// mode
 	var mode string

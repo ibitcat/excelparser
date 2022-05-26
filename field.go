@@ -14,6 +14,7 @@ type FieldInfo struct {
 	Parent   *FieldInfo   // 父字段
 	Fields   []*FieldInfo // 成员
 	FieldNum int          // 成员数
+	I18n     bool         // 是否需要国际化
 }
 
 /// methods
@@ -54,6 +55,17 @@ func (f *FieldInfo) IsVaildMode() bool {
 	}
 }
 
+func (f *FieldInfo) IsVaildI18n() bool {
+	if !f.I18n {
+		return true
+	}
+
+	if (f.Type == "string" || f.Type == "json") && !f.IsArray {
+		return true
+	}
+	return false
+}
+
 func (f *FieldInfo) getValue(row []string) (bool, string) {
 	var val string
 	if f.Index >= len(row) {
@@ -63,7 +75,16 @@ func (f *FieldInfo) getValue(row []string) (bool, string) {
 			return false, val
 		}
 	} else {
-		val = formatValue(f, row[f.Index])
+		rawVal := row[f.Index]
+		if f.I18n && len(rawVal) > 0 {
+			if i18nVal, ok := I18nMap.Load(rawVal); ok {
+				I18nNeedMap.Store(rawVal, i18nVal)
+				rawVal = i18nVal.(string)
+			} else {
+				I18nNeedMap.Store(rawVal, "")
+			}
+		}
+		val = formatValue(f, rawVal)
 	}
 
 	if len(f.Fields) == 0 && len(val) == 0 {
