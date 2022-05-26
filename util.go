@@ -119,10 +119,13 @@ func checkPathVaild(path string) (error, string) {
 
 func checkI18n(name string) (string, bool) {
 	if len(name) > 0 && len(FlagI18nPath) > 0 {
-		s := strings.Split(name, "#")
-		if len(s) == 2 {
-			return s[0], true
+		if name[0] == '#' {
+			return name[1:], true
 		}
+		// s := strings.Split(name, "#")
+		// if len(s) == 2 {
+		// 	return s[0], true
+		// }
 	}
 	return name, false
 }
