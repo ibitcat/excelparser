@@ -23,13 +23,8 @@ func main() {
 	}
 
 	// i18n output path
-	var I18nPath string
 	if len(FlagI18nPath) > 0 {
-		err, I18nPath = checkPathVaild(FlagI18nPath)
-		if err != nil {
-			panic(err)
-		}
-		openI18nXlsx(I18nPath, FlagI18nLang)
+		openI18nXlsx(FlagI18nPath, FlagI18nLang)
 	}
 
 	// output
@@ -77,12 +72,12 @@ func main() {
 
 		time.Sleep(time.Millisecond * 100)
 		printResult()
+
+		if len(FlagI18nPath) > 0 {
+			saveI18nXlsx(FlagI18nPath, FlagI18nLang)
+		}
 	} else {
 		printResult()
-	}
-
-	if len(FlagI18nPath) > 0 {
-		saveI18nXlsx(I18nPath, FlagI18nLang)
 	}
 	//fmt.Printf("running goroutines: %d\n", p.Running())
 }

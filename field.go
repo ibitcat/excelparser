@@ -78,10 +78,12 @@ func (f *FieldInfo) getValue(row []string) (bool, string) {
 		rawVal := row[f.Index]
 		if f.I18n && len(rawVal) > 0 {
 			if i18nVal, ok := I18nMap.Load(rawVal); ok {
-				I18nNeedMap.Store(rawVal, i18nVal)
-				rawVal = i18nVal.(string)
+				i18nStr := i18nVal.(string)
+				if len(i18nStr) > 0 {
+					rawVal = i18nStr
+				}
 			} else {
-				I18nNeedMap.Store(rawVal, "")
+				I18nMap.Store(rawVal, "")
 			}
 		}
 		val = formatValue(f, rawVal)

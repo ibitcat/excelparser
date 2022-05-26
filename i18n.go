@@ -9,7 +9,6 @@ import (
 )
 
 var I18nMap sync.Map
-var I18nNeedMap sync.Map
 
 func openI18nXlsx(path, lang string) error {
 	fileName := path + "/" + lang + ".xlsx"
@@ -32,6 +31,7 @@ func openI18nXlsx(path, lang string) error {
 }
 
 func saveI18nXlsx(path, lang string) {
+	os.MkdirAll(path, os.ModePerm)
 	fileName := path + "/" + lang + ".xlsx"
 
 	f := excelize.NewFile()
@@ -42,7 +42,7 @@ func saveI18nXlsx(path, lang string) {
 
 	// Set value of a cell.
 	idx := 1
-	I18nNeedMap.Range(func(key, value interface{}) bool {
+	I18nMap.Range(func(key, value interface{}) bool {
 		axis := fmt.Sprintf("A%d", idx)
 		f.SetSheetRow("Sheet1", axis, &[]interface{}{key, value})
 		idx++

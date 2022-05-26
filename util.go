@@ -121,7 +121,7 @@ func checkI18n(name string) (string, bool) {
 	if len(name) > 0 && len(FlagI18nPath) > 0 {
 		s := strings.Split(name, "#")
 		if len(s) == 2 {
-			return s[1], true
+			return s[0], true
 		}
 	}
 	return name, false
