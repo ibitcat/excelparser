@@ -34,7 +34,7 @@ golang 实现的 Excel 解析器。
 - i18n，国际化翻译配置路径
 - lang，国际化翻译目标语言(en=英文;jp=日文;kr=韩文等)
 
-**ps：**真正的输出路径格式为: `output/[server|client]/文件格式`，例如：./server/json 表示服务端json格式的输出目录。
+**ps**：真正的输出路径格式为: `output/[server|client]/文件格式`，例如：./server/json 表示服务端json格式的输出目录。
 
 ## 使用
 解析器只识别名为 `data` 或者 `vdata` 的工作表。
