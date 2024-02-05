@@ -84,7 +84,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 		j.appendIndent(depth)
 		j.appendData("}")
 	case TJson:
-		if len(row) >= field.Index {
+		if len(row) > field.Index {
 			s := row[field.Index]
 			var out bytes.Buffer
 			if FlagCompact {

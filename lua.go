@@ -123,7 +123,7 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		}
 	default:
 		s := ""
-		if len(row) >= field.Index {
+		if len(row) > field.Index {
 			s = row[field.Index]
 		}
 		l.appendData(field.formatValue(s))
