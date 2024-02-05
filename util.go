@@ -81,17 +81,17 @@ func ternary[T any](condition bool, ifOutput T, elseOutput T) T {
 	return elseOutput
 }
 
-func checkPathVaild(path string) (error, string) {
+func checkPathVaild(path string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
 	_, err = os.Stat(absPath)
 	notExist := os.IsNotExist(err)
 	if notExist {
-		return err, ""
+		return "", err
 	}
-	return nil, absPath
+	return absPath, nil
 }
 
 // 分割cell坐标
@@ -146,57 +146,57 @@ func parseType(typ string) *Type {
 	t.Kind = TNone
 	t.Cap = -1
 
-	if len(typ) > 0 && typ[:1] == "[" {
-		s := ArrayRe.FindStringSubmatch(typ)
-		if len(s) == 3 {
-			t.Kind = TArray
-			if len(s[1]) > 0 {
-				cap, _ := strconv.Atoi(s[1])
-				t.Cap = cap
-				if cap == 0 {
-					// 数组长度不能为0
-					t.Kind = -1
+	switch typ {
+	case "int":
+		t.Kind = TInt
+	case "uint":
+		t.Kind = TUint
+	case "float":
+		t.Kind = TFloat
+	case "bool":
+		t.Kind = TBool
+	case "string":
+		t.Kind = TString
+	case "any":
+		t.Kind = TAny
+	case "i18n":
+		t.Kind = TString
+		t.I18n = true
+	default:
+		if len(typ) > 0 && typ[:1] == "[" {
+			s := ArrayRe.FindStringSubmatch(typ)
+			if len(s) == 3 {
+				t.Kind = TArray
+				if len(s[1]) > 0 {
+					cap, _ := strconv.Atoi(s[1])
+					t.Cap = cap
+					if cap == 0 {
+						// 数组长度不能为0
+						t.Kind = -1
+					}
 				}
+				t.Vtype = parseType(s[2])
 			}
-			t.Vtype = parseType(s[2])
-		}
-	} else if len(typ) >= 3 && typ[:3] == "map" {
-		s := MapRe.FindStringSubmatch(typ)
-		if len(s) == 3 {
-			t.Kind = TMap
-			t.Ktype = parseType(s[1])
-			t.Vtype = parseType(s[2])
-		}
-	} else if len(typ) >= 6 && typ[:6] == "struct" {
-		t.Kind = TStruct
-		s := RawRe.FindStringSubmatch(typ)
-		if len(s) == 3 {
-			// 结构体类型别名
-			t.Aname = s[2]
-		}
-	} else if len(typ) >= 4 && typ[:4] == "json" {
-		t.Kind = TJson
-		s := RawRe.FindStringSubmatch(typ)
-		if len(s) == 3 {
-			t.Vtype = parseType(s[2])
-		}
-	} else {
-		switch typ {
-		case "int":
-			t.Kind = TInt
-		case "uint":
-			t.Kind = TUint
-		case "float":
-			t.Kind = TFloat
-		case "bool":
-			t.Kind = TBool
-		case "string":
-			t.Kind = TString
-		case "any":
-			t.Kind = TAny
-		case "i18n":
-			t.Kind = TString
-			t.I18n = true
+		} else if len(typ) >= 3 && typ[:3] == "map" {
+			s := MapRe.FindStringSubmatch(typ)
+			if len(s) == 3 {
+				t.Kind = TMap
+				t.Ktype = parseType(s[1])
+				t.Vtype = parseType(s[2])
+			}
+		} else if len(typ) >= 6 && typ[:6] == "struct" {
+			t.Kind = TStruct
+			s := RawRe.FindStringSubmatch(typ)
+			if len(s) == 3 {
+				// 结构体类型别名
+				t.Aname = s[2]
+			}
+		} else if len(typ) >= 4 && typ[:4] == "json" {
+			t.Kind = TJson
+			s := RawRe.FindStringSubmatch(typ)
+			if len(s) == 3 {
+				t.Vtype = parseType(s[2])
+			}
 		}
 	}
 	return t

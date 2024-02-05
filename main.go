@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// xlsx path
-	err, xlsxPath := checkPathVaild(Flagpath)
+	xlsxPath, err := checkPathVaild(Flagpath)
 	if err != nil {
 		panic(err)
 	}
