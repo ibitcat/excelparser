@@ -111,7 +111,7 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		l.appendData("}")
 	case TJson:
 		s := ""
-		if len(row) >= field.Index {
+		if len(row) > field.Index {
 			s = row[field.Index]
 		}
 
