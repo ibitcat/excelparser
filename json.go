@@ -101,7 +101,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 		}
 	default:
 		s := ""
-		if len(row) >= field.Index {
+		if len(row) > field.Index {
 			s = row[field.Index]
 		}
 		j.appendData(field.formatValue(s))
