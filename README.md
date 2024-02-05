@@ -80,7 +80,7 @@ excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=.
 | id     | jsonval     |
 |--------|-------------|
 | int    | json<[]int> |
-|        |             |
+|        |  s          |
 | 配置唯一id | json字符串     |
 | 1001   | [1,2,3]     |
 
