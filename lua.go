@@ -34,7 +34,10 @@ func (l *LuaFormater) formatRows() {
 			l.appendIndent(1)
 			l.appendData("[")
 			l.appendData(row[0])
-			l.appendData("] = ")
+			l.appendData("]")
+			l.appendSpace()
+			l.appendData("=")
+			l.appendSpace()
 			l.formatData(l.RootField, row, 1)
 			l.appendData(",\n")
 		}
@@ -53,7 +56,10 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 			l.appendIndent(depth + 1)
 			l.appendData("[")
 			l.appendData(strconv.Itoa(i + 1))
-			l.appendData("] = ")
+			l.appendData("]")
+			l.appendSpace()
+			l.appendData("=")
+			l.appendSpace()
 			l.formatData(f, row, depth+1)
 			l.appendData(ternary(i < len(field.Vals)-1, ",", ""))
 			l.appendEOL()
@@ -68,10 +74,15 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 			if k.isNumber() {
 				l.appendData("[")
 				l.appendData(row[k.Index])
-				l.appendData("] = ")
+				l.appendData("]")
+				l.appendSpace()
+				l.appendData("=")
+				l.appendSpace()
 			} else {
 				l.appendData(row[k.Index])
-				l.appendData(" = ")
+				l.appendSpace()
+				l.appendData("=")
+				l.appendSpace()
 			}
 
 			v := field.Vals[i]
@@ -88,7 +99,9 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 			if f.isHitMode(l.mode) {
 				l.appendIndent(depth + 1)
 				l.appendData(f.Name)
-				l.appendData(" = ")
+				l.appendSpace()
+				l.appendData("=")
+				l.appendSpace()
 				l.formatData(f, row, depth+1)
 				l.appendData(ternary(i < len(field.Vals)-1, ",", ""))
 				l.appendEOL()
@@ -137,7 +150,9 @@ func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
 		for k, v := range obj {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
-			l.appendData(" = ")
+			l.appendSpace()
+			l.appendData("=")
+			l.appendSpace()
 			l.formatJsonValue(v, depth+1)
 			l.appendComma()
 		}
@@ -150,7 +165,9 @@ func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
 		for k, v := range obj {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
-			l.appendData(" = ")
+			l.appendSpace()
+			l.appendData("=")
+			l.appendSpace()
 			l.formatJsonValue(v, depth+1)
 			l.appendComma()
 		}
@@ -163,7 +180,9 @@ func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
 		for i, v := range obj {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(i + 1))
-			l.appendData(" = ")
+			l.appendSpace()
+			l.appendData("=")
+			l.appendSpace()
 			l.formatJsonValue(v, depth+1)
 			l.appendComma()
 		}

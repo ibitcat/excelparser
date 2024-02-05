@@ -69,6 +69,11 @@ func (x *Xlsx) appendEOL() {
 	x.appendData(str)
 }
 
+func (x *Xlsx) appendSpace() {
+	str := ternary(FlagCompact && !x.Vertical, "", " ")
+	x.appendData(str)
+}
+
 func (x *Xlsx) appendIndent(depth int) {
 	str := ternary(FlagCompact && !x.Vertical, "", getIndent(depth))
 	x.appendData(str)
