@@ -37,7 +37,7 @@ func saveI18nXlsx(path, lang string) {
 	f := excelize.NewFile()
 	defer f.Close()
 
-	index := f.NewSheet("Sheet1")
+	index, _ := f.NewSheet("Sheet1")
 	f.SetActiveSheet(index)
 
 	// Set value of a cell.

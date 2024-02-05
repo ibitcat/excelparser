@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func loadLastModTime() {
@@ -28,21 +30,6 @@ func loadLastModTime() {
 				tm, _ := strconv.ParseUint(s[1], 10, 64)
 				LastModifyTime[s[0]] = tm
 			}
-		}
-	}
-}
-
-func createOutput(outpath string) {
-	outDir, err := filepath.Abs(outpath)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = os.Stat(outDir)
-	if os.IsNotExist(err) {
-		err = os.MkdirAll(outDir, os.ModePerm)
-		if err != nil {
-			panic(err)
 		}
 	}
 }
@@ -76,37 +63,43 @@ func walkFunc(path string, f os.FileInfo, err error) error {
 	return mErr
 }
 
+func exportExcel(format, mode string, xlsx *Xlsx) {
+	var formater iFormater
+	keyField := xlsx.RootField.Vals[0]
+	if len(format) > 0 && keyField.isHitMode(mode) && len(xlsx.Rows) > 0 {
+		formater = NewFormater(xlsx, format, mode)
+		formater.formatRows()
+
+		// write
+		if len(xlsx.Errors) == 0 {
+			xlsx.writeToFile(mode, format)
+		}
+	}
+}
+
 func parseExcel(i interface{}) {
 	xlsx := i.(*Xlsx)
 
 	startTime := time.Now()
-	err := xlsx.openExcel()
+	f, err := excelize.OpenFile(xlsx.PathName)
 	if err == nil {
-		rows := xlsx.Rows
-		xlsx.Descs = rows[0]
-		xlsx.Names = rows[1]
-		xlsx.Types = rows[2]
-		xlsx.Modes = rows[3]
+		defer func() {
+			xlsx.Excel = nil
+			f.Close()
+		}()
 
-		xlsx.parseHeader()
-		if len(xlsx.Errors) == 0 {
+		xlsx.Excel = f
+		ok := xlsx.parseExcel()
+		if ok && len(xlsx.Errors) == 0 {
 			xlsx.Datas = make([]string, 0)
-
-			var formater iFormater
-			keyField := xlsx.getKeyField()
-			if FlagClient.IsVaild() && keyField.isHitMode("c") {
-				formater = NewFormater(xlsx, FlagClient.OutLang, "c")
-				formater.formatRows()
-			}
-			if FlagServer.IsVaild() && keyField.isHitMode("s") {
-				formater = NewFormater(xlsx, FlagServer.OutLang, "s")
-				formater.formatRows()
-			}
+			exportExcel(FlagClient, "client", xlsx)
+			exportExcel(FlagServer, "server", xlsx)
 		}
+	} else {
+		xlsx.appendError("xlsx文件打开失败")
 	}
 	xlsx.TimeCost = getDurationMs(startTime)
 	LoadingChan <- struct{}{}
-	//ExportLua(xlsx)
 }
 
 func processMsg() {
@@ -141,7 +134,7 @@ func printResult() {
 
 func saveConvTime() {
 	file := "lastModTime.txt"
-	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
+	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 	if operr != nil {
 		fmt.Println("创建[lastModTime.txt]文件错误")
 	}

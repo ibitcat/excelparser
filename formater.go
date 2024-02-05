@@ -2,11 +2,10 @@ package main
 
 type iFormater interface {
 	formatRows()
-	exportToFile()
 }
 
-func NewFormater(x *Xlsx, lang, mode string) iFormater {
-	switch lang {
+func NewFormater(x *Xlsx, format, mode string) iFormater {
+	switch format {
 	case "lua":
 		return &LuaFormater{Xlsx: x, mode: mode}
 	case "json":

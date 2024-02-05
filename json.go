@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
@@ -18,111 +17,93 @@ func (j *JsonFormater) formatRows() {
 
 	// data
 	if j.Vertical {
-		j.appendData("{\n")
-		j.formatRow(j.RootField, 4, -1)
-		j.appendData("}\n")
+		for _, col := range j.Rows {
+			j.formatData(j.RootField, col, 0)
+		}
 	} else {
 		j.appendData("[\n")
-		for line := 4; line < len(j.Rows); line++ {
-			key := j.Rows[line][0]
+		for _, row := range j.Rows {
+			key := row[0]
 			if strings.HasPrefix(key, "//") || key == "" {
 				continue
 			}
-			j.formatRow(j.RootField, line, -1)
-		}
-		j.trimData("\n")
-		j.appendData("]\n")
-	}
-	j.exportToFile()
-}
-
-/// datas
-func (j *JsonFormater) formatChildRow(f *FieldInfo, line int) {
-	var idx int
-	for _, field := range f.Fields {
-		if field.isHitMode(j.mode) {
-			j.formatRow(field, line, idx)
-			idx++
-		}
-	}
-	j.judgCompressTrim("", "\n")
-}
-
-func (j *JsonFormater) formatRow(f *FieldInfo, line, index int) {
-	deepth := f.Deepth + 1
-	indent := getIndent(deepth)
-
-	if f.Index == -1 {
-		// root, eg.: [1001] = {
-		if j.Vertical {
-			j.formatChildRow(f, line)
-		} else {
-			j.appendData(indent)
-			j.appendData("{")
-			j.judgCompressAppend("", "\n")
-			j.formatChildRow(f, line)
-			j.judgCompressAppend("", indent)
-			j.appendData("}")
+			j.appendIndent(1)
+			j.formatData(j.RootField, row, 1)
 			j.appendData(",\n")
 		}
-	} else {
-		row := j.Rows[line]
-		ok, val := f.getValue(row)
-		if !ok {
-			return
-		}
-
-		j.judgCompressAppend("", indent)
-		if !f.Parent.IsArray {
-			j.appendData("\"" + f.Name + "\":")
-		}
-		if len(f.Fields) > 0 {
-			if f.IsArray {
-				j.judgCompressAppend("[", "[\n")
-			} else {
-				j.judgCompressAppend("{", "{\n")
-			}
-			j.formatChildRow(f, line)
-			j.judgCompressAppend("", indent)
-			if f.IsArray {
-				j.appendData("]")
-			} else {
-				j.appendData("}")
-			}
-			j.judgCompressAppend(",", ",\n")
-		} else {
-			if f.Type == "json" {
-				if !json.Valid([]byte(val)) {
-					j.sprintfError("[%s] json 格式错误：(行%d,列%d)[%s@%s]", j.mode, line+1, f.Index+1, f.Name, f.Desc)
-					j.appendData("null")
-				} else {
-					var out bytes.Buffer
-					if FlagCompress {
-						json.Compact(&out, []byte(val))
-						j.appendData(out.String())
-					} else if FlagIndent {
-						json.Indent(&out, []byte(val), indent, "  ")
-						j.appendData(out.String())
-					} else {
-						j.appendData(val)
-					}
-				}
-			} else {
-				j.appendData(val)
-			}
-			j.judgCompressAppend(",", ",\n")
-		}
+		j.replaceTail("\n")
+		j.appendData("]")
 	}
 }
 
-/// export
-func (j *JsonFormater) exportToFile() {
-	var outpath string
-	if j.mode == "c" {
-		outpath = FlagClient.OutPath
-	} else if j.mode == "s" {
-		outpath = FlagServer.OutPath
+// datas
+func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
+	fkind := field.Kind
+	switch fkind {
+	case TArray:
+		j.appendData("[")
+		j.appendEOL()
+		for i, f := range field.Vals {
+			j.appendIndent(depth + 1)
+			j.formatData(f, row, depth+1)
+			j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
+			j.appendEOL()
+		}
+		j.appendIndent(depth)
+		j.appendData("]")
+	case TMap:
+		j.appendData("{")
+		j.appendEOL()
+		for i, k := range field.Keys {
+			j.appendIndent(depth + 1)
+			j.appendData("\"")
+			j.appendData(row[k.Index])
+			j.appendData("\":")
+
+			v := field.Vals[i]
+			j.formatData(v, row, depth+1)
+			j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
+			j.appendEOL()
+		}
+		j.appendIndent(depth)
+		j.appendData("}")
+	case TStruct:
+		j.appendData("{")
+		j.appendEOL()
+		for i, f := range field.Vals {
+			if f.isHitMode(j.mode) {
+				j.appendIndent(depth + 1)
+				j.appendData("\"")
+				j.appendData(f.Name)
+				j.appendData("\":")
+				j.formatData(f, row, depth+1)
+				j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
+				j.appendEOL()
+			}
+		}
+		j.appendIndent(depth)
+		j.appendData("}")
+	case TJson:
+		if len(row) >= field.Index {
+			s := row[field.Index]
+			var out bytes.Buffer
+			if FlagCompact {
+				json.Compact(&out, []byte(s))
+				j.appendData(out.String())
+			} else if FlagIndent {
+				json.Indent(&out, []byte(s), getIndent(depth), "  ")
+				j.appendData(out.String())
+			} else {
+				j.appendData(s)
+			}
+		} else {
+			j.appendData("null")
+		}
+	default:
+		s := ""
+		if len(row) >= field.Index {
+			s = row[field.Index]
+		}
+		j.appendData(field.formatValue(s))
 	}
-	fileName := fmt.Sprintf("%s/%s.json", outpath, j.FileName)
-	j.writeToFile(fileName)
 }

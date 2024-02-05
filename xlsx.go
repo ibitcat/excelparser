@@ -1,71 +1,41 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
 
+var HeadLineNum = 4 // 配置表头行数
+const (
+	NameLine int = iota + 1
+	TypeLine
+	ModeLine
+	DescLine
+)
+
 type Xlsx struct {
-	Name      string // 文件名（带文件扩展名）
-	PathName  string // 文件完整路径
-	FileName  string // 文件名
-	Vertical  bool   // 纵向表
-	Descs     []string
-	Names     []string
-	Types     []string
-	Modes     []string
-	RootField *FieldInfo
-	Rows      [][]string
-	Datas     []string
-	Errors    []string // 错误信息
-	TimeCost  int      // 耗时
+	Name      string         // 文件名（带文件扩展名）
+	PathName  string         // 文件完整路径
+	FileName  string         // 文件名
+	SheetName string         // 工作表名
+	Vertical  bool           // 纵向表
+	Excel     *excelize.File // 打开的excel文件句柄
+	Names     []string       // 字段名列表
+	Types     []string       // 类型列表
+	Modes     []string       // 导出模式列表
+	Descs     []string       // 字段描述列表
+	RootField *Field         // 根字段
+	Rows      [][]string     // 合法的配置行
+	Datas     []string       // 导出数据缓存
+	Errors    []string       // 错误信息
+	TimeCost  int            // 耗时
 }
 
-/// methods
-func (x *Xlsx) openExcel() error {
-	f, err := excelize.OpenFile(x.PathName)
-	if err != nil {
-		x.appendError("xlsx文件打开失败")
-		return err
-	}
-	defer f.Close()
-
-	var vertical bool
-	sheetIdx := f.GetSheetIndex("data")
-	if sheetIdx == -1 {
-		vertical = true
-		sheetIdx = f.GetSheetIndex("vdata")
-	}
-	if sheetIdx == -1 {
-		x.appendError("data/vdata sheet 不存在")
-		return errors.New("data/vdata not exist")
-	}
-
-	sheetName := f.GetSheetName(sheetIdx)
-	rows, err := f.GetRows(sheetName)
-	if err != nil {
-		x.appendError("data/vdata sheet 打开错误")
-		return err
-	}
-	x.Vertical = vertical
-	if vertical {
-		if len(rows[0]) < 5 {
-			x.appendError("纵向表必须要5列")
-			return errors.New("vdata error")
-		}
-		x.Rows = rotateRows(rows)
-	} else {
-		x.Rows = rows
-	}
-	return nil
-}
-
+// methods
 func (x *Xlsx) appendError(errMsg string) {
 	errCnt := len(x.Errors)
 	if errCnt < MaxErrorCnt {
@@ -76,8 +46,16 @@ func (x *Xlsx) appendError(errMsg string) {
 	}
 }
 
-func (x *Xlsx) sprintfError(format string, a ...interface{}) {
+func (x *Xlsx) sprintfError(format string, a ...any) {
 	x.appendError(fmt.Sprintf(format, a...))
+}
+
+func (x *Xlsx) sprintfCellError(row, col int, format string, a ...any) {
+	if x.Vertical {
+		x.sprintfError("[%s%d]%s", formatAxisX(row), col, fmt.Sprintf(format, a...))
+	} else {
+		x.sprintfError("[%s%d]%s", formatAxisX(col), row, fmt.Sprintf(format, a...))
+	}
 }
 
 func (x *Xlsx) appendData(str string) {
@@ -86,186 +64,382 @@ func (x *Xlsx) appendData(str string) {
 	}
 }
 
-func (x *Xlsx) judgCompressAppend(str1, str2 string) {
-	str := ternaryString(FlagCompress && !x.Vertical, str1, str2)
+func (x *Xlsx) appendEOL() {
+	str := ternary(FlagCompact && !x.Vertical, "", "\n")
 	x.appendData(str)
 }
 
-func (x *Xlsx) trimData(str string) {
+func (x *Xlsx) appendIndent(depth int) {
+	str := ternary(FlagCompact && !x.Vertical, "", getIndent(depth))
+	x.appendData(str)
+}
+
+func (x *Xlsx) appendComma() {
+	str := ternary(FlagCompact && !x.Vertical, ",", ",\n")
+	x.appendData(str)
+}
+
+func (x *Xlsx) replaceComma() {
+	str := ternary(FlagCompact && !x.Vertical, "", "\n")
 	x.Datas[len(x.Datas)-1] = str
 }
 
-func (x *Xlsx) judgCompressTrim(str1, str2 string) {
-	x.Datas[len(x.Datas)-1] = ternaryString(FlagCompress && !x.Vertical, str1, str2)
+func (x *Xlsx) replaceTail(str string) {
+	x.Datas[len(x.Datas)-1] = str
 }
 
 func (x *Xlsx) clearData() {
 	x.Datas = x.Datas[0:0]
 }
 
-func (x *Xlsx) getKeyField() *FieldInfo {
-	return x.RootField.Fields[0]
+func (x *Xlsx) createField(i int) *Field {
+	f := new(Field)
+	f.Index = i
+	if i < len(x.Names) {
+		f.Rname = strings.TrimSpace(x.Names[i])
+		f.Name = f.Rname
+	}
+	if i < len(x.Types) {
+		typ := strings.TrimSpace(x.Types[i])
+		f.Type = parseType(typ)
+	}
+	if i < len(x.Modes) {
+		f.Mode = strings.TrimSpace(x.Modes[i])
+	}
+	if i < len(x.Descs) {
+		f.Desc = strings.TrimSpace(x.Descs[i])
+	}
+	if len(f.Rname) > 0 {
+		s := strings.Split(f.Rname, ".")
+		if len(s) > 0 {
+			f.Name = s[len(s)-1]
+		}
+	}
+	return f
 }
 
-func (x *Xlsx) checkKeyField() {
-	keyField := x.RootField.Fields[0]
-	if keyField.Index != 0 {
-		x.appendError("Key 字段不能注释")
-	} else if keyField.Name != "id" && !x.Vertical {
-		x.appendError("Key 字段必须以 id 命名")
-	}
-	if !x.Vertical {
-		if !(isNumberType(keyField.Type) || keyField.Type == "string") {
-			x.appendError("Key 字段数据类型必须为定点整数或字符串")
+func (x *Xlsx) readSheetHead() [][]string {
+	var cur int = 0
+	var results [][]string
+	if x.Vertical {
+		// 纵向表
+		cols, err := x.Excel.Cols(x.SheetName)
+		if err != nil {
+			return nil
+		}
+		for cols.Next() {
+			cur++
+			col, err := cols.Rows()
+			if err != nil {
+				break
+			}
+			results = append(results, col)
+			if cur == HeadLineNum {
+				break
+			}
+		}
+	} else {
+		// 横向表
+		rows, err := x.Excel.Rows(x.SheetName)
+		if err != nil {
+			return nil
+		}
+		for rows.Next() {
+			cur++
+			row, err := rows.Columns()
+			if err != nil {
+				break
+			}
+			results = append(results, row)
+			if cur == HeadLineNum {
+				break
+			}
 		}
 	}
-
-	idMap := make(map[string]int)
-	for line := 4; line < len(x.Rows); line++ {
-		row := x.Rows[line]
-		key := row[0]
-		if strings.HasPrefix(key, "//") || key == "" {
-			continue
-		}
-		idMap[key] += 1
-	}
-	for key, num := range idMap {
-		if num > 1 {
-			x.sprintfError("Id [%s] 重复 %d 次", key, num-1)
-		}
-	}
+	return results
 }
 
-func (x *Xlsx) checkFields(f *FieldInfo) {
-	if f.Index >= 0 {
-		// 非key字段检查
-		if !f.Parent.IsArray && len(f.Name) == 0 {
-			x.sprintfError("字段名为空：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
-		}
-		if len(f.Fields) != f.FieldNum {
-			x.sprintfError("字段元素个数不匹配：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
-		}
-		if !f.IsVaildType() {
-			x.sprintfError("字段类型错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
-		}
-		if !f.IsVaildMode() {
-			x.sprintfError("字段标签错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
-		}
-		if !f.IsVaildI18n() {
-			x.sprintfError("字段国际化错误：(列%d)[%s@%s]", f.Index+1, f.Name, f.Desc)
-		}
-	}
+func (x *Xlsx) parseField(parent *Field, sindex int) int {
+	i := sindex
+	pkind := parent.Kind
+	for i < len(x.Types) {
+		if pkind == TNone {
+			break
+		} else if pkind == TArray {
+			// list
+			v := x.createField(i)
+			if len(parent.Vals) == parent.Cap {
+				break
+			}
+			pv := parent.Vtype
+			if !(pv.isAny() || v.Kind == pv.Kind) {
+				break
+			}
 
-	if len(f.Fields) > 0 {
-		tmpMap := map[string]int{}
-		for _, field := range f.Fields {
-			if f.IsArray {
-				if f.Type == "dict" {
-					if field.Type != f.Type {
-						x.sprintfError("结构体数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc)
-					}
-				} else {
-					if field.RawType != f.Type {
-						x.sprintfError("数组元素类型错误：(列%d)[%s@%s] ", field.Index+1, field.Name, field.Desc)
-					}
+			i++
+			v.Parent = parent
+			parent.Vals = append(parent.Vals, v)
+			if v.isRecursice() {
+				i += x.parseField(v, i)
+			}
+		} else if pkind == TMap {
+			// kv 是否匹配
+			k := x.createField(i)
+			v := x.createField(i + 1)
+			if len(k.Name) > 0 {
+				break
+			}
+			pk := parent.Ktype
+			pv := parent.Vtype
+			if !pk.isBuiltin() {
+				break
+			}
+			if pk.Kind != k.Kind {
+				break
+			}
+			if !(pv.isAny() || v.Kind == pv.Kind) {
+				break
+			}
+			i += 2
+			k.IsKey = true
+			k.Parent = parent
+			v.Parent = parent
+			parent.Keys = append(parent.Keys, k)
+			parent.Vals = append(parent.Vals, v)
+
+			if v.isRecursice() {
+				i += x.parseField(v, i)
+			}
+		} else if pkind == TStruct {
+			f := x.createField(i)
+			if parent.Index >= 0 {
+				ckey, found := strings.CutPrefix(f.Rname, parent.Rname)
+				if !found {
+					break
 				}
-			} else {
-				index, ok := tmpMap[field.Name]
-				if ok {
-					x.sprintfError("字段名[%s@%s]冲突：(列%d)<->(列%d)", field.Name, field.Desc, index+1, field.Index+1)
-				} else {
-					tmpMap[field.Name] = field.Index
+				if len(strings.Split(ckey, ".")) != 2 {
+					break
 				}
 			}
-			x.checkFields(field)
+
+			i++
+			f.Parent = parent
+			parent.Vals = append(parent.Vals, f)
+			if f.isRecursice() {
+				i += x.parseField(f, i)
+			}
+		} else if pkind == TJson {
+			break
+		} else {
+			f := x.createField(i)
+			i++
+			f.Parent = parent
+			parent.Vals = append(parent.Vals, f)
+
+			if f.isRecursice() {
+				i += x.parseField(f, i)
+			}
 		}
 	}
+	return i - sindex
+}
+
+func (x *Xlsx) getMergeRangeX() [][]int {
+	mergeCells, _ := x.Excel.GetMergeCells(x.SheetName)
+	rangeX := make([][]int, 0, len(mergeCells))
+	for _, mergeCell := range mergeCells {
+		startx, starty := splitAxis(mergeCell.GetStartAxis())
+		endx, endy := splitAxis(mergeCell.GetEndAxis())
+		if starty == 1 && endy == 1 {
+			rangeX = append(rangeX, []int{startx, endx})
+		}
+		if x.Vertical {
+			if max(2, startx) < min(5, endx) {
+				x.appendError("第2~5行不能有合并单元格")
+				return nil
+			}
+		} else {
+			if max(2, starty) < min(5, endy) {
+				x.appendError("第2~5行不能有合并单元格")
+				return nil
+			}
+		}
+	}
+	return rangeX
 }
 
 func (x *Xlsx) parseHeader() {
-	rootField := new(FieldInfo)
-	rootField.Index = -1
-	rootField.Fields = make([]*FieldInfo, 0, len(x.Names))
-	x.RootField = rootField
+	f := new(Field)
+	f.Index = -1
+	f.Type = &Type{Kind: TStruct}
+	x.RootField = f
 
-	for idx := 0; idx < len(x.Types); idx++ {
-		idx = x.parseField(rootField, idx)
+	fieldNum := len(x.Types)
+	for i := 0; i < fieldNum; {
+		i += x.parseField(x.RootField, i)
 	}
-
-	// check
-	x.checkKeyField()
-	x.checkFields(rootField)
 }
 
-func (x *Xlsx) parseField(parent *FieldInfo, index int) int {
-	if index >= len(x.Types) {
-		return index
+func (x *Xlsx) checkField(field *Field) {
+	if !field.isVaild(false) {
+		x.sprintfCellError(TypeLine, field.Index+1, "字段类型错误(类型不合法)")
+	}
+	if !field.isVaildMode() {
+		x.sprintfCellError(ModeLine, field.Index+1, "导出模式错误")
+	}
+	if field.Kind == TMap && len(field.Keys) != len(field.Vals) {
+		x.sprintfCellError(TypeLine, field.Index+1, "字段类型错误(map键值对不匹配)")
+	}
+	parent := field.Parent
+	if parent != nil && parent.Kind == TStruct && len(field.Name) == 0 {
+		x.sprintfCellError(NameLine, field.Index+1, "字段名称错误(字段名为空)")
 	}
 
-	var name, desc, def string
-	def = strings.TrimSpace(x.Types[index])
-	if len(x.Descs) > index {
-		desc = x.Descs[index]
+	if len(field.Keys) > 0 {
+		for _, k := range field.Keys {
+			x.checkField(k)
+		}
 	}
-	if len(x.Names) > index {
-		name = x.Names[index]
+	if len(field.Vals) > 0 {
+		keyMap := map[string]int{}
+		for _, v := range field.Vals {
+			if field.Kind == TStruct {
+				_, ok := keyMap[v.Name]
+				if ok {
+					x.sprintfCellError(NameLine, v.Index+1, "字段名称错误(字段名%s冲突)", v.Name)
+				} else {
+					keyMap[v.Name] = v.Index
+				}
+			}
+			x.checkField(v)
+		}
 	}
-	name, i18n := checkI18n(name)
+}
 
-	field := new(FieldInfo)
-	field.Index = index
-	field.RawType = def
-	field.Parent = parent
-	field.Deepth = parent.Deepth + 1
-	field.Desc = desc
-	field.Name = name
-	field.I18n = i18n
+func (x *Xlsx) checkFields() {
+	x.checkField(x.RootField)
 
-	// mode
-	var mode string
-	if len(x.Modes) > index {
-		mode = x.Modes[index]
+	// key field
+	keyField := x.RootField.Vals[0]
+	if len(keyField.Mode) != 0 {
+		x.appendError("key 字段的导出模式错误")
 	}
-	if parent.Index >= 0 && parent.Mode != "b" {
-		// 继承父节点 mode
-		mode = parent.Mode
-	} else if strings.HasPrefix(field.Name, "//") {
-		// 列被注释
-		mode = ""
+	if !x.Vertical {
+		// 横向表
+		if keyField.Name != "id" {
+			x.appendError("Key 字段必须以 id 命名")
+		}
+		if !keyField.isInteger() {
+			x.appendError("横向表 Key 字段类型必须为整数")
+		}
 	}
-	field.Mode = mode
-	if len(mode) > 0 {
-		parent.Fields = append(parent.Fields, field)
-	}
+}
 
-	if arrayBegin := strings.LastIndex(def, "["); arrayBegin != -1 {
-		// array
-		field.Type = def[:arrayBegin]
-		field.IsArray = true
+func (x *Xlsx) checkRows() {
+	line := 0
+	x.Rows = make([][]string, 0, 64)
+	if x.Vertical {
+		cols, _ := x.Excel.Cols(x.SheetName)
+		for cols.Next() {
+			line++
+			if line > HeadLineNum {
+				col, err := cols.Rows()
+				if err != nil {
+					break
+				}
 
-		// sub array
-		arrayEnd := strings.LastIndex(def, "]")
-		fieldNum, _ := strconv.Atoi(def[(arrayBegin + 1):arrayEnd])
-		field.FieldNum = fieldNum
-		for i := 0; i < fieldNum; i++ {
-			index = x.parseField(field, index+1)
+				if x.RootField.checkRow(col, line, x) {
+					x.Rows = append(x.Rows, col)
+				}
+				break
+			}
 		}
 	} else {
-		field.Type = def
+		idMap := make(map[string]int)
+		rows, _ := x.Excel.Rows(x.SheetName)
+		for rows.Next() {
+			line++
+			if line > HeadLineNum {
+				row, err := rows.Columns()
+				if err != nil {
+					break
+				}
+				if len(row) == 0 {
+					break
+				}
 
-		isDict := strings.HasPrefix(def, "dict")
-		if isDict {
-			dictBegin := strings.Index(def, "<")
-			dictEnd := strings.Index(def, ">")
-			field.Type = def[:dictBegin]
-			fieldNum, _ := strconv.Atoi(def[(dictBegin + 1):dictEnd])
-			field.FieldNum = fieldNum
-			for i := 0; i < fieldNum; i++ {
-				index = x.parseField(field, index+1)
+				key := row[0]
+				if strings.HasPrefix(key, "//") || key == "" {
+					continue
+				}
+
+				num, ok := idMap[key]
+				if ok {
+					x.sprintfCellError(line, 1, "Id [%s] 重复 %d 次", key, num-1)
+				} else {
+					idMap[key] += 1
+				}
+
+				if x.RootField.checkRow(row, line, x) {
+					x.Rows = append(x.Rows, row)
+				}
 			}
 		}
 	}
-	return index
+}
+
+func (x *Xlsx) parseExcel() bool {
+	var vertical bool
+	f := x.Excel
+	sheetIdx, _ := f.GetSheetIndex("data")
+	if sheetIdx == -1 {
+		vertical = true
+		sheetIdx, _ = f.GetSheetIndex("vdata")
+	}
+	if sheetIdx == -1 {
+		x.appendError("data/vdata sheet 不存在")
+		return false
+	}
+
+	x.Vertical = vertical
+	x.SheetName = f.GetSheetName(sheetIdx)
+	heads := x.readSheetHead()
+	if len(heads) < HeadLineNum {
+		x.appendError("配置表头格式错误(不足4行)")
+		return false
+	}
+
+	x.Names = heads[0] // 字段名行
+	x.Types = heads[1] // 字段类型行
+	x.Modes = heads[2] // 导出模式行
+	x.Descs = heads[3] // 字段描述行
+	x.parseHeader()
+	x.checkFields()
+	x.checkRows()
+	return true
+}
+
+func (x *Xlsx) writeToFile(mode, format string) {
+	ext := ""
+	switch format {
+	case "lua":
+		ext = "lua"
+	case "json":
+		ext = "json"
+	}
+	outdir := FlagOutput + "/" + mode + "/" + format
+	outFileName := fmt.Sprintf("%s/%s.%s", outdir, x.FileName, ext)
+	err := os.MkdirAll(outdir, os.ModeDir)
+	if err == nil || os.IsExist(err) {
+		outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+		if operr != nil {
+			return
+		}
+		defer outFile.Close()
+
+		outFile.WriteString(strings.Join(x.Datas, ""))
+		outFile.Sync()
+	}
 }
 
 func (x *Xlsx) collectResult() []string {
@@ -289,15 +463,4 @@ func (x *Xlsx) collectResult() []string {
 		}
 	}
 	return results
-}
-
-func (x *Xlsx) writeToFile(outFileName string) {
-	outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
-	if operr != nil {
-		return
-	}
-	defer outFile.Close()
-
-	outFile.WriteString(strings.Join(x.Datas, ""))
-	outFile.Sync()
 }

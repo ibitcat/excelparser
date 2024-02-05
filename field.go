@@ -1,96 +1,106 @@
 package main
 
-import "strings"
+import "strconv"
 
-type FieldInfo struct {
-	Index    int          // 对应的excel列序号
-	Desc     string       // 字段描述
-	Name     string       // 字段名
-	Type     string       // 字段数据类型
-	RawType  string       // 原始字段数据类型
-	Mode     string       // 生成方式(s=server,c=client,b=both)
-	Deepth   int          // 字段深度
-	IsArray  bool         // 是否是数组
-	Parent   *FieldInfo   // 父字段
-	Fields   []*FieldInfo // 成员
-	FieldNum int          // 成员数
-	I18n     bool         // 是否需要国际化
+type Field struct {
+	*Type           // 字段数据类型
+	Parent *Field   // 父字段
+	Index  int      // 字段索引
+	Desc   string   // 字段描述
+	Rname  string   // 原始字段名
+	Name   string   // 字段名
+	Mode   string   // 生成方式(s=server,c=client,x=none)
+	Keys   []*Field // 键元素列表
+	Vals   []*Field // 值元素列表
+	IsKey  bool     // 是否是k(for map)
 }
 
-/// methods
-func (f *FieldInfo) isHitMode(tMode string) bool {
-	if f.Mode == tMode || f.Mode == "b" {
+// methods
+func (f *Field) isHitMode(tMode string) bool {
+	if f.Mode == tMode || len(f.Mode) == 0 {
 		return true
 	}
 	return false
 }
 
-func (f *FieldInfo) IsVaildType() bool {
-	def := f.Type
-	if len(f.Fields) > 0 {
-		// map or array
-		if f.IsArray {
-			arrayBegin := strings.Index(f.RawType, "[")
-			def = f.RawType[:arrayBegin]
-		} else {
-			if f.Type == "dict" {
-				return true
-			}
-		}
-	}
-
-	switch def {
-	case "int", "float", "bool", "string", "json", "dict":
-		return true
-	}
-	return false
-}
-
-func (f *FieldInfo) IsVaildMode() bool {
+func (f *Field) isVaildMode() bool {
 	switch f.Mode {
-	case "", "b", "s", "c":
+	case "", "x", "s", "c":
 		return true
 	default:
 		return false
 	}
 }
 
-func (f *FieldInfo) IsVaildI18n() bool {
-	if !f.I18n {
-		return true
-	}
-
-	if (f.Type == "string" || f.Type == "json") && !f.IsArray {
-		return true
-	}
-	return false
-}
-
-func (f *FieldInfo) getValue(row []string) (bool, string) {
+func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 	var val string
-	if f.Index >= len(row) {
-		if FlagDefault {
-			val = defaultValue(f.Type)
-		} else {
-			return false, val
-		}
-	} else {
-		rawVal := row[f.Index]
-		if f.I18n && len(rawVal) > 0 {
-			if i18nVal, ok := I18nMap.Load(rawVal); ok {
-				i18nStr := i18nVal.(string)
-				if len(i18nStr) > 0 {
-					rawVal = i18nStr
-				}
-			} else {
-				I18nMap.Store(rawVal, "")
+	if f.Index >= 0 && len(row) > f.Index {
+		val = row[f.Index]
+	}
+
+	ok := true
+	switch f.Kind {
+	case TArray:
+		for _, v := range f.Vals {
+			if !v.checkRow(row, line, x) {
+				ok = false
 			}
 		}
-		val = formatValue(f, rawVal)
+	case TMap:
+		for _, k := range f.Keys {
+			if !k.checkRow(row, line, x) {
+				ok = false
+			}
+		}
+		for _, v := range f.Vals {
+			if !v.checkRow(row, line, x) {
+				ok = false
+			}
+		}
+	case TStruct:
+		for _, v := range f.Vals {
+			if !v.checkRow(row, line, x) {
+				ok = false
+			}
+		}
+	case TJson:
+		if f.Vtype != nil {
+			ok = f.Vtype.checkJsonVal(val)
+		}
+	case TUint:
+		_, err := strconv.ParseUint(val, 10, 64)
+		if err != nil {
+			ok = false
+		}
+	case TInt:
+		_, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			ok = false
+		}
+	case TFloat:
+		_, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			ok = false
+		}
+	case TBool:
+		if !(val == "0" || val == "1" || val == "true" || val == "false") {
+			ok = false
+		}
+	case TString:
+		if ok && f.I18n && len(val) > 0 {
+			if i18nVal, ok := I18nMap.Load(val); ok {
+				i18nStr := i18nVal.(string)
+				if len(i18nStr) > 0 {
+					row[f.Index] = i18nStr
+				}
+			} else {
+				I18nMap.Store(val, "")
+			}
+		}
 	}
 
-	if len(f.Fields) == 0 && len(val) == 0 {
-		return false, val
+	if !ok && (f.isBuiltin() || f.Kind == TJson) {
+		x.sprintfCellError(line, f.Index+1, "配置值错误")
 	}
-	return true, val
+	return ok
 }

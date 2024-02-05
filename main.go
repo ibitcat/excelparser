@@ -27,18 +27,6 @@ func main() {
 		openI18nXlsx(FlagI18nPath, FlagI18nLang)
 	}
 
-	// output
-	if !FlagClient.IsVaild() && !FlagServer.IsVaild() {
-		panic("You must specify an output info.")
-	} else {
-		if FlagClient.IsVaild() {
-			createOutput(FlagClient.OutPath)
-		}
-		if FlagServer.IsVaild() {
-			createOutput(FlagServer.OutPath)
-		}
-	}
-
 	// walk
 	loadLastModTime()
 	XlsxList = make([]*Xlsx, 0)
@@ -66,7 +54,7 @@ func main() {
 		}
 		wg.Wait()
 
-		//注意 channel range 需要close channel https://segmentfault.com/a/1190000040399883?utm_source=sf-similar-article
+		// 注意 channel range 需要close channel https://segmentfault.com/a/1190000040399883?utm_source=sf-similar-article
 		close(LoadingChan)
 		saveConvTime()
 
@@ -79,5 +67,5 @@ func main() {
 	} else {
 		printResult()
 	}
-	//fmt.Printf("running goroutines: %d\n", p.Running())
+	// fmt.Printf("running goroutines: %d\n", p.Running())
 }
