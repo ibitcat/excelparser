@@ -11,30 +11,38 @@ import (
 	"time"
 )
 
-func walkFunc(path string, f os.FileInfo, err error) error {
-	if f == nil {
-		return err
-	}
-	if f.IsDir() {
-		// continue
-		return nil
-	}
-
-	ok, mErr := filepath.Match("[^~$]*.xlsx", f.Name())
-	if ok {
-		modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
-		task := &Xlsx{
-			Name:         f.Name(),
-			PathName:     path,
-			FileName:     getFileName(f.Name()),
-			Errors:       make([]string, 0),
-			TimeCost:     0,
-			LastModified: modifyTime,
-			Exports:      make([]*ExportInfo, 0),
+func walkPath(xlsxPath string) {
+	XlsxList = make([]*Xlsx, 0)
+	err := filepath.Walk(xlsxPath, func(path string, f os.FileInfo, err error) error {
+		if f == nil {
+			return err
 		}
-		XlsxList = append(XlsxList, task)
+		if f.IsDir() {
+			// continue
+			return nil
+		}
+
+		ok, mErr := filepath.Match("[^~$]*.xlsx", f.Name())
+		if ok {
+			modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
+			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator))
+			dirname := strings.TrimSuffix(fname, f.Name())
+			task := &Xlsx{
+				Name:         dirname + f.Name(),
+				PathName:     path,
+				FileName:     dirname + getFileName(f.Name()),
+				Errors:       make([]string, 0),
+				TimeCost:     0,
+				LastModified: modifyTime,
+				Exports:      make([]*ExportInfo, 0),
+			}
+			XlsxList = append(XlsxList, task)
+		}
+		return mErr
+	})
+	if err != nil {
+		panic(err)
 	}
-	return mErr
 }
 
 func findXlsx(name string) *Xlsx {

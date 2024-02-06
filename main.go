@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -32,11 +31,7 @@ func main() {
 	Mode2Format["client"] = FlagClient
 
 	// walk
-	XlsxList = make([]*Xlsx, 0)
-	err = filepath.Walk(xlsxPath, walkFunc)
-	if err != nil {
-		panic(err)
-	}
+	walkPath(xlsxPath)
 	loadExportLog()
 
 	xlsxCount := len(XlsxList)

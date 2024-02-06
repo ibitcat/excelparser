@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/xuri/excelize/v2"
@@ -25,8 +26,8 @@ type ExportInfo struct {
 
 type Xlsx struct {
 	Name         string         // 文件名（带文件扩展名）
-	PathName     string         // 文件完整路径
 	FileName     string         // 文件名
+	PathName     string         // 文件完整路径
 	SheetName    string         // 工作表名
 	Vertical     bool           // 纵向表
 	Excel        *excelize.File // 打开的excel文件句柄
@@ -507,9 +508,10 @@ func (x *Xlsx) writeToFile(mode, format string) {
 	case "json":
 		ext = "json"
 	}
-	outdir := FlagOutput + "/" + mode + "/" + format
-	outFileName := fmt.Sprintf("%s/%s.%s", outdir, x.FileName, ext)
-	err := os.MkdirAll(outdir, os.ModeDir)
+	sep := string(filepath.Separator)
+	outdir := FlagOutput + sep + mode + sep + format + sep
+	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.FileName, ext)
+	err := os.MkdirAll(filepath.Dir(outFileName), os.ModeDir)
 	if err == nil || os.IsExist(err) {
 		outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 		if operr != nil {

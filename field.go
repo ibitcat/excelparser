@@ -68,23 +68,31 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 			ok = f.Vtype.checkJsonVal(val)
 		}
 	case TUint:
-		_, err := strconv.ParseUint(val, 10, 64)
-		if err != nil {
-			ok = false
+		if len(val) > 0 && !FlagDefault {
+			_, err := strconv.ParseUint(val, 10, 64)
+			if err != nil {
+				ok = false
+			}
 		}
 	case TInt:
-		_, err := strconv.ParseInt(val, 10, 64)
-		if err != nil {
-			ok = false
+		if len(val) > 0 && !FlagDefault {
+			_, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				ok = false
+			}
 		}
 	case TFloat:
-		_, err := strconv.ParseFloat(val, 64)
-		if err != nil {
-			ok = false
+		if len(val) > 0 && !FlagDefault {
+			_, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				ok = false
+			}
 		}
 	case TBool:
-		if !(val == "0" || val == "1" || val == "true" || val == "false") {
-			ok = false
+		if len(val) > 0 && !FlagDefault {
+			if !(val == "0" || val == "1" || val == "true" || val == "false") {
+				ok = false
+			}
 		}
 	case TString:
 		if ok && f.I18n && len(val) > 0 {
