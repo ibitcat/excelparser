@@ -120,6 +120,8 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		err := json.Unmarshal([]byte(s), &result)
 		if err == nil {
 			l.formatJsonValue(result, depth)
+		} else {
+			l.appendData("nil")
 		}
 	default:
 		s := ""
