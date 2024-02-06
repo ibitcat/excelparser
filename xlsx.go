@@ -457,10 +457,10 @@ func (x *Xlsx) parseExcel() bool {
 		return false
 	}
 
-	x.Names = heads[0] // 字段名行
-	x.Types = heads[1] // 字段类型行
-	x.Modes = heads[2] // 导出模式行
-	x.Descs = heads[3] // 字段描述行
+	x.Names = heads[NameLine-1] // 字段名行
+	x.Types = heads[TypeLine-1] // 字段类型行
+	x.Modes = heads[ModeLine-1] // 导出模式行
+	x.Descs = heads[DescLine-1] // 字段描述行
 	x.parseHeader()
 	x.checkFields()
 	x.checkRows()
