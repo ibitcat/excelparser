@@ -27,13 +27,17 @@ func main() {
 		openI18nXlsx(FlagI18nPath, FlagI18nLang)
 	}
 
+	Mode2Format = make(map[string]string)
+	Mode2Format["server"] = FlagServer
+	Mode2Format["client"] = FlagClient
+
 	// walk
-	loadLastModTime()
 	XlsxList = make([]*Xlsx, 0)
 	err = filepath.Walk(xlsxPath, walkFunc)
 	if err != nil {
 		panic(err)
 	}
+	loadExportLog()
 
 	xlsxCount := len(XlsxList)
 	if xlsxCount > 0 {
@@ -43,7 +47,7 @@ func main() {
 		// parse
 		var wg sync.WaitGroup
 		p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
-			parseExcel(i)
+			startParse(i)
 			wg.Done()
 		})
 		defer p.Release()

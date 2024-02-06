@@ -24,13 +24,13 @@ var (
 
 // global vars
 var (
-	LastModifyTime map[string]uint64 // 文件的最后修改时间
-	XlsxList       []*Xlsx
-	Splitline      string
-	CostFormat     string
-	InfoFormat     string
-	LoadingChan    chan struct{}
-	MaxErrorCnt    int = 11
+	XlsxList    []*Xlsx
+	Splitline   string
+	CostFormat  string
+	InfoFormat  string
+	LoadingChan chan struct{}
+	MaxErrorCnt int = 11
+	Mode2Format map[string]string
 )
 
 func init() {

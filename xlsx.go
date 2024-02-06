@@ -17,22 +17,30 @@ const (
 	DescLine
 )
 
+type ExportInfo struct {
+	Mode     string `json:"mode"`
+	Format   string `json:"format"`
+	LastTime uint64 `json:"lasttime"`
+}
+
 type Xlsx struct {
-	Name      string         // 文件名（带文件扩展名）
-	PathName  string         // 文件完整路径
-	FileName  string         // 文件名
-	SheetName string         // 工作表名
-	Vertical  bool           // 纵向表
-	Excel     *excelize.File // 打开的excel文件句柄
-	Names     []string       // 字段名列表
-	Types     []string       // 类型列表
-	Modes     []string       // 导出模式列表
-	Descs     []string       // 字段描述列表
-	RootField *Field         // 根字段
-	Rows      [][]string     // 合法的配置行
-	Datas     []string       // 导出数据缓存
-	Errors    []string       // 错误信息
-	TimeCost  int            // 耗时
+	Name         string         // 文件名（带文件扩展名）
+	PathName     string         // 文件完整路径
+	FileName     string         // 文件名
+	SheetName    string         // 工作表名
+	Vertical     bool           // 纵向表
+	Excel        *excelize.File // 打开的excel文件句柄
+	Names        []string       // 字段名列表
+	Types        []string       // 类型列表
+	Modes        []string       // 导出模式列表
+	Descs        []string       // 字段描述列表
+	RootField    *Field         // 根字段
+	Rows         [][]string     // 合法的配置行
+	Datas        []string       // 导出数据缓存
+	Errors       []string       // 错误信息
+	Exports      []*ExportInfo  // 导出信息
+	LastModified uint64         // 最后修改时间
+	TimeCost     int            // 耗时
 }
 
 // methods
@@ -393,6 +401,41 @@ func (x *Xlsx) checkRows() {
 	}
 }
 
+func (x *Xlsx) canParse() bool {
+	if FlagForce {
+		return true
+	} else {
+		var cnt, num int
+		for mode, format := range Mode2Format {
+			if len(format) > 0 {
+				cnt++
+				for _, v := range x.Exports {
+					if v.Mode == mode && v.Format == format && v.LastTime == x.LastModified {
+						num++
+						break
+					}
+				}
+			}
+		}
+		return cnt != num
+	}
+}
+
+func (x *Xlsx) updateExportInfo(mode, format string) {
+	var e *ExportInfo
+	for _, v := range x.Exports {
+		if v.Mode == mode && v.Format == format {
+			e = v
+			break
+		}
+	}
+	if e == nil {
+		x.Exports = append(x.Exports, &ExportInfo{mode, format, x.LastModified})
+	} else {
+		e.LastTime = x.LastModified
+	}
+}
+
 func (x *Xlsx) parseExcel() bool {
 	var vertical bool
 	f := x.Excel
@@ -422,6 +465,38 @@ func (x *Xlsx) parseExcel() bool {
 	x.checkFields()
 	x.checkRows()
 	return true
+}
+
+func (x *Xlsx) exportExcel() {
+	f, err := excelize.OpenFile(x.PathName)
+	if err == nil {
+		defer func() {
+			x.Excel = nil
+			f.Close()
+		}()
+
+		x.Excel = f
+		ok := x.parseExcel()
+		if ok && len(x.Errors) == 0 && len(x.Rows) > 0 {
+			x.Datas = make([]string, 0)
+
+			keyField := x.RootField.Vals[0]
+			for mode, format := range Mode2Format {
+				if len(format) > 0 && keyField.isHitMode(mode) {
+					formater := NewFormater(x, format, mode)
+					formater.formatRows()
+
+					// write
+					if len(x.Errors) == 0 {
+						x.updateExportInfo(mode, format)
+						x.writeToFile(mode, format)
+					}
+				}
+			}
+		}
+	} else {
+		x.appendError("xlsx文件打开失败")
+	}
 }
 
 func (x *Xlsx) writeToFile(mode, format string) {

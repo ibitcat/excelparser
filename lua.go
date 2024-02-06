@@ -61,9 +61,9 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 			l.appendData("=")
 			l.appendSpace()
 			l.formatData(f, row, depth+1)
-			l.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-			l.appendEOL()
+			l.appendComma()
 		}
+		l.replaceComma()
 		l.appendIndent(depth)
 		l.appendData("}")
 	case TMap:
@@ -87,15 +87,15 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 
 			v := field.Vals[i]
 			l.formatData(v, row, depth+1)
-			l.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-			l.appendEOL()
+			l.appendComma()
 		}
+		l.replaceComma()
 		l.appendIndent(depth)
 		l.appendData("}")
 	case TStruct:
 		l.appendData("{")
 		l.appendEOL()
-		for i, f := range field.Vals {
+		for _, f := range field.Vals {
 			if f.isHitMode(l.mode) {
 				l.appendIndent(depth + 1)
 				l.appendData(f.Name)
@@ -103,10 +103,10 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 				l.appendData("=")
 				l.appendSpace()
 				l.formatData(f, row, depth+1)
-				l.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-				l.appendEOL()
+				l.appendComma()
 			}
 		}
+		l.replaceComma()
 		l.appendIndent(depth)
 		l.appendData("}")
 	case TJson:

@@ -2,37 +2,14 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/xuri/excelize/v2"
 )
-
-func loadLastModTime() {
-	LastModifyTime = make(map[string]uint64)
-	file, err := os.Open("lastModTime.txt")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) > 0 {
-			s := strings.Split(line, ",")
-			if len(s) == 2 {
-				tm, _ := strconv.ParseUint(s[1], 10, 64)
-				LastModifyTime[s[0]] = tm
-			}
-		}
-	}
-}
 
 func walkFunc(path string, f os.FileInfo, err error) error {
 	if f == nil {
@@ -46,59 +23,60 @@ func walkFunc(path string, f os.FileInfo, err error) error {
 	ok, mErr := filepath.Match("[^~$]*.xlsx", f.Name())
 	if ok {
 		modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
-		if lastTime, ok := LastModifyTime[f.Name()]; FlagForce || !ok || lastTime != modifyTime {
-			// 检查文件名
-			task := &Xlsx{
-				Name:     f.Name(),
-				PathName: path,
-				FileName: getFileName(f.Name()),
-				Errors:   make([]string, 0),
-				TimeCost: 0,
-			}
-			XlsxList = append(XlsxList, task)
+		task := &Xlsx{
+			Name:         f.Name(),
+			PathName:     path,
+			FileName:     getFileName(f.Name()),
+			Errors:       make([]string, 0),
+			TimeCost:     0,
+			LastModified: modifyTime,
+			Exports:      make([]*ExportInfo, 0),
 		}
-		LastModifyTime[f.Name()] = modifyTime
-		return nil
+		XlsxList = append(XlsxList, task)
 	}
 	return mErr
 }
 
-func exportExcel(format, mode string, xlsx *Xlsx) {
-	var formater iFormater
-	keyField := xlsx.RootField.Vals[0]
-	if len(format) > 0 && keyField.isHitMode(mode) && len(xlsx.Rows) > 0 {
-		formater = NewFormater(xlsx, format, mode)
-		formater.formatRows()
+func findXlsx(name string) *Xlsx {
+	for _, x := range XlsxList {
+		if x.Name == name {
+			return x
+		}
+	}
+	return nil
+}
 
-		// write
-		if len(xlsx.Errors) == 0 {
-			xlsx.writeToFile(mode, format)
+func loadExportLog() {
+	file, err := os.Open("export.log")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) > 0 {
+			s := strings.SplitN(line, ",", 2)
+			if len(s) == 2 {
+				x := findXlsx(s[0])
+				if x != nil {
+					json.Unmarshal([]byte(s[1]), &x.Exports)
+				}
+			}
 		}
 	}
 }
 
-func parseExcel(i interface{}) {
+func startParse(i interface{}) {
 	xlsx := i.(*Xlsx)
-
-	startTime := time.Now()
-	f, err := excelize.OpenFile(xlsx.PathName)
-	if err == nil {
-		defer func() {
-			xlsx.Excel = nil
-			f.Close()
-		}()
-
-		xlsx.Excel = f
-		ok := xlsx.parseExcel()
-		if ok && len(xlsx.Errors) == 0 {
-			xlsx.Datas = make([]string, 0)
-			exportExcel(FlagClient, "client", xlsx)
-			exportExcel(FlagServer, "server", xlsx)
-		}
+	if xlsx.canParse() {
+		startTime := time.Now()
+		xlsx.exportExcel()
+		xlsx.TimeCost = getDurationMs(startTime)
 	} else {
-		xlsx.appendError("xlsx文件打开失败")
+		xlsx.appendError("无需生成")
 	}
-	xlsx.TimeCost = getDurationMs(startTime)
 	LoadingChan <- struct{}{}
 }
 
@@ -133,24 +111,22 @@ func printResult() {
 }
 
 func saveConvTime() {
-	file := "lastModTime.txt"
+	file := "export.log"
 	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 	if operr != nil {
-		fmt.Println("创建[lastModTime.txt]文件错误")
+		fmt.Println("创建[export.log]文件错误")
 	}
 	defer outFile.Close()
 
+	modTimes := make([]string, 0, len(XlsxList))
 	for _, xlsx := range XlsxList {
-		if len(xlsx.Errors) > 0 {
-			delete(LastModifyTime, xlsx.Name)
+		es, err := json.Marshal(xlsx.Exports)
+		if err == nil {
+			modTimes = append(modTimes, xlsx.Name+","+string(es))
 		}
 	}
 
 	// save time
-	modTimes := make([]string, 0, len(LastModifyTime))
-	for name, tm := range LastModifyTime {
-		modTimes = append(modTimes, name+","+strconv.FormatUint(tm, 10))
-	}
 	outFile.WriteString(strings.Join(modTimes, "\n"))
 	outFile.Sync()
 }
