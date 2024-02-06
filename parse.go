@@ -104,7 +104,7 @@ func processMsg() {
 
 func printResult() {
 	cellLen := MaxFileLen + 1
-	costFormat := fmt.Sprintf("%%-%ds| %%-5dms", cellLen)
+	costFormat := fmt.Sprintf("%%-%ds| cost:%%-5dms, line:%%-6d", cellLen)
 	infoFormat := fmt.Sprintf("%%-%ds| %%s", cellLen)
 	splitline := fmt.Sprintf("%s+%s", strings.Repeat("-", cellLen), strings.Repeat("-", 50))
 

@@ -532,7 +532,7 @@ func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string 
 
 	errNum := len(x.Errors)
 	if errNum == 0 {
-		results = append(results, fmt.Sprintf(costFormat, x.FileName, x.TimeCost))
+		results = append(results, fmt.Sprintf(costFormat, x.FileName, x.TimeCost, len(x.Rows)))
 	} else if errNum == 1 {
 		results = append(results, fmt.Sprintf(infoFormat, x.FileName, x.Errors[0]))
 	} else {
