@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ func main() {
 	Mode2Format["server"] = FlagServer
 	Mode2Format["client"] = FlagClient
 
+	startTime := time.Now()
 	// walk
 	walkPath(xlsxPath)
 	loadExportLog()
@@ -66,5 +68,6 @@ func main() {
 	} else {
 		printResult()
 	}
+	fmt.Printf("Total Cost: %d ms\n", getDurationMs(startTime))
 	// fmt.Printf("running goroutines: %d\n", p.Running())
 }
