@@ -215,7 +215,6 @@ func (x *Xlsx) parseField(parent *Field, sindex int) int {
 				break
 			}
 			i += 2
-			k.IsKey = true
 			k.Parent = parent
 			v.Parent = parent
 			parent.Keys = append(parent.Keys, k)

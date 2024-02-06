@@ -12,7 +12,6 @@ type Field struct {
 	Mode   string   // 生成方式(s=server,c=client,x=none)
 	Keys   []*Field // 键元素列表
 	Vals   []*Field // 值元素列表
-	IsKey  bool     // 是否是k(for map)
 }
 
 // methods
