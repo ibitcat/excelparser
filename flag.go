@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 )
 
 // flags
@@ -25,19 +24,12 @@ var (
 // global vars
 var (
 	XlsxList    []*Xlsx
-	Splitline   string
-	CostFormat  string
-	InfoFormat  string
 	LoadingChan chan struct{}
 	MaxErrorCnt int = 11
 	Mode2Format map[string]string
 )
 
 func init() {
-	CostFormat = "%-30s| %-5dms"
-	InfoFormat = "%-30s| %s"
-	Splitline = fmt.Sprintf("%s+%s", strings.Repeat("-", 30), strings.Repeat("-", 70))
-
 	// flag
 	flag.BoolVar(&Flaghelp, "help", false, "Excelparser help.")
 	flag.BoolVar(&FlagIndent, "indent", false, "Json indent flag.")

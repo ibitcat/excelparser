@@ -403,13 +403,11 @@ func (x *Xlsx) checkRows() {
 }
 
 func (x *Xlsx) canParse() bool {
-	if FlagForce {
-		return true
-	} else {
-		var cnt, num int
-		for mode, format := range Mode2Format {
-			if len(format) > 0 {
-				cnt++
+	var cnt, num int
+	for mode, format := range Mode2Format {
+		if len(format) > 0 {
+			cnt++
+			if !FlagForce {
 				for _, v := range x.Exports {
 					if v.Mode == mode && v.Format == format && v.LastTime == x.LastModified {
 						num++
@@ -418,8 +416,8 @@ func (x *Xlsx) canParse() bool {
 				}
 			}
 		}
-		return cnt != num
 	}
+	return cnt != num
 }
 
 func (x *Xlsx) updateExportInfo(mode, format string) {
@@ -481,9 +479,11 @@ func (x *Xlsx) exportExcel() {
 		if ok && len(x.Errors) == 0 && len(x.Rows) > 0 {
 			x.Datas = make([]string, 0)
 
+			num := 0
 			keyField := x.RootField.Vals[0]
 			for mode, format := range Mode2Format {
 				if len(format) > 0 && keyField.isHitMode(mode) {
+					num++
 					formater := NewFormater(x, format, mode)
 					formater.formatRows()
 
@@ -493,6 +493,9 @@ func (x *Xlsx) exportExcel() {
 						x.writeToFile(mode, format)
 					}
 				}
+			}
+			if num == 0 {
+				x.appendError("无需生成")
 			}
 		}
 	} else {
@@ -524,23 +527,23 @@ func (x *Xlsx) writeToFile(mode, format string) {
 	}
 }
 
-func (x *Xlsx) collectResult() []string {
+func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string {
 	results := make([]string, 0)
-	results = append(results, Splitline)
+	results = append(results, splitline)
 
 	errNum := len(x.Errors)
 	if errNum == 0 {
-		results = append(results, fmt.Sprintf(CostFormat, x.FileName, x.TimeCost))
+		results = append(results, fmt.Sprintf(costFormat, x.FileName, x.TimeCost))
 	} else if errNum == 1 {
-		results = append(results, fmt.Sprintf(InfoFormat, x.FileName, x.Errors[0]))
+		results = append(results, fmt.Sprintf(infoFormat, x.FileName, x.Errors[0]))
 	} else {
 		mid := int(math.Ceil(float64(errNum)/2)) - 1
 		for i := 0; i < errNum; i++ {
 			err := x.Errors[i]
 			if mid == i {
-				results = append(results, fmt.Sprintf(InfoFormat, x.FileName, err))
+				results = append(results, fmt.Sprintf(infoFormat, x.FileName, err))
 			} else {
-				results = append(results, fmt.Sprintf(InfoFormat, "", err))
+				results = append(results, fmt.Sprintf(infoFormat, "", err))
 			}
 		}
 	}

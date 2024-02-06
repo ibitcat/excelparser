@@ -17,7 +17,13 @@ type Field struct {
 
 // methods
 func (f *Field) isHitMode(tMode string) bool {
-	if f.Mode == tMode || len(f.Mode) == 0 {
+	if len(f.Mode) == 0 {
+		return true
+	}
+	if tMode == "server" && f.Mode == "s" {
+		return true
+	}
+	if tMode == "client" && f.Mode == "c" {
 		return true
 	}
 	return false
