@@ -20,12 +20,12 @@ func (l *LuaFormater) formatRows() {
 
 	// data
 	if l.Vertical {
-		l.appendData("\nreturn ")
+		l.appendData("return ")
 		for _, col := range l.Rows {
 			l.formatData(l.RootField, col, 0)
 		}
 	} else {
-		l.appendData("\nreturn {\n")
+		l.appendData("return {\n")
 		for _, row := range l.Rows {
 			key := row[0]
 			if strings.HasPrefix(key, "//") || key == "" {
