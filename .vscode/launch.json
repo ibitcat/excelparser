@@ -16,7 +16,7 @@
             },
             "args": [
                 "--path=./xlsx",
-                "--server=lua",
+                "--server=json",
                 "--force"
             ] // 启动参数
         }

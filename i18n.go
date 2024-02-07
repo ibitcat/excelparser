@@ -31,6 +31,18 @@ func openI18nXlsx(path, lang string) error {
 	return nil
 }
 
+func getI18nString(val string) string {
+	if i18nVal, ok := I18nMap.Load(val); ok {
+		i18nStr := i18nVal.(string)
+		if len(i18nStr) > 0 {
+			return i18nStr
+		}
+	} else {
+		I18nMap.Store(val, "")
+	}
+	return ""
+}
+
 func saveI18nXlsx(path, lang string) {
 	os.MkdirAll(path, os.ModePerm)
 	fileName := path + "/" + lang + ".xlsx"

@@ -86,6 +86,15 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 	case TJson:
 		if len(row) > field.Index {
 			s := row[field.Index]
+			if field.I18n {
+				var result interface{}
+				json.Unmarshal([]byte(s), &result)
+				j.updateI18nJson(field.Vtype, result)
+				bytes, err := json.Marshal(result)
+				if err == nil {
+					s = string(bytes)
+				}
+			}
 			var out bytes.Buffer
 			if FlagCompact {
 				json.Compact(&out, []byte(s))
@@ -96,6 +105,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 			} else {
 				j.appendData(s)
 			}
+
 		} else {
 			j.appendData("null")
 		}
@@ -105,5 +115,42 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 			s = row[field.Index]
 		}
 		j.appendData(field.formatValue(s))
+	}
+}
+
+func (j *JsonFormater) updateI18nJson(t *Type, obj interface{}) {
+	var vt *Type
+	if t != nil {
+		vt = t.Vtype
+	}
+	if vt == nil {
+		return
+	}
+
+	switch val := obj.(type) {
+	case map[interface{}]interface{}:
+		for k, v := range val {
+			if vt.isI18nString() {
+				val[k] = getI18nString(v.(string))
+			} else {
+				j.updateI18nJson(vt, v)
+			}
+		}
+	case map[string]interface{}:
+		for k, v := range val {
+			if vt.isI18nString() {
+				val[k] = getI18nString(v.(string))
+			} else {
+				j.updateI18nJson(vt, v)
+			}
+		}
+	case []interface{}:
+		for i, v := range val {
+			if vt.isI18nString() {
+				val[i] = getI18nString(v.(string))
+			} else {
+				j.updateI18nJson(vt, v)
+			}
+		}
 	}
 }

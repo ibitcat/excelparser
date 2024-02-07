@@ -197,6 +197,7 @@ func parseType(typ string) *Type {
 			if len(s) == 3 {
 				t.Vtype = parseType(s[2])
 			}
+			t.I18n = t.isI18nJson()
 		}
 	}
 	return t

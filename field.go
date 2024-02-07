@@ -100,14 +100,10 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 			}
 		}
 	case TString:
-		if ok && f.I18n && len(val) > 0 {
-			if i18nVal, ok := I18nMap.Load(val); ok {
-				i18nStr := i18nVal.(string)
-				if len(i18nStr) > 0 {
-					row[f.Index] = i18nStr
-				}
-			} else {
-				I18nMap.Store(val, "")
+		if ok && f.isI18nString() && len(val) > 0 {
+			i18nStr := getI18nString(val)
+			if len(i18nStr) > 0 {
+				row[f.Index] = i18nStr
 			}
 		}
 	}

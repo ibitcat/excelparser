@@ -97,6 +97,10 @@ func (t *Type) isInteger() bool {
 	return false
 }
 
+func (t *Type) isI18nString() bool {
+	return t.Kind == TString && t.I18n
+}
+
 // 是否是需要递归的类型
 func (t *Type) isRecursice() bool {
 	switch t.Kind {
@@ -201,6 +205,26 @@ func (t *Type) checkJsonVal(val string) bool {
 	err := json.Unmarshal([]byte(val), &result)
 	if err == nil {
 		return t.checkJsonObj(result)
+	}
+	return false
+}
+
+func (t *Type) jsonHasI18n() bool {
+	switch t.Kind {
+	case TArray, TMap:
+		return t.Vtype.jsonHasI18n()
+	case TString:
+		return t.I18n
+	}
+	return false
+}
+
+func (t *Type) isI18nJson() bool {
+	if t.Kind == TJson {
+		vt := t.Vtype
+		if vt != nil {
+			return vt.jsonHasI18n()
+		}
 	}
 	return false
 }

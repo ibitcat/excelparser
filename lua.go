@@ -119,7 +119,7 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		var result interface{}
 		err := json.Unmarshal([]byte(s), &result)
 		if err == nil {
-			l.formatJsonValue(result, depth)
+			l.formatJsonValue(field.Vtype, result, depth)
 		} else {
 			l.appendData("nil")
 		}
@@ -144,18 +144,22 @@ func (l *LuaFormater) formatJsonKey(key interface{}) string {
 	return keystr
 }
 
-func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
-	switch obj := obj.(type) {
+func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
+	var vt *Type
+	if t != nil {
+		vt = t.Vtype
+	}
+	switch val := obj.(type) {
 	case map[interface{}]interface{}:
 		l.appendData("{")
 		l.appendEOL()
-		for k, v := range obj {
+		for k, v := range val {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(v, depth+1)
+			l.formatJsonValue(vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
@@ -164,13 +168,13 @@ func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
 	case map[string]interface{}:
 		l.appendData("{")
 		l.appendEOL()
-		for k, v := range obj {
+		for k, v := range val {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(v, depth+1)
+			l.formatJsonValue(vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
@@ -179,21 +183,24 @@ func (l *LuaFormater) formatJsonValue(obj interface{}, depth int) {
 	case []interface{}:
 		l.appendData("{")
 		l.appendEOL()
-		for i, v := range obj {
+		for i, v := range val {
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(i + 1))
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(v, depth+1)
+			l.formatJsonValue(vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
 		l.appendIndent(depth)
 		l.appendData("}")
 	case string:
-		l.appendData(formatString(obj))
+		if t != nil && t.isI18nString() {
+			val = getI18nString(val)
+		}
+		l.appendData(formatString(val))
 	default:
-		l.appendData(fmt.Sprintf("%v", obj))
+		l.appendData(fmt.Sprintf("%v", val))
 	}
 }
