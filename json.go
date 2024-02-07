@@ -43,12 +43,12 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 	case TArray:
 		j.appendData("[")
 		j.appendEOL()
-		for i, f := range field.Vals {
+		for _, f := range field.Vals {
 			j.appendIndent(depth + 1)
 			j.formatData(f, row, depth+1)
-			j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-			j.appendEOL()
+			j.appendComma()
 		}
+		j.replaceComma()
 		j.appendIndent(depth)
 		j.appendData("]")
 	case TMap:
@@ -62,25 +62,25 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 
 			v := field.Vals[i]
 			j.formatData(v, row, depth+1)
-			j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-			j.appendEOL()
+			j.appendComma()
 		}
+		j.replaceComma()
 		j.appendIndent(depth)
 		j.appendData("}")
 	case TStruct:
 		j.appendData("{")
 		j.appendEOL()
-		for i, f := range field.Vals {
+		for _, f := range field.Vals {
 			if f.isHitMode(j.mode) {
 				j.appendIndent(depth + 1)
 				j.appendData("\"")
 				j.appendData(f.Name)
 				j.appendData("\":")
 				j.formatData(f, row, depth+1)
-				j.appendData(ternary(i < len(field.Vals)-1, ",", ""))
-				j.appendEOL()
+				j.appendComma()
 			}
 		}
+		j.replaceComma()
 		j.appendIndent(depth)
 		j.appendData("}")
 	case TJson:

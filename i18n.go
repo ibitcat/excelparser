@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"sync"
 
 	"github.com/xuri/excelize/v2"
@@ -41,13 +42,18 @@ func saveI18nXlsx(path, lang string) {
 	f.SetActiveSheet(index)
 
 	// Set value of a cell.
-	idx := 1
+	keys := make([]string, 0, 64)
 	I18nMap.Range(func(key, value interface{}) bool {
-		axis := fmt.Sprintf("A%d", idx)
-		f.SetSheetRow("Sheet1", axis, &[]interface{}{key, value})
-		idx++
+		keys = append(keys, key.(string))
 		return true
 	})
+	sort.Strings(keys)
+	for i, k := range keys {
+		axis := fmt.Sprintf("A%d", i+1)
+		v, _ := I18nMap.Load(k)
+		f.SetSheetRow("Sheet1", axis, &[]interface{}{k, v})
+	}
+
 	if err := f.SaveAs(fileName); err != nil {
 		fmt.Println(err)
 	}

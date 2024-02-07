@@ -94,8 +94,12 @@ func (x *Xlsx) appendComma() {
 }
 
 func (x *Xlsx) replaceComma() {
-	str := ternary(FlagCompact && !x.Vertical, "", "\n")
-	x.Datas[len(x.Datas)-1] = str
+	tailIdx := len(x.Datas) - 1
+	comma := x.Datas[tailIdx]
+	if len(comma) > 0 && comma[:1] == "," {
+		str := ternary(FlagCompact && !x.Vertical, "", "\n")
+		x.Datas[tailIdx] = str
+	}
 }
 
 func (x *Xlsx) replaceTail(str string) {
