@@ -48,6 +48,9 @@ func saveI18nXlsx(path, lang string) {
 	fileName := path + "/" + lang + ".xlsx"
 
 	f := excelize.NewFile()
+	f.SetDocProps(&excelize.DocProperties{
+		Creator: "Excel Parser",
+	})
 	defer f.Close()
 
 	index, _ := f.NewSheet("Sheet1")
