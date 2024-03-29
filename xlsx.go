@@ -39,7 +39,7 @@ type Xlsx struct {
 	Rows         [][]string     // 合法的配置行
 	Datas        []string       // 导出数据缓存
 	Errors       []string       // 错误信息
-	Exports      []*ExportInfo  // 导出信息
+	Exports      []ExportInfo  // 导出信息
 	LastModified uint64         // 最后修改时间
 	TimeCost     int            // 耗时
 }
@@ -425,16 +425,17 @@ func (x *Xlsx) canParse() bool {
 
 func (x *Xlsx) updateExportInfo(mode, format string) {
 	var e *ExportInfo
-	for _, v := range x.Exports {
-		if v.Mode == mode && v.Format == format {
-			e = v
+	for i := 0; i < len(x.Exports); i++ {
+		p := &x.Exports[i]
+		if p.Mode == mode && p.Format == format {
+			e = p
 			break
 		}
 	}
-	if e == nil {
-		x.Exports = append(x.Exports, &ExportInfo{mode, format, x.LastModified})
-	} else {
+	if e != nil {
 		e.LastTime = x.LastModified
+	} else {
+		x.Exports = append(x.Exports, ExportInfo{mode, format, x.LastModified})
 	}
 }
 

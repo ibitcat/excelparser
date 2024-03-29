@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/panjf2000/ants/v2 v2.9.0
 	github.com/xuri/excelize/v2 v2.8.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

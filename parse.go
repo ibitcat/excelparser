@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 var MaxFileLen int
@@ -36,7 +37,7 @@ func walkPath(xlsxPath string) {
 				Errors:       make([]string, 0),
 				TimeCost:     0,
 				LastModified: modifyTime,
-				Exports:      make([]*ExportInfo, 0),
+				Exports:      make([]ExportInfo, 0),
 			}
 			MaxFileLen = max(MaxFileLen, len(task.FileName))
 			XlsxList = append(XlsxList, task)
@@ -58,23 +59,19 @@ func findXlsx(name string) *Xlsx {
 }
 
 func loadExportLog() {
-	file, err := os.Open("export.log")
+	data, err := os.ReadFile("export.log")
 	if err != nil {
 		return
 	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) > 0 {
-			s := strings.SplitN(line, ",", 2)
-			if len(s) == 2 {
-				x := findXlsx(s[0])
-				if x != nil {
-					json.Unmarshal([]byte(s[1]), &x.Exports)
-				}
-			}
+	m := make(map[string][]ExportInfo)
+	err = yaml.Unmarshal([]byte(data), &m)
+	if err != nil {
+		return
+	}
+	for k, v := range m {
+		x := findXlsx(k)
+		if x != nil {
+			x.Exports = v
 		}
 	}
 }
@@ -134,15 +131,16 @@ func saveConvTime() {
 	}
 	defer outFile.Close()
 
-	modTimes := make([]string, 0, len(XlsxList))
+	m := make(map[string][]ExportInfo)
 	for _, xlsx := range XlsxList {
-		es, err := json.Marshal(xlsx.Exports)
-		if err == nil {
-			modTimes = append(modTimes, xlsx.Name+","+string(es))
-		}
+		m[xlsx.Name] = xlsx.Exports
 	}
 
 	// save time
-	outFile.WriteString(strings.Join(modTimes, "\n"))
+	d, err := yaml.Marshal(&m)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	outFile.WriteString(string(d))
 	outFile.Sync()
 }
