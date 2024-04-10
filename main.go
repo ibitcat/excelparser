@@ -27,6 +27,7 @@ func main() {
 	if len(FlagI18nLang) > 0 {
 		I18nLocale = gotext.NewLocale(FlagI18nPath, FlagI18nLang)
 		I18nLocale.AddDomain("default")
+		I18nLocale.ClearAllRefs()
 	}
 
 	Mode2Format = make(map[string]string)

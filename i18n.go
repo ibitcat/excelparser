@@ -42,7 +42,7 @@ func getI18nString(val string, f *Field, row int) string {
 		ref = fmt.Sprintf("%s:%s%d", f.Xlsx.Name, formatAxisX(f.Index+1), row)
 	}
 
-	I18nLocale.SetRefs(val, ref)
+	I18nLocale.AddRefs(val, ref)
 	return I18nLocale.Get(val)
 	// if i18nVal, ok := I18nMap.Load(val); ok {
 	// 	i18nStr := i18nVal.(string)
