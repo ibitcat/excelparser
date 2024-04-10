@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bitvcat/gotext"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -23,8 +24,9 @@ func main() {
 	}
 
 	// i18n output path
-	if len(FlagI18nPath) > 0 {
-		openI18nXlsx(FlagI18nPath, FlagI18nLang)
+	if len(FlagI18nLang) > 0 {
+		I18nLocale = gotext.NewLocale(FlagI18nPath, FlagI18nLang)
+		I18nLocale.AddDomain("default")
 	}
 
 	Mode2Format = make(map[string]string)

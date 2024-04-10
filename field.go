@@ -5,6 +5,7 @@ import "strconv"
 type Field struct {
 	*Type           // 字段数据类型
 	Parent *Field   // 父字段
+	Xlsx   *Xlsx    // 所属excel
 	Index  int      // 字段索引
 	Desc   string   // 字段描述
 	Rname  string   // 原始字段名
@@ -101,7 +102,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 		}
 	case TString:
 		if ok && f.isI18nString() && len(val) > 0 {
-			i18nStr := getI18nString(val)
+			i18nStr := getI18nString(val, f, line)
 			if len(i18nStr) > 0 {
 				row[f.Index] = i18nStr
 			}

@@ -39,7 +39,7 @@ type Xlsx struct {
 	Rows         [][]string     // 合法的配置行
 	Datas        []string       // 导出数据缓存
 	Errors       []string       // 错误信息
-	Exports      []ExportInfo  // 导出信息
+	Exports      []ExportInfo   // 导出信息
 	LastModified uint64         // 最后修改时间
 	TimeCost     int            // 耗时
 }
@@ -113,6 +113,7 @@ func (x *Xlsx) clearData() {
 func (x *Xlsx) createField(i int) *Field {
 	f := new(Field)
 	f.Index = i
+	f.Xlsx = x
 	if i < len(x.Names) {
 		f.Rname = strings.TrimSpace(x.Names[i])
 		f.Name = f.Rname
@@ -288,6 +289,7 @@ func (x *Xlsx) getMergeRangeX() [][]int {
 func (x *Xlsx) parseHeader() {
 	f := new(Field)
 	f.Index = -1
+	f.Xlsx = x
 	f.Type = &Type{Kind: TStruct}
 	x.RootField = f
 

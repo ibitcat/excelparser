@@ -39,7 +39,7 @@ func init() {
 	flag.StringVar(&Flagpath, "path", "", "Excel input path.")
 	flag.StringVar(&FlagClient, "client", "", "Export client fields using the specified format.")
 	flag.StringVar(&FlagServer, "server", "", "Export server fields using the specified format.")
-	flag.StringVar(&FlagI18nPath, "i18n", "", "I18n excel file path.")
+	flag.StringVar(&FlagI18nPath, "i18n", "./locales", "I18n po file path.")
 	flag.StringVar(&FlagI18nLang, "lang", "", "I18n language.")
 	flag.StringVar(&FlagOutput, "output", ".", "Export output path.")
 

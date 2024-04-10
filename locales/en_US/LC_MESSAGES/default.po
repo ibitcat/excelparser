@@ -1,0 +1,28 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"X-Generator: Poedit 3.4.2\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: item\item.xlsx:E6 task.xlsx:E6 task.xlsx:E7 item\item.xlsx:E7 item\item.xlsx:E8 ...
+msgid "hello"
+msgstr ""
+
+#: item\item.xlsx:C5 item\item.xlsx:C6 item\item.xlsx:C7 item\item.xlsx:C8 item\item.xlsx:C9 ...
+msgid "世界"
+msgstr "world"
+
+#: item\item.xlsx:C5 item\item.xlsx:C6 item\item.xlsx:C7 item\item.xlsx:C8 item\item.xlsx:C9 ...
+msgid "你好"
+msgstr "hello"
+
+#: item\item.xlsx:E5 task.xlsx:E5
+msgid "这是一个道具"
+msgstr "this is a item"

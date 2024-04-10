@@ -9,6 +9,7 @@ import (
 
 type LuaFormater struct {
 	*Xlsx
+	line int
 	mode string
 }
 
@@ -16,17 +17,20 @@ type LuaFormater struct {
 // 高级特性：id公式，数值范围检查，字段注释，配置行注释
 func (l *LuaFormater) formatRows() {
 	// 复用 datas
+	l.line = 0
 	l.clearData()
 
 	// data
 	if l.Vertical {
 		l.appendData("return ")
 		for _, col := range l.Rows {
+			l.line++
 			l.formatData(l.RootField, col, 0)
 		}
 	} else {
 		l.appendData("return {\n")
 		for _, row := range l.Rows {
+			l.line++
 			key := row[0]
 			if strings.HasPrefix(key, "//") || key == "" {
 				continue
@@ -119,7 +123,7 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		var result interface{}
 		err := json.Unmarshal([]byte(s), &result)
 		if err == nil {
-			l.formatJsonValue(field.Vtype, result, depth)
+			l.formatJsonValue(field, field.Vtype, result, depth)
 		} else {
 			l.appendData("nil")
 		}
@@ -144,7 +148,7 @@ func (l *LuaFormater) formatJsonKey(key interface{}) string {
 	return keystr
 }
 
-func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
+func (l *LuaFormater) formatJsonValue(field *Field, t *Type, obj interface{}, depth int) {
 	var vt *Type
 	if t != nil {
 		vt = t.Vtype
@@ -159,7 +163,7 @@ func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(vt, v, depth+1)
+			l.formatJsonValue(field, vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
@@ -174,7 +178,7 @@ func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(vt, v, depth+1)
+			l.formatJsonValue(field, vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
@@ -189,7 +193,7 @@ func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
 			l.appendSpace()
 			l.appendData("=")
 			l.appendSpace()
-			l.formatJsonValue(vt, v, depth+1)
+			l.formatJsonValue(field, vt, v, depth+1)
 			l.appendComma()
 		}
 		l.replaceComma()
@@ -197,7 +201,7 @@ func (l *LuaFormater) formatJsonValue(t *Type, obj interface{}, depth int) {
 		l.appendData("}")
 	case string:
 		if t != nil && t.isI18nString() {
-			val = getI18nString(val)
+			val = getI18nString(val, field, l.line+HeadLineNum)
 		}
 		l.appendData(formatString(val))
 	default:

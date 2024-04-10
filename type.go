@@ -22,7 +22,7 @@ const (
 type Type struct {
 	Kind  int    // 类型定义
 	Cap   int    // 容量（for array）
-	I18n  bool   // 国际化字符串(for string)
+	I18n  bool   // 是否有国际化字符串(for string,json)
 	Aname string // alias type name(for struct)
 	Ktype *Type  // 键类型(for map)
 	Vtype *Type  // 值类型

@@ -8,21 +8,25 @@ import (
 
 type JsonFormater struct {
 	*Xlsx
+	line int
 	mode string
 }
 
 func (j *JsonFormater) formatRows() {
 	// 复用 datas
+	j.line = 0
 	j.clearData()
 
 	// data
 	if j.Vertical {
 		for _, col := range j.Rows {
+			j.line++
 			j.formatData(j.RootField, col, 0)
 		}
 	} else {
 		j.appendData("[\n")
 		for _, row := range j.Rows {
+			j.line++
 			key := row[0]
 			if strings.HasPrefix(key, "//") || key == "" {
 				continue
@@ -89,7 +93,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 			if field.I18n {
 				var result interface{}
 				json.Unmarshal([]byte(s), &result)
-				j.updateI18nJson(field.Vtype, result)
+				j.updateI18nJson(field, field.Vtype, result)
 				bytes, err := json.Marshal(result)
 				if err == nil {
 					s = string(bytes)
@@ -118,7 +122,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 	}
 }
 
-func (j *JsonFormater) updateI18nJson(t *Type, obj interface{}) {
+func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj interface{}) {
 	var vt *Type
 	if t != nil {
 		vt = t.Vtype
@@ -131,25 +135,25 @@ func (j *JsonFormater) updateI18nJson(t *Type, obj interface{}) {
 	case map[interface{}]interface{}:
 		for k, v := range val {
 			if vt.isI18nString() {
-				val[k] = getI18nString(v.(string))
+				val[k] = getI18nString(v.(string), field, j.line+HeadLineNum)
 			} else {
-				j.updateI18nJson(vt, v)
+				j.updateI18nJson(field, vt, v)
 			}
 		}
 	case map[string]interface{}:
 		for k, v := range val {
 			if vt.isI18nString() {
-				val[k] = getI18nString(v.(string))
+				val[k] = getI18nString(v.(string), field, j.line+HeadLineNum)
 			} else {
-				j.updateI18nJson(vt, v)
+				j.updateI18nJson(field, vt, v)
 			}
 		}
 	case []interface{}:
 		for i, v := range val {
 			if vt.isI18nString() {
-				val[i] = getI18nString(v.(string))
+				val[i] = getI18nString(v.(string), field, j.line+HeadLineNum)
 			} else {
-				j.updateI18nJson(vt, v)
+				j.updateI18nJson(field, vt, v)
 			}
 		}
 	}

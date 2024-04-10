@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 	"sync"
 
+	"github.com/bitvcat/gotext"
 	"github.com/xuri/excelize/v2"
 )
 
-var I18nMap sync.Map
+var (
+	I18nMap    sync.Map
+	I18nLocale *gotext.Locale
+)
 
 func openI18nXlsx(path, lang string) error {
 	fileName := path + "/" + lang + ".xlsx"
@@ -31,45 +34,57 @@ func openI18nXlsx(path, lang string) error {
 	return nil
 }
 
-func getI18nString(val string) string {
-	if i18nVal, ok := I18nMap.Load(val); ok {
-		i18nStr := i18nVal.(string)
-		if len(i18nStr) > 0 {
-			return i18nStr
-		}
+func getI18nString(val string, f *Field, row int) string {
+	var ref string
+	if f.Xlsx.Vertical {
+		ref = fmt.Sprintf("%s:%s%d", f.Xlsx.Name, formatAxisX(row), f.Index+1)
 	} else {
-		I18nMap.Store(val, "")
+		ref = fmt.Sprintf("%s:%s%d", f.Xlsx.Name, formatAxisX(f.Index+1), row)
 	}
-	return ""
+
+	I18nLocale.SetRefs(val, ref)
+	return I18nLocale.Get(val)
+	// if i18nVal, ok := I18nMap.Load(val); ok {
+	// 	i18nStr := i18nVal.(string)
+	// 	if len(i18nStr) > 0 {
+	// 		return i18nStr
+	// 	}
+	// } else {
+	// 	I18nMap.Store(val, "")
+	// }
+	// return ""
 }
 
 func saveI18nXlsx(path, lang string) {
-	os.MkdirAll(path, os.ModePerm)
-	fileName := path + "/" + lang + ".xlsx"
+	I18nLocale.MarshalPo()
+	/*
+		os.MkdirAll(path, os.ModePerm)
+		fileName := path + "/" + lang + ".xlsx"
 
-	f := excelize.NewFile()
-	f.SetDocProps(&excelize.DocProperties{
-		Creator: "Excel Parser",
-	})
-	defer f.Close()
+		f := excelize.NewFile()
+		f.SetDocProps(&excelize.DocProperties{
+			Creator: "Excel Parser",
+		})
+		defer f.Close()
 
-	index, _ := f.NewSheet("Sheet1")
-	f.SetActiveSheet(index)
+		index, _ := f.NewSheet("Sheet1")
+		f.SetActiveSheet(index)
 
-	// Set value of a cell.
-	keys := make([]string, 0, 64)
-	I18nMap.Range(func(key, value interface{}) bool {
-		keys = append(keys, key.(string))
-		return true
-	})
-	sort.Strings(keys)
-	for i, k := range keys {
-		axis := fmt.Sprintf("A%d", i+1)
-		v, _ := I18nMap.Load(k)
-		f.SetSheetRow("Sheet1", axis, &[]interface{}{k, v})
-	}
+		// Set value of a cell.
+		keys := make([]string, 0, 64)
+		I18nMap.Range(func(key, value interface{}) bool {
+			keys = append(keys, key.(string))
+			return true
+		})
+		sort.Strings(keys)
+		for i, k := range keys {
+			axis := fmt.Sprintf("A%d", i+1)
+			v, _ := I18nMap.Load(k)
+			f.SetSheetRow("Sheet1", axis, &[]interface{}{k, v})
+		}
 
-	if err := f.SaveAs(fileName); err != nil {
-		fmt.Println(err)
-	}
+		if err := f.SaveAs(fileName); err != nil {
+			fmt.Println(err)
+		}
+	*/
 }
