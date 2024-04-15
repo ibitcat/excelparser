@@ -1,0 +1,60 @@
+msgid ""
+msgstr ""
+
+#: ..\..\xlsx\task.xlsx:E6 ..\..\xlsx\item\item.xlsx:E6 ..\..\xlsx\task.xlsx:E7 ..\..\xlsx\item\item.xlsx:E7 ..\..\xlsx\task.xlsx:E8
+#: ..\..\xlsx\item\item.xlsx:E8 ..\..\xlsx\task.xlsx:E9 ..\..\xlsx\item\item.xlsx:E9 ..\..\xlsx\task.xlsx:E10 ..\..\xlsx\item\item.xlsx:E10
+#: ..\..\xlsx\task.xlsx:E11 ..\..\xlsx\item\item.xlsx:E11 ..\..\xlsx\task.xlsx:E12 ..\..\xlsx\item\item.xlsx:E12 ..\..\xlsx\task.xlsx:E13
+#: ..\..\xlsx\item\item.xlsx:E13 ..\..\xlsx\task.xlsx:E14 ..\..\xlsx\item\item.xlsx:E14 ..\..\xlsx\task.xlsx:E15 ..\..\xlsx\item\item.xlsx:E15
+#: ..\..\xlsx\task.xlsx:E16 ..\..\xlsx\item\item.xlsx:E16 ..\..\xlsx\task.xlsx:E17 ..\..\xlsx\item\item.xlsx:E17 ..\..\xlsx\task.xlsx:E18
+#: ..\..\xlsx\item\item.xlsx:E18 ..\..\xlsx\task.xlsx:E19 ..\..\xlsx\item\item.xlsx:E19 ..\..\xlsx\task.xlsx:E20 ..\..\xlsx\item\item.xlsx:E20
+#: ..\..\xlsx\task.xlsx:E21 ..\..\xlsx\item\item.xlsx:E21 ..\..\xlsx\task.xlsx:E22 ..\..\xlsx\item\item.xlsx:E22 ..\..\xlsx\task.xlsx:E23
+#: ..\..\xlsx\item\item.xlsx:E23 ..\..\xlsx\task.xlsx:E24 ..\..\xlsx\item\item.xlsx:E24 ..\..\xlsx\task.xlsx:E25 ..\..\xlsx\item\item.xlsx:E25
+#: ..\..\xlsx\task.xlsx:E26 ..\..\xlsx\item\item.xlsx:E26 ..\..\xlsx\task.xlsx:E27 ..\..\xlsx\item\item.xlsx:E27 ..\..\xlsx\task.xlsx:E28
+#: ..\..\xlsx\item\item.xlsx:E28 ..\..\xlsx\task.xlsx:E29 ..\..\xlsx\item\item.xlsx:E29 ..\..\xlsx\task.xlsx:E30 ..\..\xlsx\item\item.xlsx:E30
+#: ..\..\xlsx\task.xlsx:E31 ..\..\xlsx\item\item.xlsx:E31 ..\..\xlsx\task.xlsx:E32 ..\..\xlsx\item\item.xlsx:E32 ..\..\xlsx\task.xlsx:E33
+#: ..\..\xlsx\item\item.xlsx:E33 ..\..\xlsx\task.xlsx:E34 ..\..\xlsx\item\item.xlsx:E34 ..\..\xlsx\task.xlsx:E35 ..\..\xlsx\item\item.xlsx:E35
+#: ..\..\xlsx\task.xlsx:E36 ..\..\xlsx\item\item.xlsx:E36 ..\..\xlsx\task.xlsx:E37 ..\..\xlsx\item\item.xlsx:E37 ..\..\xlsx\task.xlsx:E38
+#: ..\..\xlsx\item\item.xlsx:E38 ..\..\xlsx\task.xlsx:E39 ..\..\xlsx\item\item.xlsx:E39 ..\..\xlsx\task.xlsx:E40 ..\..\xlsx\item\item.xlsx:E40
+#: ..\..\xlsx\task.xlsx:E41 ..\..\xlsx\item\item.xlsx:E41
+msgid "hello"
+msgstr "你好好啊"
+
+#: ..\..\xlsx\task.xlsx:C5 ..\..\xlsx\task.xlsx:C6 ..\..\xlsx\item\item.xlsx:C5 ..\..\xlsx\task.xlsx:C7 ..\..\xlsx\item\item.xlsx:C6
+#: ..\..\xlsx\task.xlsx:C8 ..\..\xlsx\item\item.xlsx:C7 ..\..\xlsx\task.xlsx:C9 ..\..\xlsx\item\item.xlsx:C8 ..\..\xlsx\task.xlsx:C10
+#: ..\..\xlsx\item\item.xlsx:C9 ..\..\xlsx\task.xlsx:C11 ..\..\xlsx\item\item.xlsx:C10 ..\..\xlsx\task.xlsx:C12 ..\..\xlsx\item\item.xlsx:C11
+#: ..\..\xlsx\task.xlsx:C13 ..\..\xlsx\item\item.xlsx:C12 ..\..\xlsx\task.xlsx:C14 ..\..\xlsx\item\item.xlsx:C13 ..\..\xlsx\task.xlsx:C15
+#: ..\..\xlsx\item\item.xlsx:C14 ..\..\xlsx\task.xlsx:C16 ..\..\xlsx\item\item.xlsx:C15 ..\..\xlsx\task.xlsx:C17 ..\..\xlsx\item\item.xlsx:C16
+#: ..\..\xlsx\task.xlsx:C18 ..\..\xlsx\item\item.xlsx:C17 ..\..\xlsx\task.xlsx:C19 ..\..\xlsx\item\item.xlsx:C18 ..\..\xlsx\task.xlsx:C20
+#: ..\..\xlsx\task.xlsx:C21 ..\..\xlsx\item\item.xlsx:C19 ..\..\xlsx\item\item.xlsx:C20 ..\..\xlsx\task.xlsx:C22 ..\..\xlsx\item\item.xlsx:C21
+#: ..\..\xlsx\item\item.xlsx:C22 ..\..\xlsx\task.xlsx:C23 ..\..\xlsx\item\item.xlsx:C23 ..\..\xlsx\task.xlsx:C24 ..\..\xlsx\task.xlsx:C25
+#: ..\..\xlsx\item\item.xlsx:C24 ..\..\xlsx\task.xlsx:C26 ..\..\xlsx\item\item.xlsx:C25 ..\..\xlsx\task.xlsx:C27 ..\..\xlsx\item\item.xlsx:C26
+#: ..\..\xlsx\task.xlsx:C28 ..\..\xlsx\item\item.xlsx:C27 ..\..\xlsx\task.xlsx:C29 ..\..\xlsx\item\item.xlsx:C28 ..\..\xlsx\task.xlsx:C30
+#: ..\..\xlsx\item\item.xlsx:C29 ..\..\xlsx\task.xlsx:C31 ..\..\xlsx\item\item.xlsx:C30 ..\..\xlsx\task.xlsx:C32 ..\..\xlsx\item\item.xlsx:C31
+#: ..\..\xlsx\task.xlsx:C33 ..\..\xlsx\item\item.xlsx:C32 ..\..\xlsx\task.xlsx:C34 ..\..\xlsx\item\item.xlsx:C33 ..\..\xlsx\task.xlsx:C35
+#: ..\..\xlsx\item\item.xlsx:C34 ..\..\xlsx\task.xlsx:C36 ..\..\xlsx\item\item.xlsx:C35 ..\..\xlsx\task.xlsx:C37 ..\..\xlsx\item\item.xlsx:C36
+#: ..\..\xlsx\task.xlsx:C38 ..\..\xlsx\item\item.xlsx:C37 ..\..\xlsx\task.xlsx:C39 ..\..\xlsx\item\item.xlsx:C38 ..\..\xlsx\task.xlsx:C40
+#: ..\..\xlsx\item\item.xlsx:C39 ..\..\xlsx\task.xlsx:C41 ..\..\xlsx\item\item.xlsx:C40 ..\..\xlsx\item\item.xlsx:C41
+msgid "世界"
+msgstr "woooooorld"
+
+#: ..\..\xlsx\task.xlsx:C5 ..\..\xlsx\task.xlsx:C6 ..\..\xlsx\item\item.xlsx:C5 ..\..\xlsx\task.xlsx:C7 ..\..\xlsx\item\item.xlsx:C6
+#: ..\..\xlsx\task.xlsx:C8 ..\..\xlsx\item\item.xlsx:C7 ..\..\xlsx\task.xlsx:C9 ..\..\xlsx\item\item.xlsx:C8 ..\..\xlsx\task.xlsx:C10
+#: ..\..\xlsx\item\item.xlsx:C9 ..\..\xlsx\task.xlsx:C11 ..\..\xlsx\item\item.xlsx:C10 ..\..\xlsx\task.xlsx:C12 ..\..\xlsx\item\item.xlsx:C11
+#: ..\..\xlsx\task.xlsx:C13 ..\..\xlsx\item\item.xlsx:C12 ..\..\xlsx\task.xlsx:C14 ..\..\xlsx\item\item.xlsx:C13 ..\..\xlsx\task.xlsx:C15
+#: ..\..\xlsx\item\item.xlsx:C14 ..\..\xlsx\task.xlsx:C16 ..\..\xlsx\item\item.xlsx:C15 ..\..\xlsx\task.xlsx:C17 ..\..\xlsx\item\item.xlsx:C16
+#: ..\..\xlsx\task.xlsx:C18 ..\..\xlsx\item\item.xlsx:C17 ..\..\xlsx\task.xlsx:C19 ..\..\xlsx\item\item.xlsx:C18 ..\..\xlsx\task.xlsx:C20
+#: ..\..\xlsx\item\item.xlsx:C19 ..\..\xlsx\task.xlsx:C21 ..\..\xlsx\item\item.xlsx:C20 ..\..\xlsx\task.xlsx:C22 ..\..\xlsx\item\item.xlsx:C21
+#: ..\..\xlsx\item\item.xlsx:C22 ..\..\xlsx\task.xlsx:C23 ..\..\xlsx\item\item.xlsx:C23 ..\..\xlsx\task.xlsx:C24 ..\..\xlsx\item\item.xlsx:C24
+#: ..\..\xlsx\task.xlsx:C25 ..\..\xlsx\task.xlsx:C26 ..\..\xlsx\item\item.xlsx:C25 ..\..\xlsx\task.xlsx:C27 ..\..\xlsx\item\item.xlsx:C26
+#: ..\..\xlsx\task.xlsx:C28 ..\..\xlsx\item\item.xlsx:C27 ..\..\xlsx\task.xlsx:C29 ..\..\xlsx\item\item.xlsx:C28 ..\..\xlsx\task.xlsx:C30
+#: ..\..\xlsx\item\item.xlsx:C29 ..\..\xlsx\task.xlsx:C31 ..\..\xlsx\item\item.xlsx:C30 ..\..\xlsx\task.xlsx:C32 ..\..\xlsx\item\item.xlsx:C31
+#: ..\..\xlsx\task.xlsx:C33 ..\..\xlsx\item\item.xlsx:C32 ..\..\xlsx\task.xlsx:C34 ..\..\xlsx\item\item.xlsx:C33 ..\..\xlsx\task.xlsx:C35
+#: ..\..\xlsx\item\item.xlsx:C34 ..\..\xlsx\task.xlsx:C36 ..\..\xlsx\item\item.xlsx:C35 ..\..\xlsx\task.xlsx:C37 ..\..\xlsx\item\item.xlsx:C36
+#: ..\..\xlsx\task.xlsx:C38 ..\..\xlsx\item\item.xlsx:C37 ..\..\xlsx\task.xlsx:C39 ..\..\xlsx\item\item.xlsx:C38 ..\..\xlsx\task.xlsx:C40
+#: ..\..\xlsx\item\item.xlsx:C39 ..\..\xlsx\task.xlsx:C41 ..\..\xlsx\item\item.xlsx:C40 ..\..\xlsx\item\item.xlsx:C41
+msgid "你好"
+msgstr "hello"
+
+#: ..\..\xlsx\task.xlsx:E5 ..\..\xlsx\item\item.xlsx:E5
+msgid "这是一个道具"
+msgstr "this is a item"

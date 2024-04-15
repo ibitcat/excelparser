@@ -1,5 +1,9 @@
 github.com/bitvcat/gotext v0.0.0-20240410104816-c1295b11df5e h1:t5WiIbk5UIcp0m49KPViCuDLYAO9n1JpsCdJOubnH/U=
 github.com/bitvcat/gotext v0.0.0-20240410104816-c1295b11df5e/go.mod h1:URYbkq1NI0oePkh5Jff1J1owhpv5no3R9xl1GJo8xbo=
+github.com/bitvcat/gotext v0.0.0-20240415123143-8c79836c0cbe h1:2ijvVL0O+DNjfUjjMzkWOWyrUAcr1OoblCUCAZKWpTQ=
+github.com/bitvcat/gotext v0.0.0-20240415123143-8c79836c0cbe/go.mod h1:URYbkq1NI0oePkh5Jff1J1owhpv5no3R9xl1GJo8xbo=
+github.com/bitvcat/gotext v0.0.0-20240415124902-f8c4e6c471e9 h1:DfruuNMfdwIPIFIfgih2TLzhjoMCnJXxxIyIDE3gBcg=
+github.com/bitvcat/gotext v0.0.0-20240415124902-f8c4e6c471e9/go.mod h1:URYbkq1NI0oePkh5Jff1J1owhpv5no3R9xl1GJo8xbo=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -69,7 +69,7 @@ excelparser --path=./xlsx --server=lua --client=json --indent
 - 示例3:
 ```
 server 生成json配置到 ./out/server/json 目录中，并使用 ./i18n 目录中的 en.xlsx 翻译文件来替换配置中的 i18n 类型配置值。
-excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=./i18n --lang=en
+excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=./locales --lang=en_US
 ```
 
 ## 表头格式
