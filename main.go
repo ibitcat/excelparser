@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bitvcat/gotext"
+	"github.com/ibitcat/gotext"
 	"github.com/panjf2000/ants/v2"
 )
 

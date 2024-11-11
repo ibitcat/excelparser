@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/bitvcat/gotext"
+	"github.com/ibitcat/gotext"
 	"github.com/xuri/excelize/v2"
 )
 

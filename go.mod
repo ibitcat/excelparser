@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.1
 
 require (
-	github.com/bitvcat/gotext v0.0.0-20240415124902-f8c4e6c471e9
+	github.com/ibitcat/gotext v0.0.0-20240520115757-acebc814905b
 	github.com/panjf2000/ants/v2 v2.9.1
 	github.com/xuri/excelize/v2 v2.8.1
 	gopkg.in/yaml.v3 v3.0.1
