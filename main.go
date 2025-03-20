@@ -65,7 +65,7 @@ func main() {
 		time.Sleep(time.Millisecond * 100)
 		printResult()
 
-		if len(FlagI18nPath) > 0 {
+		if len(FlagI18nLang) > 0 {
 			saveI18nXlsx(FlagI18nPath, FlagI18nLang)
 		}
 	} else {

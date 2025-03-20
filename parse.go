@@ -59,7 +59,7 @@ func findXlsx(name string) *Xlsx {
 }
 
 func loadExportLog() {
-	data, err := os.ReadFile("export.log")
+	data, err := os.ReadFile("export.yaml")
 	if err != nil {
 		return
 	}
@@ -124,10 +124,10 @@ func printResult() {
 }
 
 func saveConvTime() {
-	file := "export.log"
+	file := "export.yaml"
 	outFile, operr := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 	if operr != nil {
-		fmt.Println("创建[export.log]文件错误")
+		fmt.Println("创建[export.yaml]文件错误")
 	}
 	defer outFile.Close()
 

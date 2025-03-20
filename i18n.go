@@ -36,6 +36,9 @@ func openI18nXlsx(path, lang string) error {
 }
 
 func getI18nString(val string, f *Field, row int) string {
+	if I18nLocale == nil {
+		return val
+	}
 	var ref string
 	absI18nPath, _ := filepath.Abs(I18nLocale.GetPath())
 	absXlsxPath, _ := filepath.Abs(Flagpath)
