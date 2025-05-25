@@ -523,7 +523,7 @@ func (x *Xlsx) writeToFile(mode, format string) {
 	// windows: out\server\json
 	outdir := FlagOutput + sep + mode + sep + format + sep
 	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.OutName, ext)
-	err := os.MkdirAll(filepath.Dir(outFileName), os.ModeDir)
+	err := os.MkdirAll(filepath.Dir(outFileName), 0o755)
 	if err == nil || os.IsExist(err) {
 		outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 		if operr != nil {
@@ -533,6 +533,8 @@ func (x *Xlsx) writeToFile(mode, format string) {
 
 		outFile.WriteString(strings.Join(x.Datas, ""))
 		outFile.Sync()
+	} else {
+		x.appendError(fmt.Sprintf("输出目录[%s]创建失败: %v", outdir, err))
 	}
 }
 
