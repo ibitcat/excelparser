@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,6 +17,7 @@ var MaxFileLen int
 
 func walkPath(xlsxPath string) {
 	XlsxList = make([]*Xlsx, 0)
+	OutNames := make(map[string]string) // 导出名冲突检查
 	err := filepath.Walk(xlsxPath, func(path string, f os.FileInfo, err error) error {
 		if f == nil {
 			return err
@@ -30,15 +32,22 @@ func walkPath(xlsxPath string) {
 			modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
 			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator))
 			dirname := strings.TrimSuffix(fname, f.Name())
+			fileName := getFileName(f.Name())
+			outName := strings.SplitN(fileName, "#", 2)[0]
 			task := &Xlsx{
 				Name:         dirname + f.Name(),
 				PathName:     path,
-				FileName:     dirname + getFileName(f.Name()),
+				FileName:     dirname + fileName,
+				OutName:      outName,
 				Errors:       make([]string, 0),
 				TimeCost:     0,
 				LastModified: modifyTime,
 				Exports:      make([]ExportInfo, 0),
 			}
+			if _, ok := OutNames[outName]; ok {
+				return errors.New(outName + " 导出名冲突")
+			}
+			OutNames[outName] = task.Name
 			MaxFileLen = max(MaxFileLen, len(task.FileName))
 			XlsxList = append(XlsxList, task)
 		}
@@ -76,7 +85,7 @@ func loadExportLog() {
 	}
 }
 
-func startParse(i interface{}) {
+func startParse(i any) {
 	xlsx := i.(*Xlsx)
 	if xlsx.canParse() {
 		startTime := time.Now()

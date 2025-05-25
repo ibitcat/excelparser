@@ -28,6 +28,7 @@ type Xlsx struct {
 	Name         string         // 文件名（带文件扩展名）
 	FileName     string         // 文件名
 	PathName     string         // 文件完整路径
+	OutName      string         // 输出文件名(item@道具.xlsx, 输出为 item)
 	SheetName    string         // 工作表名
 	Vertical     bool           // 纵向表
 	Excel        *excelize.File // 打开的excel文件句柄
@@ -518,8 +519,10 @@ func (x *Xlsx) writeToFile(mode, format string) {
 		ext = "json"
 	}
 	sep := string(filepath.Separator)
+	// linux: out/server/json
+	// windows: out\server\json
 	outdir := FlagOutput + sep + mode + sep + format + sep
-	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.FileName, ext)
+	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.OutName, ext)
 	err := os.MkdirAll(filepath.Dir(outFileName), os.ModeDir)
 	if err == nil || os.IsExist(err) {
 		outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
@@ -539,15 +542,15 @@ func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string 
 
 	errNum := len(x.Errors)
 	if errNum == 0 {
-		results = append(results, fmt.Sprintf(costFormat, x.FileName, x.TimeCost, len(x.Rows)))
+		results = append(results, fmt.Sprintf(costFormat, x.OutName, x.TimeCost, len(x.Rows)))
 	} else if errNum == 1 {
-		results = append(results, fmt.Sprintf(infoFormat, x.FileName, x.Errors[0]))
+		results = append(results, fmt.Sprintf(infoFormat, x.OutName, x.Errors[0]))
 	} else {
 		mid := int(math.Ceil(float64(errNum)/2)) - 1
-		for i := 0; i < errNum; i++ {
+		for i := range errNum {
 			err := x.Errors[i]
 			if mid == i {
-				results = append(results, fmt.Sprintf(infoFormat, x.FileName, err))
+				results = append(results, fmt.Sprintf(infoFormat, x.OutName, err))
 			} else {
 				results = append(results, fmt.Sprintf(infoFormat, "", err))
 			}
