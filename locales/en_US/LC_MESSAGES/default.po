@@ -7,16 +7,16 @@ msgstr ""
 "Language-Team: \n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
+"X-Generator: Poedit 3.7\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.7\n"
 
 #: ..\..\..\xlsx\template@模板.xlsx:E1
 msgid "hello"
 msgstr "halo"
 
 # 测试注释
-#: ..\..\..\out\server\lua\item.lua:20
+#: ..\..\..\xlsx\template@模板.xlsx:C1
 msgid "世界"
 msgstr "world"
 

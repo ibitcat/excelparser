@@ -11,7 +11,7 @@
 ---@field key7 integer[][] 二维数组
 
 ---@type Tsystem
-local t ={
+local t = {
   key1 = 1,
   key2 = "fuckyou",
   key3 = false,
