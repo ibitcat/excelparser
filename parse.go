@@ -33,7 +33,7 @@ func walkPath(xlsxPath string) {
 			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator))
 			dirname := strings.TrimSuffix(fname, f.Name())
 			fileName := getFileName(f.Name())
-			outName := strings.SplitN(fileName, "#", 2)[0]
+			outName := strings.SplitN(fileName, "@", 2)[0]
 			task := &Xlsx{
 				Name:         dirname + f.Name(),
 				PathName:     path,

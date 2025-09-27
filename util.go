@@ -14,7 +14,6 @@ var (
 	indentStr  map[int]string
 	ArrayRe    = regexp.MustCompile(`^\[(\d*?)\](.+)`)
 	MapRe      = regexp.MustCompile(`^map\[(.+?)\](.+)`)
-	RawRe      = regexp.MustCompile(`(\w+)<(.+)>`)
 	BasicTypes = []string{"int", "uint", "bool", "string", "var"}
 )
 
@@ -163,42 +162,127 @@ func parseType(typ string) *Type {
 		t.Kind = TString
 		t.I18n = true
 	default:
-		if len(typ) > 0 && typ[:1] == "[" {
-			s := ArrayRe.FindStringSubmatch(typ)
-			if len(s) == 3 {
-				t.Kind = TArray
-				if len(s[1]) > 0 {
-					cap, _ := strconv.Atoi(s[1])
-					t.Cap = cap
-					if cap == 0 {
-						// 数组长度不能为0
-						t.Kind = -1
-					}
-				}
-				t.Vtype = parseType(s[2])
-			}
-		} else if len(typ) >= 3 && typ[:3] == "map" {
-			s := MapRe.FindStringSubmatch(typ)
-			if len(s) == 3 {
-				t.Kind = TMap
-				t.Ktype = parseType(s[1])
-				t.Vtype = parseType(s[2])
-			}
-		} else if len(typ) >= 6 && typ[:6] == "struct" {
-			t.Kind = TStruct
-			s := RawRe.FindStringSubmatch(typ)
-			if len(s) == 3 {
-				// 结构体类型别名
-				t.Aname = s[2]
-			}
-		} else if len(typ) >= 4 && typ[:4] == "json" {
-			t.Kind = TJson
-			s := RawRe.FindStringSubmatch(typ)
-			if len(s) == 3 {
-				t.Vtype = parseType(s[2])
-			}
-			t.I18n = t.isI18nJson()
-		}
+		parseCompositeType(typ, t)
 	}
 	return t
+}
+
+// splitStructFields 将结构体字符串按字段分割，正确处理嵌套的括号和数组
+// 输入格式：{field1=type1,field2=type2,...}
+// 返回：[]string{"field1=type1", "field2=type2", ...}
+func splitStructFields(s string) []string {
+	if len(s) < 2 || s[0] != '{' || s[len(s)-1] != '}' {
+		return nil
+	}
+
+	// 去掉外层大括号
+	s = s[1 : len(s)-1]
+
+	var result []string
+	var current strings.Builder
+	depth := 0        // 跟踪大括号嵌套深度
+	bracketDepth := 0 // 跟踪方括号嵌套深度
+
+	for i := range len(s) {
+		char := s[i]
+		switch char {
+		case '{':
+			depth++
+			current.WriteByte(char)
+		case '}':
+			depth--
+			current.WriteByte(char)
+		case '[':
+			bracketDepth++
+			current.WriteByte(char)
+		case ']':
+			bracketDepth--
+			current.WriteByte(char)
+		case ',':
+			if depth == 0 && bracketDepth == 0 {
+				// 只在最外层处理逗号
+				if current.Len() > 0 {
+					result = append(result, strings.TrimSpace(current.String()))
+					current.Reset()
+				}
+			} else {
+				current.WriteByte(char)
+			}
+		default:
+			current.WriteByte(char)
+		}
+	}
+
+	// 添加最后一个字段
+	if current.Len() > 0 {
+		result = append(result, strings.TrimSpace(current.String()))
+	}
+
+	return result
+}
+
+// 解析复合类型
+func parseCompositeType(typ string, t *Type) {
+	if len(typ) > 0 && typ[:1] == "[" {
+		// array
+		s := ArrayRe.FindStringSubmatch(typ)
+		if len(s) == 3 {
+			t.Kind = TArray
+			if len(s[1]) > 0 {
+				cap, _ := strconv.Atoi(s[1])
+				t.Cap = cap
+				if cap == 0 {
+					// 数组长度不能为0
+					t.Kind = -1
+				}
+			}
+			t.Vtype = parseType(s[2])
+		}
+	} else if len(typ) >= 3 && typ[:3] == "map" {
+		// map
+		s := MapRe.FindStringSubmatch(typ)
+		if len(s) == 3 {
+			t.Kind = TMap
+			t.Ktype = parseType(s[1])
+			t.Vtype = parseType(s[2])
+		}
+	} else if len(typ) >= 6 && typ[:6] == "struct" {
+		// 具名结构体
+		t.Kind = TStruct
+		s := strings.SplitN(typ, "#", 2)
+		if len(s) == 2 {
+			// 结构体类型别名
+			t.Aname = s[1]
+		}
+	} else if len(typ) >= 4 && typ[:4] == "json" {
+		// json
+		// eg.: json 原始json
+		// eg.: json:map[string]int json 的值是 map[string]int
+		// eg.: json:{sites=[]{name=string,url=string}} json 的值是一个结构体
+		t.Kind = TJson
+		s := strings.SplitN(typ, ":", 2)
+		if len(s) == 2 {
+			// json 的类型别名
+			t.Vtype = parseType(s[1])
+		}
+		t.I18n = t.isI18nJson()
+	} else if len(typ) > 0 && typ[0] == '{' && typ[len(typ)-1] == '}' {
+		// 匿名结构体
+		// eg.: {sites=[]{name=string,url=string},age=int}
+		t.Kind = TStruct
+		t.Ftypes = make(map[string]*Type)
+
+		// 使用 splitStructFields 正确处理嵌套结构
+		parts := splitStructFields(typ)
+		for _, part := range parts {
+			kv := strings.SplitN(part, "=", 2)
+			if len(kv) == 2 {
+				fname := strings.TrimSpace(kv[0])
+				ftype := strings.TrimSpace(kv[1])
+				if len(fname) > 0 && len(ftype) > 0 {
+					t.Ftypes[fname] = parseType(ftype)
+				}
+			}
+		}
+	}
 }

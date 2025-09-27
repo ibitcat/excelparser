@@ -20,12 +20,13 @@ const (
 )
 
 type Type struct {
-	Kind  int    // 类型定义
-	Cap   int    // 容量（for array）
-	I18n  bool   // 是否有国际化字符串(for string,json)
-	Aname string // alias type name(for struct)
-	Ktype *Type  // 键类型(for map)
-	Vtype *Type  // 值类型
+	Kind   int              // 类型定义
+	Cap    int              // 容量（for array）
+	I18n   bool             // 是否有国际化字符串(for string,json)
+	Aname  string           // alias type name(for 具名结构体)
+	Ktype  *Type            // 键类型(for map)
+	Vtype  *Type            // 值类型(for map,array,json)
+	Ftypes map[string]*Type // 字段类型(for 匿名结构体)
 }
 
 // methods
@@ -56,11 +57,6 @@ func (t *Type) isVaild(inJson bool) bool {
 			ok = t.Vtype.isVaild(inJson)
 		}
 		return ok
-	case TStruct:
-		if inJson {
-			// json 不支持结构体
-			return false
-		}
 	case TJson:
 		if t.Vtype != nil {
 			return t.Vtype.isVaild(true)
@@ -144,10 +140,10 @@ func (t *Type) formatValue(val string) string {
 	}
 }
 
-func (t *Type) checkJsonObj(obj interface{}) bool {
+func (t *Type) checkJsonObj(obj any) bool {
 	switch t.Kind {
 	case TArray:
-		if array, ok := obj.([]interface{}); !ok {
+		if array, ok := obj.([]any); !ok {
 			return false
 		} else {
 			if t.Cap > 0 {
@@ -164,7 +160,7 @@ func (t *Type) checkJsonObj(obj interface{}) bool {
 		}
 	case TMap:
 		if t.Ktype.Kind == TString {
-			if m, ok := obj.(map[string]interface{}); !ok {
+			if m, ok := obj.(map[string]any); !ok {
 				return false
 			} else {
 				for _, v := range m {
@@ -174,7 +170,7 @@ func (t *Type) checkJsonObj(obj interface{}) bool {
 				}
 			}
 		} else {
-			if m, ok := obj.(map[interface{}]interface{}); !ok {
+			if m, ok := obj.(map[any]any); !ok {
 				return false
 			} else {
 				for k, v := range m {
@@ -196,12 +192,26 @@ func (t *Type) checkJsonObj(obj interface{}) bool {
 	case TString:
 		_, ok := obj.(string)
 		return ok
+	case TStruct:
+		if s, ok := obj.(map[string]any); !ok {
+			return false
+		} else {
+			for k, ft := range t.Ftypes {
+				vv, found := s[k]
+				if !found {
+					return false
+				}
+				if !ft.checkJsonObj(vv) {
+					return false
+				}
+			}
+		}
 	}
 	return true
 }
 
 func (t *Type) checkJsonVal(val string) bool {
-	var result interface{}
+	var result any
 	err := json.Unmarshal([]byte(val), &result)
 	if err == nil {
 		return t.checkJsonObj(result)
@@ -227,4 +237,32 @@ func (t *Type) isI18nJson() bool {
 		}
 	}
 	return false
+}
+
+func (t *Type) luaTypeName() string {
+	switch t.Kind {
+	case TInt:
+		return "integer"
+	case TUint:
+		return "integer"
+	case TFloat:
+		return "number"
+	case TBool:
+		return "boolean"
+	case TString:
+		return "string"
+	case TArray:
+		// int[]
+		return t.Vtype.luaTypeName() + "[]"
+	case TMap:
+		return "table" + "<" + t.Ktype.luaTypeName() + "," + t.Vtype.luaTypeName() + ">"
+	case TStruct:
+		return "table"
+	case TJson:
+		if t.Vtype != nil {
+			return t.Vtype.luaTypeName()
+		}
+		return "table"
+	}
+	return "any"
 }

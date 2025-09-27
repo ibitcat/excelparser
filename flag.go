@@ -25,7 +25,7 @@ var (
 var (
 	XlsxList    []*Xlsx
 	LoadingChan chan struct{}
-	MaxErrorCnt int = 11
+	MaxErrorCnt int = 6
 	Mode2Format map[string]string
 )
 
@@ -47,7 +47,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `excelparser version: 2022.0.1
+	fmt.Fprintf(os.Stderr, `excelparser version: 2025.0.1
     Usage: excelparser [OPTIONS]
     eg.: excelparser.exe --path=./xlsx --server=lua  --client=lua
          excelparser.exe --path=./xlsx --server=json --client=json --indent

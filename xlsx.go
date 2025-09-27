@@ -243,6 +243,10 @@ func (x *Xlsx) parseField(parent *Field, sindex int) int {
 
 			i++
 			f.Parent = parent
+			if parent.Ftypes == nil {
+				parent.Ftypes = make(map[string]*Type)
+			}
+			parent.Ftypes[f.Name] = f.Type
 			parent.Vals = append(parent.Vals, f)
 			if f.isRecursice() {
 				i += x.parseField(f, i)
@@ -442,6 +446,7 @@ func (x *Xlsx) updateExportInfo(mode, format string) {
 	}
 }
 
+// 解析excel表头并静态检查表数据
 func (x *Xlsx) parseExcel() bool {
 	var vertical bool
 	f := x.Excel
@@ -559,4 +564,21 @@ func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string 
 		}
 	}
 	return results
+}
+
+func (x *Xlsx) formatLuaComment(mode string) string {
+	comments := make([]string, 0, len(x.RootField.Vals)+3)
+	comments = append(comments, "---"+x.FileName)
+	comments = append(comments, "---@class T"+x.OutName)
+	for _, v := range x.RootField.Vals {
+		if v.isHitMode(mode) {
+			comments = append(comments, "---@field "+v.Name+" "+v.luaTypeName()+" "+v.Desc)
+		}
+	}
+	if x.Vertical {
+		comments = append(comments, "\n---@type "+"T"+x.OutName)
+	} else {
+		comments = append(comments, "\n---@type table<integer, "+"T"+x.OutName+">")
+	}
+	return strings.Join(comments, "\n")
 }

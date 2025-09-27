@@ -44,9 +44,9 @@ func getI18nString(val string, f *Field, row int) string {
 	absXlsxPath, _ := filepath.Abs(Flagpath)
 	relpath, _ := filepath.Rel(absI18nPath, absXlsxPath)
 	if f.Xlsx.Vertical {
-		ref = fmt.Sprintf("%s%c%s:%s%d", relpath, filepath.Separator, f.Xlsx.Name, formatAxisX(row), f.Index+1)
+		ref = fmt.Sprintf("%s%c%s:%s%d", relpath, filepath.Separator, f.Xlsx.Name, formatAxisX(row), 1)
 	} else {
-		ref = fmt.Sprintf("%s%c%s:%s%d", relpath, filepath.Separator, f.Xlsx.Name, formatAxisX(f.Index+1), row)
+		ref = fmt.Sprintf("%s%c%s:%s%d", relpath, filepath.Separator, f.Xlsx.Name, formatAxisX(f.Index+1), 1)
 	}
 
 	I18nLocale.AddRefs(val, ref)

@@ -91,7 +91,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 		if len(row) > field.Index {
 			s := row[field.Index]
 			if field.I18n {
-				var result interface{}
+				var result any
 				json.Unmarshal([]byte(s), &result)
 				j.updateI18nJson(field, field.Vtype, result)
 				bytes, err := json.Marshal(result)
@@ -122,7 +122,7 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 	}
 }
 
-func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj interface{}) {
+func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj any) {
 	var vt *Type
 	if t != nil {
 		vt = t.Vtype
@@ -132,7 +132,7 @@ func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj interface{}) {
 	}
 
 	switch val := obj.(type) {
-	case map[interface{}]interface{}:
+	case map[any]any:
 		for k, v := range val {
 			if vt.isI18nString() {
 				val[k] = getI18nString(v.(string), field, j.line+HeadLineNum)
@@ -140,7 +140,7 @@ func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj interface{}) {
 				j.updateI18nJson(field, vt, v)
 			}
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		for k, v := range val {
 			if vt.isI18nString() {
 				val[k] = getI18nString(v.(string), field, j.line+HeadLineNum)
@@ -148,7 +148,7 @@ func (j *JsonFormater) updateI18nJson(field *Field, t *Type, obj interface{}) {
 				j.updateI18nJson(field, vt, v)
 			}
 		}
-	case []interface{}:
+	case []any:
 		for i, v := range val {
 			if vt.isI18nString() {
 				val[i] = getI18nString(v.(string), field, j.line+HeadLineNum)

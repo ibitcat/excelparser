@@ -16,7 +16,9 @@
             },
             "args": [
                 "--path=./xlsx",
-                "--server=json",
+                "--output=./out",
+                "--server=lua",
+                "--client=json",
                 "--i18n=./locales",
                 "--lang=en_US",
                 "--force"
