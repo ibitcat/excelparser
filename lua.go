@@ -62,12 +62,14 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		l.appendEOL()
 		for i, f := range field.Vals {
 			l.appendIndent(depth + 1)
-			l.appendData("[")
-			l.appendData(strconv.Itoa(i + 1))
-			l.appendData("]")
-			l.appendSpace()
-			l.appendData("=")
-			l.appendSpace()
+			if l.Vertical || !FlagCompact {
+				l.appendData("[")
+				l.appendData(strconv.Itoa(i + 1))
+				l.appendData("]")
+				l.appendSpace()
+				l.appendData("=")
+				l.appendSpace()
+			}
 			l.formatData(f, row, depth+1)
 			l.appendComma()
 		}
@@ -193,10 +195,12 @@ func (l *LuaFormater) formatJsonValue(field *Field, t *Type, obj any, depth int)
 		l.appendEOL()
 		for i, v := range val {
 			l.appendIndent(depth + 1)
-			l.appendData(l.formatJsonKey(i + 1))
-			l.appendSpace()
-			l.appendData("=")
-			l.appendSpace()
+			if l.Vertical || !FlagCompact {
+				l.appendData(l.formatJsonKey(i + 1))
+				l.appendSpace()
+				l.appendData("=")
+				l.appendSpace()
+			}
 			l.formatJsonValue(field, vt, v, depth+1)
 			l.appendComma()
 		}

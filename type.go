@@ -126,15 +126,16 @@ func (t *Type) formatValue(val string) string {
 	if FlagDefault && len(val) == 0 {
 		return t.defaultValue()
 	} else {
-		if t.Kind == TString {
+		switch t.Kind {
+		case TString:
 			return formatString(val)
-		} else if t.Kind == TBool {
+		case TBool:
 			if val == "0" {
 				return "false"
 			} else {
 				return "true"
 			}
-		} else {
+		default:
 			return val
 		}
 	}

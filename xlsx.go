@@ -548,11 +548,12 @@ func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string 
 	results = append(results, splitline)
 
 	errNum := len(x.Errors)
-	if errNum == 0 {
+	switch errNum {
+	case 0:
 		results = append(results, fmt.Sprintf(costFormat, x.OutName, x.TimeCost, len(x.Rows)))
-	} else if errNum == 1 {
+	case 1:
 		results = append(results, fmt.Sprintf(infoFormat, x.OutName, x.Errors[0]))
-	} else {
+	default:
 		mid := int(math.Ceil(float64(errNum)/2)) - 1
 		for i := range errNum {
 			err := x.Errors[i]

@@ -15,7 +15,7 @@
                 //"GOPATH": "D:/Develop/vscodegolang"
             },
             "args": [
-                "--path=./xlsx",
+                "--path=./xlsx/tpl",
                 "--output=./out",
                 "--server=lua",
                 "--client=json",
