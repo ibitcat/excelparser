@@ -568,18 +568,19 @@ func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string 
 }
 
 func (x *Xlsx) formatLuaComment(mode string) string {
+	clsName := "T" + toTitle(x.OutName)
 	comments := make([]string, 0, len(x.RootField.Vals)+3)
 	comments = append(comments, "---"+x.FileName)
-	comments = append(comments, "---@class T"+x.OutName)
+	comments = append(comments, "---@class "+clsName)
 	for _, v := range x.RootField.Vals {
 		if v.isHitMode(mode) {
 			comments = append(comments, "---@field "+v.Name+" "+v.luaTypeName()+" "+v.Desc)
 		}
 	}
 	if x.Vertical {
-		comments = append(comments, "\n---@type "+"T"+x.OutName)
+		comments = append(comments, "\n---@type "+clsName)
 	} else {
-		comments = append(comments, "\n---@type table<integer, "+"T"+x.OutName+">")
+		comments = append(comments, "\n---@type table<integer, "+clsName+">")
 	}
 	return strings.Join(comments, "\n")
 }

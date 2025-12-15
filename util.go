@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 var (
@@ -285,4 +286,13 @@ func parseCompositeType(typ string, t *Type) {
 			}
 		}
 	}
+}
+
+func toTitle(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
 }
