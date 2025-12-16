@@ -314,9 +314,18 @@ func (x *Xlsx) checkField(field *Field) {
 	if field.Kind == TMap && len(field.Keys) != len(field.Vals) {
 		x.sprintfCellError(TypeLine, field.Index+1, "字段类型错误(map键值对不匹配)")
 	}
+
 	parent := field.Parent
-	if parent != nil && parent.Kind == TStruct && len(field.Name) == 0 {
-		x.sprintfCellError(NameLine, field.Index+1, "字段名称错误(字段名为空)")
+	if parent != nil {
+		if field.Kind == TStruct && (parent.Kind == TArray || parent.Kind == TMap) {
+			if (parent.Name + "[]") != field.Name {
+				x.sprintfCellError(NameLine, field.Index+1, "字段名称错误(字段名%s应为%s[])", field.Name, parent.Name)
+			}
+		}
+
+		if parent.Kind == TStruct && len(field.Name) == 0 {
+			x.sprintfCellError(NameLine, field.Index+1, "字段名称错误(字段名为空)")
+		}
 	}
 
 	if len(field.Keys) > 0 {

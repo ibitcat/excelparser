@@ -50,7 +50,7 @@ func getIndent(num int) string {
 }
 
 func formatString(val string) string {
-	val = strings.Replace(val, "\"", "\\\"", -1)
+	val = strings.ReplaceAll(val, "\"", "\\\"")
 	return fmt.Sprintf("\"%s\"", val)
 }
 
