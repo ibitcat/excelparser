@@ -41,9 +41,11 @@ type
     StatusBar1: TStatusBar;
     procedure Button4Click(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
+    procedure CheckBox4Change(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure Label5Click(Sender: TObject);
+    procedure Label6Click(Sender: TObject);
     procedure Panel1Click(Sender: TObject);
   private
 
@@ -81,7 +83,12 @@ begin
 
 end;
 
-procedure TForm1.Button4Click(Sender: TObject);
+procedure TForm1.CheckBox4Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1Button4Click(Sender: TObject);
 begin
 
 end;

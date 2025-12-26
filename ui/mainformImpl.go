@@ -4,6 +4,7 @@ import (
 	"excelparser/core"
 
 	"github.com/ying32/govcl/vcl"
+	"github.com/ying32/govcl/vcl/types"
 )
 
 //::private::
@@ -140,14 +141,24 @@ func (f *TForm1) initComboBox() {
 	f.ComboBox1.Items().Add("lua")
 	f.ComboBox1.Items().Add("json")
 	f.ComboBox1.SetItemIndex(0)
+	f.ComboBox1.SetStyle(types.CsDropDownList)
+	f.ComboBox1.SetSelStart(int32(len(f.ComboBox1.Text())))
 
 	f.ComboBox2.Items().Clear()
 	f.ComboBox2.Items().Add("lua")
 	f.ComboBox2.Items().Add("json")
 	f.ComboBox2.SetItemIndex(0)
+	f.ComboBox2.SetStyle(types.CsDropDownList)
+	f.ComboBox2.SetSelStart(int32(len(f.ComboBox2.Text())))
+
+	f.ComboBox3.Items().Clear()
+	f.ComboBox3.Items().Add("en")
+	f.ComboBox3.Items().Add("de")
+	f.ComboBox3.SetItemIndex(0)
+	f.ComboBox3.SetStyle(types.CsDropDownList)
 
 	core.GFlags.Server = f.ComboBox1.Text()
-	core.GFlags.Server = f.ComboBox1.Text()
+	core.GFlags.Client = f.ComboBox2.Text()
 }
 
 func (f *TForm1) refreshListView(path string) {
@@ -183,4 +194,7 @@ func (f *TForm1) refreshListView(path string) {
 //#endregion
 
 func (f *TForm1) OnCheckBox4Change(sender vcl.IObject) {
+}
+
+func (f *TForm1) OnButton4Click(sender vcl.IObject) {
 }

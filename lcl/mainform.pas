@@ -88,7 +88,7 @@ begin
 
 end;
 
-procedure TForm1.Button4Click(Sender: TObject);
+procedure TForm1Button4Click(Sender: TObject);
 begin
 
 end;
