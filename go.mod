@@ -8,6 +8,7 @@ require (
 	github.com/ibitcat/gotext v0.0.0-20250927034219-e52a841e29b6
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/xuri/excelize/v2 v2.10.0
+	github.com/ying32/govcl v2.2.3+incompatible
 	gopkg.in/yaml.v3 v3.0.1
 )
 
