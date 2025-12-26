@@ -140,3 +140,13 @@ func (f *TForm1) refreshListView(xlsxPath string) {
 }
 
 //#endregion
+
+func (f *TForm1) OnLabel5Click(sender vcl.IObject) {
+
+}
+
+
+func (f *TForm1) OnCheckBox3Change(sender vcl.IObject) {
+
+}
+
