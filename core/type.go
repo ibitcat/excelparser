@@ -1,33 +1,9 @@
-package main
+package core
 
 import (
 	"encoding/json"
 	"strings"
 )
-
-const (
-	TNone   int = -1   // 非法类型
-	TAny    int = iota // any
-	TInt               // 有符号整数
-	TUint              // 无符号整数
-	TFloat             // 浮点数
-	TBool              // 布尔型
-	TString            // 字符串
-	TArray             // 数组
-	TMap               // map
-	TStruct            // 结构体
-	TJson              // json
-)
-
-type Type struct {
-	Kind   int              // 类型定义
-	Cap    int              // 容量（for array）
-	I18n   bool             // 是否有国际化字符串(for string,json)
-	Aname  string           // alias type name(for 具名结构体)
-	Ktype  *Type            // 键类型(for map)
-	Vtype  *Type            // 值类型(for map,array,json)
-	Ftypes map[string]*Type // 字段类型(for 匿名结构体)
-}
 
 // methods
 func (t *Type) isVaild(inJson bool) bool {
@@ -123,7 +99,7 @@ func (t *Type) defaultValue() string {
 
 func (t *Type) formatValue(val string) string {
 	val = strings.TrimSpace(val)
-	if FlagDefault && len(val) == 0 {
+	if len(val) == 0 {
 		return t.defaultValue()
 	} else {
 		switch t.Kind {

@@ -1,21 +1,8 @@
-package main
+package core
 
 import (
 	"strconv"
 )
-
-type Field struct {
-	*Type           // 字段数据类型
-	Parent *Field   // 父字段
-	Xlsx   *Xlsx    // 所属excel
-	Index  int      // 字段索引
-	Desc   string   // 字段描述
-	Rname  string   // 原始字段名
-	Name   string   // 字段名
-	Mode   string   // 生成方式(s=server,c=client,x=none)
-	Keys   []*Field // 键元素列表
-	Vals   []*Field // 值元素列表
-}
 
 // methods
 func (f *Field) isHitMode(tMode string) bool {
@@ -76,28 +63,28 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 			ok = f.Vtype.checkJsonVal(val)
 		}
 	case TUint:
-		if len(val) > 0 && !FlagDefault {
+		if len(val) > 0 {
 			_, err := strconv.ParseUint(val, 10, 64)
 			if err != nil {
 				ok = false
 			}
 		}
 	case TInt:
-		if len(val) > 0 && !FlagDefault {
+		if len(val) > 0 {
 			_, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
 				ok = false
 			}
 		}
 	case TFloat:
-		if len(val) > 0 && !FlagDefault {
+		if len(val) > 0 {
 			_, err := strconv.ParseFloat(val, 64)
 			if err != nil {
 				ok = false
 			}
 		}
 	case TBool:
-		if len(val) > 0 && !FlagDefault {
+		if len(val) > 0 {
 			if !(val == "0" || val == "1" || val == "true" || val == "false") {
 				ok = false
 			}

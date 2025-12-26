@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"excelparser/core"
+
 	"github.com/ying32/govcl/vcl"
 )
 
@@ -48,6 +50,14 @@ func (f *TForm1) OnPanel1Click(sender vcl.IObject) {
 }
 
 func (f *TForm1) OnComboBox1Change(sender vcl.IObject) {
+	core.GFlags.Server = f.ComboBox1.Text()
+}
+
+func (f *TForm1) OnComboBox2Change(sender vcl.IObject) {
+	core.GFlags.Client = f.ComboBox2.Text()
+}
+
+func (f *TForm1) OnCheckBox3Change(sender vcl.IObject) {
 }
 
 //#endregion
@@ -58,11 +68,17 @@ func (f *TForm1) OnComboBox1Change(sender vcl.IObject) {
 func (f *TForm1) initMenu() {
 	menu := vcl.NewMenuItem(f)
 	menu.SetCaption("文件(&F)")
+	subMenu := vcl.NewMenuItem(f)
+	subMenu.SetCaption("退出(&X)")
+	menu.Add(subMenu)
+	subMenu.SetOnClick(func(vcl.IObject) {
+		f.Close()
+	})
 	f.MainMenu1.Items().Add(menu)
 
 	menu = vcl.NewMenuItem(f)
 	menu.SetCaption("关于(&A)")
-	subMenu := vcl.NewMenuItem(f)
+	subMenu = vcl.NewMenuItem(f)
 	subMenu.SetCaption("帮助(&H)")
 	menu.Add(subMenu)
 	subMenu.SetOnClick(func(vcl.IObject) {
@@ -96,8 +112,13 @@ func (f *TForm1) initListView() {
 
 	col = lv1.Columns().Add()
 	col.SetCaption("文件状态")
-	col.SetWidth(200)
-	col.SetMaxWidth(200)
+	col.SetWidth(100)
+	col.SetMaxWidth(100)
+
+	col = lv1.Columns().Add()
+	col.SetCaption("导出状态")
+	col.SetWidth(100)
+	col.SetMaxWidth(100)
 
 	col = lv1.Columns().Add()
 	col.SetCaption("导出结果")
@@ -124,29 +145,42 @@ func (f *TForm1) initComboBox() {
 	f.ComboBox2.Items().Add("lua")
 	f.ComboBox2.Items().Add("json")
 	f.ComboBox2.SetItemIndex(0)
+
+	core.GFlags.Server = f.ComboBox1.Text()
+	core.GFlags.Server = f.ComboBox1.Text()
 }
 
-func (f *TForm1) refreshListView(xlsxPath string) {
+func (f *TForm1) refreshListView(path string) {
+	core.GFlags.Path = path
+
+	err := core.WalkPath()
+	if err != nil {
+		vcl.ShowMessage(err.Error())
+		return
+	}
+
 	lv1 := f.ListView1
 	lv1.Items().BeginUpdate()
 	lv1.Items().Clear()
-	xlsxList := []string{"file1.xlsx", "file2.xlsx", "file3.xlsx", "file4.xlsx"}
-	for _, xlsx := range xlsxList {
+	for _, xlsx := range core.XlsxList {
 		item := lv1.Items().Add()
-		item.SetCaption(xlsx)
-		item.SubItems().Add("-")
+		item.SetCaption(xlsx.Name)
+
+		// 文件状态
+		if xlsx.CanParse() {
+			item.SubItems().Add("就绪")
+		} else {
+			item.SubItems().Add("-")
+		}
+
+		// 导出状态
+
+		// 导出结果
 	}
 	lv1.Items().EndUpdate()
 }
 
 //#endregion
 
-func (f *TForm1) OnLabel5Click(sender vcl.IObject) {
-
+func (f *TForm1) OnCheckBox4Change(sender vcl.IObject) {
 }
-
-
-func (f *TForm1) OnCheckBox3Change(sender vcl.IObject) {
-
-}
-

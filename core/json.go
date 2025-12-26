@@ -1,16 +1,10 @@
-package main
+package core
 
 import (
 	"bytes"
 	"encoding/json"
 	"strings"
 )
-
-type JsonFormater struct {
-	*Xlsx
-	line int
-	mode string
-}
 
 func (j *JsonFormater) formatRows() {
 	// 复用 datas
@@ -100,10 +94,10 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 				}
 			}
 			var out bytes.Buffer
-			if FlagCompact {
+			if GFlags.Compact {
 				json.Compact(&out, []byte(s))
 				j.appendData(out.String())
-			} else if FlagIndent {
+			} else if GFlags.Pretty {
 				json.Indent(&out, []byte(s), getIndent(depth), "  ")
 				j.appendData(out.String())
 			} else {

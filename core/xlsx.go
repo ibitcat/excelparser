@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"fmt"
@@ -9,41 +9,6 @@ import (
 
 	"github.com/xuri/excelize/v2"
 )
-
-var HeadLineNum = 4 // 配置表头行数
-const (
-	NameLine int = iota + 1
-	TypeLine
-	ModeLine
-	DescLine
-)
-
-type ExportInfo struct {
-	Mode     string `json:"mode"`
-	Format   string `json:"format"`
-	LastTime uint64 `json:"lasttime"`
-}
-
-type Xlsx struct {
-	Name         string         // 文件名（带文件扩展名）
-	FileName     string         // 文件名
-	PathName     string         // 文件完整路径
-	OutName      string         // 输出文件名(item@道具.xlsx, 输出为 item)
-	SheetName    string         // 工作表名
-	Vertical     bool           // 纵向表
-	Excel        *excelize.File // 打开的excel文件句柄
-	Names        []string       // 字段名列表
-	Types        []string       // 类型列表
-	Modes        []string       // 导出模式列表
-	Descs        []string       // 字段描述列表
-	RootField    *Field         // 根字段
-	Rows         [][]string     // 合法的配置行
-	Datas        []string       // 导出数据缓存
-	Errors       []string       // 错误信息
-	Exports      []ExportInfo   // 导出信息
-	LastModified uint64         // 最后修改时间
-	TimeCost     int            // 耗时
-}
 
 // methods
 func (x *Xlsx) appendError(errMsg string) {
@@ -75,22 +40,22 @@ func (x *Xlsx) appendData(str string) {
 }
 
 func (x *Xlsx) appendEOL() {
-	str := ternary(FlagCompact && !x.Vertical, "", "\n")
+	str := ternary(GFlags.Compact && !x.Vertical, "", "\n")
 	x.appendData(str)
 }
 
 func (x *Xlsx) appendSpace() {
-	str := ternary(FlagCompact && !x.Vertical, "", " ")
+	str := ternary(GFlags.Compact && !x.Vertical, "", " ")
 	x.appendData(str)
 }
 
 func (x *Xlsx) appendIndent(depth int) {
-	str := ternary(FlagCompact && !x.Vertical, "", getIndent(depth))
+	str := ternary(GFlags.Compact && !x.Vertical, "", getIndent(depth))
 	x.appendData(str)
 }
 
 func (x *Xlsx) appendComma() {
-	str := ternary(FlagCompact && !x.Vertical, ",", ",\n")
+	str := ternary(GFlags.Compact && !x.Vertical, ",", ",\n")
 	x.appendData(str)
 }
 
@@ -98,7 +63,7 @@ func (x *Xlsx) replaceComma() {
 	tailIdx := len(x.Datas) - 1
 	comma := x.Datas[tailIdx]
 	if len(comma) > 0 && comma[:1] == "," {
-		str := ternary(FlagCompact && !x.Vertical, "", "\n")
+		str := ternary(GFlags.Compact && !x.Vertical, "", "\n")
 		x.Datas[tailIdx] = str
 	}
 }
@@ -421,22 +386,29 @@ func (x *Xlsx) checkRows() {
 	}
 }
 
-func (x *Xlsx) canParse() bool {
-	var cnt, num int
-	for mode, format := range Mode2Format {
-		if len(format) > 0 {
-			cnt++
-			if !FlagForce {
-				for _, v := range x.Exports {
-					if v.Mode == mode && v.Format == format && v.LastTime == x.LastModified {
-						num++
-						break
-					}
-				}
-			}
+// 是否文件已修改
+func (x *Xlsx) isModified(mode, format string) bool {
+	if GFlags.Force {
+		return true
+	}
+
+	for _, v := range x.Exports {
+		if v.Mode == mode && v.Format == format && v.LastTime == x.LastModified {
+			// 文件未修改
+			return false
 		}
 	}
-	return cnt != num
+	return true
+}
+
+func (x *Xlsx) CanParse() bool {
+	if len(GFlags.Server) > 0 && x.isModified("server", GFlags.Server) {
+		return true
+	}
+	if len(GFlags.Client) > 0 && x.isModified("client", GFlags.Client) {
+		return true
+	}
+	return false
 }
 
 func (x *Xlsx) updateExportInfo(mode, format string) {
@@ -487,6 +459,26 @@ func (x *Xlsx) parseExcel() bool {
 	return true
 }
 
+func (x *Xlsx) exportModeExcel(mode, format string) bool {
+	if len(mode) == 0 || len(format) == 0 {
+		return false
+	}
+	keyField := x.RootField.Vals[0]
+	if !keyField.isHitMode(mode) {
+		// key字段mode不匹配
+		return false
+	}
+	formater := NewFormater(x, format, mode)
+	formater.formatRows()
+
+	// write
+	if len(x.Errors) == 0 {
+		x.updateExportInfo(mode, format)
+		x.writeToFile(mode, format)
+	}
+	return true
+}
+
 func (x *Xlsx) exportExcel() {
 	f, err := excelize.OpenFile(x.PathName)
 	if err == nil {
@@ -500,22 +492,9 @@ func (x *Xlsx) exportExcel() {
 		if ok && len(x.Errors) == 0 && len(x.Rows) > 0 {
 			x.Datas = make([]string, 0)
 
-			num := 0
-			keyField := x.RootField.Vals[0]
-			for mode, format := range Mode2Format {
-				if len(format) > 0 && keyField.isHitMode(mode) {
-					num++
-					formater := NewFormater(x, format, mode)
-					formater.formatRows()
-
-					// write
-					if len(x.Errors) == 0 {
-						x.updateExportInfo(mode, format)
-						x.writeToFile(mode, format)
-					}
-				}
-			}
-			if num == 0 {
+			sok := x.exportModeExcel("server", GFlags.Server)
+			cok := x.exportModeExcel("client", GFlags.Client)
+			if !sok && !cok {
 				x.appendError("无需生成")
 			}
 		}
@@ -535,7 +514,7 @@ func (x *Xlsx) writeToFile(mode, format string) {
 	sep := string(filepath.Separator)
 	// linux: out/server/json
 	// windows: out\server\json
-	outdir := FlagOutput + sep + mode + sep + format + sep
+	outdir := GFlags.Output + sep + mode + sep + format + sep
 	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.OutName, ext)
 	err := os.MkdirAll(filepath.Dir(outFileName), 0o755)
 	if err == nil || os.IsExist(err) {

@@ -1,18 +1,11 @@
-package main
+package core
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
-	"github.com/ibitcat/gotext"
 	"github.com/xuri/excelize/v2"
-)
-
-var (
-	I18nMap    sync.Map
-	I18nLocale *gotext.Locale
 )
 
 func openI18nXlsx(path, lang string) error {
@@ -41,7 +34,7 @@ func getI18nString(val string, f *Field, row int) string {
 	}
 	var ref string
 	absI18nPath, _ := filepath.Abs(I18nLocale.GetPath())
-	absXlsxPath, _ := filepath.Abs(Flagpath)
+	absXlsxPath, _ := filepath.Abs(GFlags.Path)
 	relpath, _ := filepath.Rel(absI18nPath, absXlsxPath)
 	if f.Xlsx.Vertical {
 		ref = fmt.Sprintf("%s%c%s:%s%d", relpath, filepath.Separator, f.Xlsx.Name, formatAxisX(row), 1)
@@ -62,7 +55,7 @@ func getI18nString(val string, f *Field, row int) string {
 	// return ""
 }
 
-func saveI18nXlsx(path, lang string) {
+func SaveI18nXlsx(path, lang string) {
 	I18nLocale.MarshalPo()
 	/*
 		os.MkdirAll(path, os.ModePerm)

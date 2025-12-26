@@ -17,9 +17,11 @@ type
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
+    Button5: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
     CheckBox3: TCheckBox;
+    CheckBox4: TCheckBox;
     ComboBox1: TComboBox;
     ComboBox2: TComboBox;
     ComboBox3: TComboBox;
@@ -37,9 +39,12 @@ type
     Panel1: TPanel;
     SelectDirectoryDialog1: TSelectDirectoryDialog;
     StatusBar1: TStatusBar;
+    procedure Button4Click(Sender: TObject);
     procedure CheckBox3Change(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure ComboBox2Change(Sender: TObject);
     procedure Label5Click(Sender: TObject);
+    procedure Panel1Click(Sender: TObject);
   private
 
   public
@@ -60,12 +65,23 @@ begin
 
 end;
 
-procedure TForm1.Label5Click(Sender: TObject);
+procedure TForm1.ComboBox2Change(Sender: TObject);
 begin
 
 end;
 
+procedure TForm1.Panel1Click(Sender: TObject);
+begin
+
+end;
+
+
 procedure TForm1.CheckBox3Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
 begin
 
 end;

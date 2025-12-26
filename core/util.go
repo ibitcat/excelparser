@@ -1,29 +1,16 @@
-package main
+// 辅助函数
+
+package core
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 )
-
-var (
-	indentStr  map[int]string
-	ArrayRe    = regexp.MustCompile(`^\[(\d*?)\](.+)`)
-	MapRe      = regexp.MustCompile(`^map\[(.+?)\](.+)`)
-	BasicTypes = []string{"int", "uint", "bool", "string", "var"}
-)
-
-func init() {
-	indentStr = make(map[int]string)
-	for i := 0; i < 10; i++ {
-		indentStr[i] = strings.Repeat(" ", i*2)
-	}
-}
 
 // json decode
 func isAsciiStr(str string) bool {
@@ -42,7 +29,7 @@ func getIndent(num int) string {
 	if num < 0 {
 		num = 0
 	}
-	if indent, ok := indentStr[num]; ok {
+	if indent, ok := IndentStr[num]; ok {
 		return indent
 	} else {
 		return strings.Repeat(" ", num*2)
@@ -54,7 +41,7 @@ func formatString(val string) string {
 	return fmt.Sprintf("\"%s\"", val)
 }
 
-func getDurationMs(t time.Time) int {
+func GetDurationMs(t time.Time) int {
 	return int(time.Since(t).Nanoseconds() / 1e6)
 }
 
@@ -81,7 +68,7 @@ func ternary[T any](condition bool, ifOutput T, elseOutput T) T {
 	return elseOutput
 }
 
-func checkPathVaild(path string) (string, error) {
+func CheckPathVaild(path string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", err
