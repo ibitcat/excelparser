@@ -17,7 +17,7 @@ func main() {
 	}
 
 	startTime := time.Now()
-	core.Run()
+	core.Run(nil)
 	fmt.Printf("Total Cost: %d ms\n", core.GetDurationMs(startTime))
 	// fmt.Printf("running goroutines: %d\n", p.Running())
 }

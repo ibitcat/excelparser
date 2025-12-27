@@ -4,6 +4,7 @@
 ---@class TTpl2
 ---@field id integer 任务id
 ---@field type integer 任务类型
+---@field name string 任务名
 ---@field conditions integer[][] 任务条件
 
 ---@type table<integer, TTpl2>
@@ -11,6 +12,7 @@ local t = {
   [1001] = {
     id = 1001,
     type = 1,
+    name = "提升境界到锻体期·前期",
     conditions = {
       [1] = {
         [1] = 1001,
@@ -21,6 +23,7 @@ local t = {
   [1002] = {
     id = 1002,
     type = 1,
+    name = "剑术总等级达到10级",
     conditions = {
       [1] = {
         [1] = 1001,
@@ -31,6 +34,7 @@ local t = {
   [1003] = {
     id = 1003,
     type = 1,
+    name = "完成第1关历练",
     conditions = {
       [1] = {
         [1] = 1001,
@@ -41,6 +45,7 @@ local t = {
   [1004] = {
     id = 1004,
     type = 1,
+    name = "学成出师",
     conditions = {
       [1] = {
         [1] = 1001,
@@ -51,6 +56,7 @@ local t = {
   [1005] = {
     id = 1005,
     type = 1,
+    name = "完成第2关历练",
     conditions = {
       [1] = {
         [1] = 1001,
@@ -61,6 +67,7 @@ local t = {
   [1006] = {
     id = 1006,
     type = 1,
+    name = "激活法宝乾坤镜",
     conditions = {
       [1] = {
         [1] = 1001,

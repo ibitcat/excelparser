@@ -1,3 +1,4 @@
-export.yaml
+.excelparser.temp
+.excelparser.config
 excelparser
 excelparser.exe

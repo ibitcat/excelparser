@@ -21,7 +21,7 @@ var (
 )
 
 func WalkPath() error {
-	xlsxPath, err := CheckPathVaild(GFlags.Path)
+	xlsxPath, err := CheckPathValid(GFlags.Path)
 	if err != nil {
 		return err
 	}
@@ -48,6 +48,7 @@ func WalkPath() error {
 			fileName := getFileName(f.Name())
 			outName := strings.SplitN(fileName, "@", 2)[0]
 			task := &Xlsx{
+				Idx:          len(XlsxList),
 				Name:         dirname + f.Name(),
 				PathName:     path,
 				FileName:     dirname + fileName,
@@ -72,7 +73,7 @@ func WalkPath() error {
 	return err
 }
 
-func findXlsx(name string) *Xlsx {
+func FindXlsxByName(name string) *Xlsx {
 	for _, x := range XlsxList {
 		if x.Name == name {
 			return x
@@ -92,7 +93,7 @@ func LoadExportTime() {
 		return
 	}
 	for k, v := range m {
-		x := findXlsx(k)
+		x := FindXlsxByName(k)
 		if x != nil {
 			x.Exports = v
 		}
@@ -140,16 +141,25 @@ func ProcessMsg() {
 	fmt.Println(splitline)
 	fmt.Printf(infoFormat, "FileName", "Result\n")
 
-	for xlsx := range LoadingChan {
-		result := xlsx.collectResult(costFormat, infoFormat, splitline)
-		fmt.Println(strings.Join(result, "\n"))
-		// percent := float32(count) / float32(total)
-		// fmt.Printf("\rProgress:[%-50s][%d%%]", strings.Repeat("█", int(percent*50)), int(percent*100))
+	for event := range EventChan {
+		if event.Status == "finish" {
+			result := event.Xlsx.collectResult(costFormat, infoFormat, splitline)
+			fmt.Println(strings.Join(result, "\n"))
+		}
 	}
 	fmt.Println(splitline)
 }
 
-func Run() error {
+type ParseEvent struct {
+	Xlsx   *Xlsx
+	Status string // "start" / "finish"
+}
+
+type ParseHandler struct {
+	OnEvent func(*ParseEvent) // 统一的事件回调
+}
+
+func Run(handler *ParseHandler) error {
 	// i18n output path
 	if len(GFlags.I18nLang) > 0 {
 		I18nLocale = gotext.NewLocale(GFlags.I18nPath, GFlags.I18nLang)
@@ -168,15 +178,26 @@ func Run() error {
 	}
 
 	defer SaveExportTime()
-	LoadingChan = make(chan *Xlsx, xlsxCount)
-	go ProcessMsg()
+	EventChan = make(chan *ParseEvent, xlsxCount*2) // *2 因为每个任务有 start 和 finish 两个事件
+
+	// 启动监听协程
+	if handler != nil && handler.OnEvent != nil {
+		go func() {
+			for event := range EventChan {
+				handler.OnEvent(event)
+			}
+		}()
+	} else {
+		go ProcessMsg()
+	}
 
 	// parse
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		xlsx := i.(*Xlsx)
+		EventChan <- &ParseEvent{Xlsx: xlsx, Status: "start"}
 		StartParse(xlsx)
-		LoadingChan <- xlsx
+		EventChan <- &ParseEvent{Xlsx: xlsx, Status: "finish"}
 		wg.Done()
 	})
 	defer p.Release()
@@ -187,8 +208,7 @@ func Run() error {
 	}
 	wg.Wait()
 
-	// 注意 channel range 需要close channel https://segmentfault.com/a/1190000040399883?utm_source=sf-similar-article
-	close(LoadingChan)
+	close(EventChan)
 
 	if len(GFlags.I18nLang) > 0 {
 		SaveI18nXlsx(GFlags.I18nPath, GFlags.I18nLang)

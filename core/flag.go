@@ -27,7 +27,7 @@ func init() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `excelparser version: 2025.0.1
     Usage: excelparser [OPTIONS]
-    eg.: excelparser.exe --path=./xlsx --server=lua  --client=lua
+    eg.: excelparser.exe --path=./xlsx --server=lua  --client=lua --output=./out
          excelparser.exe --path=./xlsx --server=json --client=json --indent
          excelparser.exe --path=./xlsx --server=lua  --client=json --indent
          excelparser.exe --path=./xlsx --server=lua  --indent --i18n=./i18n --lang=en

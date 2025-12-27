@@ -1,17 +1,49 @@
 package ui
 
 import (
+	"encoding/json"
 	"excelparser/core"
+	"fmt"
+	"os"
 
 	"github.com/ying32/govcl/vcl"
+	"github.com/ying32/govcl/vcl/rtl"
 	"github.com/ying32/govcl/vcl/types"
 )
+
+// 配置结构
+type AppConfig struct {
+	ConfigPath string `json:"config_path"`
+	OutputPath string `json:"output_path"`
+	I18nPath   string `json:"i18n_path"`
+}
+
+const configFileName = ".excelparser.config"
+
+// 加载配置
+func loadConfig() *AppConfig {
+	config := &AppConfig{}
+	if data, err := os.ReadFile(configFileName); err == nil {
+		json.Unmarshal(data, config)
+	}
+	return config
+}
+
+// 保存配置
+func saveConfig(config *AppConfig) error {
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(configFileName, data, 0644)
+}
 
 //::private::
 type TForm1Fields struct {
 	isInit    bool
 	title     string
 	aboutForm *TForm2
+	config    *AppConfig
 }
 
 //#region 组件回调
@@ -21,13 +53,17 @@ func (f *TForm1) OnFormCreate(sender vcl.IObject) {
 	f.isInit = false
 	f.title = "excelparser - Excel配置表解析工具"
 
+	config := loadConfig()
+	f.config = config
 	f.SetCaption(f.title)
 	f.initMenu()
 	f.initSelectEdit()
-	f.initSelectBtn()
 	f.initListView()
 	f.initAboutForm()
 	f.initComboBox()
+	if len(config.ConfigPath) > 0 {
+		f.refreshListView(config.ConfigPath)
+	}
 	f.isInit = true
 }
 
@@ -35,19 +71,47 @@ func (f *TForm1) OnSelectBtnClick(sender vcl.IObject) {
 	btn := vcl.AsButton(sender)
 	if f.SelectDirectoryDialog1.Execute() {
 		selectedPath := f.SelectDirectoryDialog1.FileName()
+		if _, err := core.CheckPathValid(selectedPath); err != nil {
+			vcl.ShowMessage("⚠️ 所选路径不存在,请重新选择!")
+			return
+		}
+
 		switch btn.Tag() {
 		case 1:
 			f.Edit1.SetText(selectedPath)
 			f.refreshListView(selectedPath)
+			f.config.ConfigPath = selectedPath
 		case 2:
 			f.Edit2.SetText(selectedPath)
+			f.config.OutputPath = selectedPath
 		case 3:
 			f.Edit3.SetText(selectedPath)
+			f.config.I18nPath = selectedPath
 		}
+
+		saveConfig(f.config)
 	}
 }
 
-func (f *TForm1) OnPanel1Click(sender vcl.IObject) {
+func (f *TForm1) OnButton1Click(sender vcl.IObject) {
+	f.OnSelectBtnClick(sender)
+}
+
+func (f *TForm1) OnButton2Click(sender vcl.IObject) {
+	f.OnSelectBtnClick(sender)
+}
+
+func (f *TForm1) OnButton3Click(sender vcl.IObject) {
+	f.OnSelectBtnClick(sender)
+}
+
+// 开始导出
+func (f *TForm1) OnButton4Click(sender vcl.IObject) {
+	f.StartExport()
+}
+
+func (f *TForm1) OnButton5Click(sender vcl.IObject) {
+	f.refreshListView(f.Edit1.Text())
 }
 
 func (f *TForm1) OnComboBox1Change(sender vcl.IObject) {
@@ -58,7 +122,68 @@ func (f *TForm1) OnComboBox2Change(sender vcl.IObject) {
 	core.GFlags.Client = f.ComboBox2.Text()
 }
 
-func (f *TForm1) OnCheckBox3Change(sender vcl.IObject) {
+func (f *TForm1) OnCheckBoxAllChange(sender vcl.IObject) {
+	core.GFlags.Force = f.CheckBoxAll.Checked()
+}
+
+func (f *TForm1) OnCheckBoxCompactChange(sender vcl.IObject) {
+	f.CheckBoxPretty.SetChecked(!f.CheckBoxCompact.Checked())
+}
+
+func (f *TForm1) OnCheckBoxPrettyChange(sender vcl.IObject) {
+	f.CheckBoxCompact.SetChecked(!f.CheckBoxPretty.Checked())
+}
+
+// 右键菜单 - 打开文件所在目录
+func (f *TForm1) OnMenuItem1Click(sender vcl.IObject) {
+	lv := f.ListView1
+	if lv.Selected() == nil {
+		return
+	}
+
+	rtl.SysOpen(f.Edit1.Text())
+}
+
+// 右键菜单 - 打开文件
+func (f *TForm1) OnMenuItem2Click(sender vcl.IObject) {
+	lv := f.ListView1
+	if lv.Selected() == nil {
+		return
+	}
+
+	// 获取选中的文件
+	item := lv.Selected()
+	fileName := item.Caption()
+	xlsx := core.FindXlsxByName(fileName)
+	fmt.Println(f.Edit1.Text(), fileName)
+	if xlsx != nil {
+		// 打开文件
+		rtl.SysOpen(f.Edit1.Text() + "\\" + fileName)
+	}
+}
+
+// ListView 双击事件 - 显示错误详情
+func (f *TForm1) OnListViewDblClick(sender vcl.IObject) {
+	lv := f.ListView1
+	if lv.Selected() == nil {
+		return
+	}
+
+	item := lv.Selected()
+	fileName := item.Caption()
+	xlsx := core.FindXlsxByName(fileName)
+	if xlsx == nil {
+		return
+	}
+
+	// 检查是否有错误
+	if len(xlsx.Errors) > 0 {
+		errorMsg := fmt.Sprintf("文件: %s\n\n错误详情:\n\n", fileName)
+		for i, err := range xlsx.Errors {
+			errorMsg += fmt.Sprintf("%d. %s\n", i+1, err)
+		}
+		vcl.ShowMessage(errorMsg)
+	}
 }
 
 //#endregion
@@ -88,18 +213,26 @@ func (f *TForm1) initMenu() {
 	f.MainMenu1.Items().Add(menu)
 }
 
-// 初始化选择路径编辑框
 func (f *TForm1) initSelectEdit() {
-	f.Edit1.SetText("请选择配置路径")
-	f.Edit2.SetText("请选择导出路径")
-	f.Edit3.SetText("请选择翻译路径")
-}
+	config := f.config
 
-// 初始化选择按钮
-func (f *TForm1) initSelectBtn() {
-	f.Button1.SetOnClick(f.OnSelectBtnClick)
-	f.Button2.SetOnClick(f.OnSelectBtnClick)
-	f.Button3.SetOnClick(f.OnSelectBtnClick)
+	if config.ConfigPath != "" {
+		f.Edit1.SetText(config.ConfigPath)
+	} else {
+		f.Edit1.SetText("请选择配置路径")
+	}
+
+	if config.OutputPath != "" {
+		f.Edit2.SetText(config.OutputPath)
+	} else {
+		f.Edit2.SetText("请选择导出路径")
+	}
+
+	if config.I18nPath != "" {
+		f.Edit3.SetText(config.I18nPath)
+	} else {
+		f.Edit3.SetText("请选择翻译路径")
+	}
 }
 
 // 初始化列表视图
@@ -127,6 +260,15 @@ func (f *TForm1) initListView() {
 	col.SetMaxWidth(200)
 
 	lv1.SetDoubleBuffered(true)
+
+	// 启用整行选择
+	lv1.SetRowSelect(true)
+
+	// 关联右键菜单
+	lv1.SetPopupMenu(f.PopupMenu1)
+
+	// 双击事件
+	lv1.SetOnDblClick(f.OnListViewDblClick)
 }
 
 // 初始化关于窗口
@@ -156,14 +298,22 @@ func (f *TForm1) initComboBox() {
 	f.ComboBox3.Items().Add("de")
 	f.ComboBox3.SetItemIndex(0)
 	f.ComboBox3.SetStyle(types.CsDropDownList)
-
-	core.GFlags.Server = f.ComboBox1.Text()
-	core.GFlags.Client = f.ComboBox2.Text()
 }
 
 func (f *TForm1) refreshListView(path string) {
-	core.GFlags.Path = path
+	// 检查path是否合法
+	if path == "" {
+		vcl.ShowMessage("⚠️ 请先选择有效的配置路径!")
+		return
+	}
+	// 检查路径是否存在
+	if _, err := core.CheckPathValid(path); err != nil {
+		vcl.ShowMessage("⚠️ 所选路径不存在,请重新选择!")
+		return
+	}
 
+	core.Walked = false
+	core.GFlags.Path = path
 	err := core.WalkPath()
 	if err != nil {
 		vcl.ShowMessage(err.Error())
@@ -185,16 +335,77 @@ func (f *TForm1) refreshListView(path string) {
 		}
 
 		// 导出状态
+		item.SubItems().Add("-")
 
 		// 导出结果
+		item.SubItems().Add("-")
 	}
 	lv1.Items().EndUpdate()
 }
 
+func (f *TForm1) updateListViewItem(ch <-chan *core.Xlsx) {
+	for xlsx := range ch {
+		vcl.ThreadSync(func() {
+			lv1 := f.ListView1
+			item := lv1.Items().Item(int32(xlsx.Idx))
+			item.SubItems().SetStrings(0, "导出中...")
+		})
+	}
+}
+
+func (f *TForm1) StartExport() {
+	// 检查配置路径
+	// 检查导出路径
+	// 检查翻译路径
+
+	// ready := make(chan struct{})
+	// go func() {
+	// 	close(ready) // 关闭 channel 表示已进入协程
+	// 	f.updateListViewItem()
+	// }()
+	// <-ready // 等待 channel 关闭
+
+	fmt.Println("开始导出配置...")
+	core.GFlags.Path = f.Edit1.Text()
+	core.GFlags.Output = f.Edit2.Text()
+	core.GFlags.I18nPath = f.Edit3.Text()
+	core.GFlags.Compact = f.CheckBoxCompact.Checked()
+	core.GFlags.Pretty = f.CheckBoxPretty.Checked()
+	core.GFlags.Force = f.CheckBoxAll.Checked()
+	core.GFlags.Server = f.ComboBox1.Text()
+	core.GFlags.Client = f.ComboBox2.Text()
+	if _, err := core.CheckPathValid(core.GFlags.Path); err != nil {
+		vcl.ShowMessage("⚠️ 配置路径无效,请重新选择!")
+		return
+	}
+	if _, err := core.CheckPathValid(core.GFlags.Output); err != nil {
+		vcl.ShowMessage("⚠️ 导出路径无效,请重新选择!")
+		return
+	}
+
+	go core.Run(&core.ParseHandler{
+		OnEvent: func(event *core.ParseEvent) {
+			vcl.ThreadSync(func() {
+				switch event.Status {
+				case "start":
+					f.updateItemStatus(event.Xlsx, 1, "🔄 导出中...")
+				case "finish":
+					f.updateItemStatus(event.Xlsx, 1, "✓ 完成")
+					if len(event.Xlsx.Errors) > 0 {
+						f.updateItemStatus(event.Xlsx, 2, "❌ "+event.Xlsx.Errors[0])
+					} else {
+						f.updateItemStatus(event.Xlsx, 2, "✓ 成功")
+					}
+				}
+			})
+		},
+	})
+}
+
+func (f *TForm1) updateItemStatus(xlsx *core.Xlsx, idx int32, status string) {
+	lv := f.ListView1
+	item := lv.Items().Item(int32(xlsx.Idx))
+	item.SubItems().SetStrings(idx, status)
+}
+
 //#endregion
-
-func (f *TForm1) OnCheckBox4Change(sender vcl.IObject) {
-}
-
-func (f *TForm1) OnButton4Click(sender vcl.IObject) {
-}

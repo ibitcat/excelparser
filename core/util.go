@@ -68,7 +68,7 @@ func ternary[T any](condition bool, ifOutput T, elseOutput T) T {
 	return elseOutput
 }
 
-func CheckPathVaild(path string) (string, error) {
+func CheckPathValid(path string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", err

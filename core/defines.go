@@ -85,6 +85,7 @@ type Field struct {
 
 // Excel配置表结构体
 type Xlsx struct {
+	Idx          int            // 索引
 	Name         string         // 文件名（带文件扩展名）
 	FileName     string         // 文件名
 	PathName     string         // 文件完整路径
@@ -133,9 +134,9 @@ var (
 	I18nMap     sync.Map                                           // 国际化字符串映射
 	I18nLocale  *gotext.Locale                                     // 国际化对象
 	XlsxList    []*Xlsx                                            // Excel配置表列表
-	LoadingChan chan *Xlsx                                         // 加载进度通道
+	EventChan   chan *ParseEvent                                   // 解析事件通道
 	MaxErrorCnt = 6                                                // 每个文件最大错误数
-	ExportYaml  = ".export.yaml"                                   // 导出记录文件名
+	ExportYaml  = ".excelparser.temp"                              // 导出记录文件名
 )
 
 //#endregion

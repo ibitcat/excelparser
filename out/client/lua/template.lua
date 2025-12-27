@@ -3,7 +3,6 @@
 ---template@模板
 ---@class TTemplate
 ---@field id integer 配置唯一id
----@field jsonval table json描述
 ---@field i18njson string[] 
 ---@field list1 any[] 奖励道具
 ---@field map1 table<integer,string> 简单map
@@ -16,23 +15,6 @@
 local t = {
   [1001] = {
     id = 1001,
-    jsonval = {
-      sites = {
-        [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
-        },
-        [2] = {
-          name = "google",
-          url = "www.google.com"
-        },
-        [3] = {
-          name = "qq",
-          url = "www.qq.com"
-        }
-      },
-      age = 100
-    },
     i18njson = {
       [1] = "你好",
       [2] = "世界"
@@ -122,23 +104,6 @@ local t = {
   },
   [1002] = {
     id = 1002,
-    jsonval = {
-      sites = {
-        [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
-        },
-        [2] = {
-          name = "google",
-          url = "www.google.com"
-        },
-        [3] = {
-          url = "www.qq.com",
-          name = "qq"
-        }
-      },
-      age = 100
-    },
     i18njson = {
       [1] = "你好",
       [2] = "世界"
@@ -228,23 +193,6 @@ local t = {
   },
   [1003] = {
     id = 1003,
-    jsonval = {
-      sites = {
-        [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
-        },
-        [2] = {
-          url = "www.google.com",
-          name = "google"
-        },
-        [3] = {
-          name = "qq",
-          url = "www.qq.com"
-        }
-      },
-      age = 100
-    },
     i18njson = {
       [1] = "你好",
       [2] = "世界"
@@ -334,23 +282,6 @@ local t = {
   },
   [1004] = {
     id = 1004,
-    jsonval = {
-      sites = {
-        [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
-        },
-        [2] = {
-          name = "google",
-          url = "www.google.com"
-        },
-        [3] = {
-          name = "qq",
-          url = "www.qq.com"
-        }
-      },
-      age = 100
-    },
     i18njson = {
       [1] = "你好",
       [2] = "世界"
@@ -440,23 +371,6 @@ local t = {
   },
   [1005] = {
     id = 1005,
-    jsonval = {
-      sites = {
-        [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
-        },
-        [2] = {
-          url = "www.google.com",
-          name = "google"
-        },
-        [3] = {
-          name = "qq",
-          url = "www.qq.com"
-        }
-      },
-      age = 100
-    },
     i18njson = {
       [1] = "你好",
       [2] = "世界"
