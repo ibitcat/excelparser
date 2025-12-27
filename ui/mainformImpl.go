@@ -87,6 +87,7 @@ func (f *TForm1) OnSelectBtnClick(sender vcl.IObject) {
 		case 3:
 			f.Edit3.SetText(selectedPath)
 			f.config.I18nPath = selectedPath
+			f.refreshI18nComboBox(selectedPath)
 		}
 
 		saveConfig(f.config)
@@ -293,11 +294,41 @@ func (f *TForm1) initComboBox() {
 	f.ComboBox2.SetStyle(types.CsDropDownList)
 	f.ComboBox2.SetSelStart(int32(len(f.ComboBox2.Text())))
 
-	f.ComboBox3.Items().Clear()
-	f.ComboBox3.Items().Add("en")
-	f.ComboBox3.Items().Add("de")
-	f.ComboBox3.SetItemIndex(0)
 	f.ComboBox3.SetStyle(types.CsDropDownList)
+	// 如果有配置的 i18n 路径，扫描文件夹列表
+	if f.config.I18nPath != "" {
+		f.refreshI18nComboBox(f.config.I18nPath)
+	} else {
+		f.ComboBox3.Items().Clear()
+		f.ComboBox3.Items().Add("")
+		f.ComboBox3.SetItemIndex(0)
+	}
+}
+
+func (f *TForm1) refreshI18nComboBox(path string) {
+	if path == "" {
+		return
+	}
+
+	// 读取目录下的文件夹列表
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return
+	}
+
+	f.ComboBox3.Items().Clear()
+	for _, entry := range entries {
+		if entry.IsDir() {
+			f.ComboBox3.Items().Add(entry.Name())
+		}
+	}
+
+	if f.ComboBox3.Items().Count() > 0 {
+		f.ComboBox3.SetItemIndex(0)
+	} else {
+		f.ComboBox3.Items().Add("")
+		f.ComboBox3.SetItemIndex(0)
+	}
 }
 
 func (f *TForm1) refreshListView(path string) {
@@ -353,11 +384,13 @@ func (f *TForm1) updateListViewItem(ch <-chan *core.Xlsx) {
 	}
 }
 
-func (f *TForm1) StartExport() {
-	// 检查配置路径
-	// 检查导出路径
-	// 检查翻译路径
+func (f *TForm1) updateItemStatus(xlsx *core.Xlsx, idx int32, status string) {
+	lv := f.ListView1
+	item := lv.Items().Item(int32(xlsx.Idx))
+	item.SubItems().SetStrings(idx, status)
+}
 
+func (f *TForm1) StartExport() {
 	// ready := make(chan struct{})
 	// go func() {
 	// 	close(ready) // 关闭 channel 表示已进入协程
@@ -366,9 +399,9 @@ func (f *TForm1) StartExport() {
 	// <-ready // 等待 channel 关闭
 
 	fmt.Println("开始导出配置...")
+	i18nPath := f.Edit3.Text()
 	core.GFlags.Path = f.Edit1.Text()
 	core.GFlags.Output = f.Edit2.Text()
-	core.GFlags.I18nPath = f.Edit3.Text()
 	core.GFlags.Compact = f.CheckBoxCompact.Checked()
 	core.GFlags.Pretty = f.CheckBoxPretty.Checked()
 	core.GFlags.Force = f.CheckBoxAll.Checked()
@@ -381,6 +414,10 @@ func (f *TForm1) StartExport() {
 	if _, err := core.CheckPathValid(core.GFlags.Output); err != nil {
 		vcl.ShowMessage("⚠️ 导出路径无效,请重新选择!")
 		return
+	}
+	if i18nAbsPath, err := core.CheckPathValid(i18nPath); err == nil {
+		core.GFlags.I18nPath = i18nAbsPath
+		core.GFlags.I18nLang = f.ComboBox3.Text()
 	}
 
 	go core.Run(&core.ParseHandler{
@@ -400,12 +437,6 @@ func (f *TForm1) StartExport() {
 			})
 		},
 	})
-}
-
-func (f *TForm1) updateItemStatus(xlsx *core.Xlsx, idx int32, status string) {
-	lv := f.ListView1
-	item := lv.Items().Item(int32(xlsx.Idx))
-	item.SubItems().SetStrings(idx, status)
 }
 
 //#endregion

@@ -11,19 +11,19 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ..\..\..\xlsx\template@模板.xlsx:E1
+#: ..\..\..\xlsx\template@模板.xlsx:E1 ..\..\..\xlsx\tpl\tpl1@模板.xlsx:E1
 msgid "hello"
 msgstr "halo"
 
 # 测试注释
-#: ..\..\..\xlsx\template@模板.xlsx:C1
+#: ..\..\..\xlsx\template@模板.xlsx:C1 ..\..\..\xlsx\tpl\tpl1@模板.xlsx:C1
 msgid "世界"
 msgstr "world"
 
-#: ..\..\..\xlsx\template@模板.xlsx:C1
+#: ..\..\..\xlsx\template@模板.xlsx:C1 ..\..\..\xlsx\tpl\tpl1@模板.xlsx:C1
 msgid "你好"
 msgstr "hello"
 
-#: ..\..\..\xlsx\template@模板.xlsx:E1
+#: ..\..\..\xlsx\template@模板.xlsx:E1 ..\..\..\xlsx\tpl\tpl1@模板.xlsx:E1
 msgid "这是一个道具"
 msgstr "this is a item"

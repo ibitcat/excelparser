@@ -34,11 +34,11 @@ local t = {
       age = 100
     },
     i18njson = {
-      [1] = "你好",
-      [2] = "世界"
+      [1] = "hello",
+      [2] = "world"
     },
     list1 = {
-      [1] = "这是一个道具",
+      [1] = "this is a item",
       [2] = 2,
       [3] = 3
     },
@@ -125,8 +125,8 @@ local t = {
     jsonval = {
       sites = {
         [1] = {
-          name = "baidu",
-          url = "www.baidu.com"
+          url = "www.baidu.com",
+          name = "baidu"
         },
         [2] = {
           name = "google",
@@ -140,11 +140,11 @@ local t = {
       age = 100
     },
     i18njson = {
-      [1] = "你好",
-      [2] = "世界"
+      [1] = "hello",
+      [2] = "world"
     },
     list1 = {
-      [1] = "hello",
+      [1] = "halo",
       [2] = 2,
       [3] = 3
     },
@@ -235,8 +235,8 @@ local t = {
           url = "www.baidu.com"
         },
         [2] = {
-          name = "google",
-          url = "www.google.com"
+          url = "www.google.com",
+          name = "google"
         },
         [3] = {
           name = "qq",
@@ -246,11 +246,11 @@ local t = {
       age = 100
     },
     i18njson = {
-      [1] = "你好",
-      [2] = "世界"
+      [1] = "hello",
+      [2] = "world"
     },
     list1 = {
-      [1] = "hello",
+      [1] = "halo",
       [2] = 2,
       [3] = 3
     },
@@ -345,18 +345,18 @@ local t = {
           url = "www.google.com"
         },
         [3] = {
-          url = "www.qq.com",
-          name = "qq"
+          name = "qq",
+          url = "www.qq.com"
         }
       },
       age = 100
     },
     i18njson = {
-      [1] = "你好",
-      [2] = "世界"
+      [1] = "hello",
+      [2] = "world"
     },
     list1 = {
-      [1] = "hello",
+      [1] = "halo",
       [2] = 2,
       [3] = 3
     },
@@ -441,6 +441,7 @@ local t = {
   [1005] = {
     id = 1005,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
           name = "baidu",
@@ -454,15 +455,14 @@ local t = {
           name = "qq",
           url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
-      [1] = "你好",
-      [2] = "世界"
+      [1] = "hello",
+      [2] = "world"
     },
     list1 = {
-      [1] = "hello",
+      [1] = "halo",
       [2] = 2,
       [3] = 3
     },
