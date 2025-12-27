@@ -18,6 +18,8 @@ type AppConfig struct {
 	I18nPath   string `json:"i18n_path"`
 }
 
+var exporting bool = false
+
 const configFileName = ".excelparser.config"
 
 // 加载配置
@@ -396,6 +398,20 @@ func (f *TForm1) updateItemStatus(xlsx *core.Xlsx, idx int32, status string) {
 	item.SubItems().SetStrings(idx, status)
 }
 
+func (f *TForm1) switchEnable(enable bool) {
+	f.Button1.SetEnabled(enable)
+	f.Button2.SetEnabled(enable)
+	f.Button3.SetEnabled(enable)
+	f.Button4.SetEnabled(enable)
+	f.Button5.SetEnabled(enable)
+	f.ComboBox1.SetEnabled(enable)
+	f.ComboBox2.SetEnabled(enable)
+	f.ComboBox3.SetEnabled(enable)
+	f.CheckBoxAll.SetEnabled(enable)
+	f.CheckBoxCompact.SetEnabled(enable)
+	f.CheckBoxPretty.SetEnabled(enable)
+}
+
 func (f *TForm1) StartExport() {
 	// ready := make(chan struct{})
 	// go func() {
@@ -426,7 +442,15 @@ func (f *TForm1) StartExport() {
 		core.GFlags.I18nLang = f.ComboBox3.Text()
 	}
 
+	f.switchEnable(false)
+	f.StatusBar1.Panels().Items(2).SetText("导出中...")
+
 	go func() {
+		if exporting {
+			vcl.ShowMessage("⚠️ 正在导出中，请稍后...")
+			return
+		}
+		exporting = true
 		core.Run(&core.ParseHandler{
 			OnEvent: func(event *core.ParseEvent) {
 				vcl.ThreadSync(func() {
@@ -444,6 +468,8 @@ func (f *TForm1) StartExport() {
 				})
 			},
 		})
+		exporting = false
+		f.switchEnable(true)
 		f.StatusBar1.Panels().Items(2).SetText(fmt.Sprintf("总耗时(ms)：%d", core.ExportCost))
 	}()
 }

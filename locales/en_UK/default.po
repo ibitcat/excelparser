@@ -1,14 +1,16 @@
 msgid ""
 msgstr ""
 
-msgid "hello"
-msgstr "你好好啊"
-
 msgid "世界"
 msgstr "woooooorld"
 
 msgid "你好"
 msgstr "hello"
 
+#: ..\..\xlsx\template@模板.xlsx:E1 ..\..\xlsx\tpl\tpl1@模板.xlsx:E1
+msgid "hello"
+msgstr "你好好啊"
+
+#: ..\..\xlsx\template@模板.xlsx:E1 ..\..\xlsx\tpl\tpl1@模板.xlsx:E1
 msgid "这是一个道具"
 msgstr "this is a item"

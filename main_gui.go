@@ -5,7 +5,6 @@ package main
 import (
 	"excelparser/ui"
 
-	_ "github.com/ying32/govcl/pkgs/winappres"
 	"github.com/ying32/govcl/vcl"
 )
 

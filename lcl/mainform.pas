@@ -52,6 +52,7 @@ type
     procedure CheckBoxPrettyChange(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure Label5Click(Sender: TObject);
     procedure Label6Click(Sender: TObject);
     procedure MenuItem1Click(Sender: TObject);
@@ -78,6 +79,11 @@ begin
 end;
 
 procedure TForm1.ComboBox2Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
 begin
 
 end;

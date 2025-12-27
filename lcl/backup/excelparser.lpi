@@ -10,12 +10,17 @@
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <XPManifest>
-        <DpiAware Value="True"/>
+        <DpiAware Value="True/PM_V2"/>
       </XPManifest>
       <Icon Value="0"/>
     </General>
     <Res2go>
-      <PackageName Value=""/>
+      <Enabled Value="True"/>
+      <OutputPath Value=".."/>
+      <UseOriginalFileName Value="True"/>
+      <PackageName Value="ui"/>
+      <GoBuildMode Value="exe"/>
+      <GoRoot Value="D:\Program Files\Go"/>
     </Res2go>
     <BuildModes>
       <Item Name="Default" Default="True"/>
@@ -41,6 +46,7 @@
         <Filename Value="mainform.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>
