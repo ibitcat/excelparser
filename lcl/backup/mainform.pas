@@ -55,6 +55,7 @@ type
     procedure Label5Click(Sender: TObject);
     procedure Label6Click(Sender: TObject);
     procedure MenuItem1Click(Sender: TObject);
+    procedure MenuItem2Click(Sender: TObject);
     procedure Panel1Click(Sender: TObject);
   private
 
@@ -92,6 +93,11 @@ begin
 end;
 
 procedure TForm1.MenuItem1Click(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.MenuItem2Click(Sender: TObject);
 begin
 
 end;

@@ -56,6 +56,7 @@ func (f *TForm1) OnFormCreate(sender vcl.IObject) {
 	config := loadConfig()
 	f.config = config
 	f.SetCaption(f.title)
+	f.SetBorderStyle(types.BsSingle) // 固定窗口大小
 	f.initMenu()
 	f.initSelectEdit()
 	f.initListView()
@@ -351,6 +352,7 @@ func (f *TForm1) refreshListView(path string) {
 		return
 	}
 
+	changeCount := 0
 	lv1 := f.ListView1
 	lv1.Items().BeginUpdate()
 	lv1.Items().Clear()
@@ -360,6 +362,7 @@ func (f *TForm1) refreshListView(path string) {
 
 		// 文件状态
 		if xlsx.CanParse() {
+			changeCount++
 			item.SubItems().Add("就绪")
 		} else {
 			item.SubItems().Add("-")
@@ -372,6 +375,9 @@ func (f *TForm1) refreshListView(path string) {
 		item.SubItems().Add("-")
 	}
 	lv1.Items().EndUpdate()
+
+	f.StatusBar1.Panels().Items(0).SetText(fmt.Sprintf("文件数量：%d", int32(len(core.XlsxList))))
+	f.StatusBar1.Panels().Items(1).SetText(fmt.Sprintf("有变化的文件数量：%d", changeCount))
 }
 
 func (f *TForm1) updateListViewItem(ch <-chan *core.Xlsx) {
@@ -420,23 +426,26 @@ func (f *TForm1) StartExport() {
 		core.GFlags.I18nLang = f.ComboBox3.Text()
 	}
 
-	go core.Run(&core.ParseHandler{
-		OnEvent: func(event *core.ParseEvent) {
-			vcl.ThreadSync(func() {
-				switch event.Status {
-				case "start":
-					f.updateItemStatus(event.Xlsx, 1, "🔄 导出中...")
-				case "finish":
-					f.updateItemStatus(event.Xlsx, 1, "✓ 完成")
-					if len(event.Xlsx.Errors) > 0 {
-						f.updateItemStatus(event.Xlsx, 2, "❌ "+event.Xlsx.Errors[0])
-					} else {
-						f.updateItemStatus(event.Xlsx, 2, "✓ 成功")
+	go func() {
+		core.Run(&core.ParseHandler{
+			OnEvent: func(event *core.ParseEvent) {
+				vcl.ThreadSync(func() {
+					switch event.Status {
+					case "start":
+						f.updateItemStatus(event.Xlsx, 1, "🔄 导出中...")
+					case "finish":
+						f.updateItemStatus(event.Xlsx, 1, "✓ 完成")
+						if len(event.Xlsx.Errors) > 0 {
+							f.updateItemStatus(event.Xlsx, 2, "❌ "+event.Xlsx.Errors[0])
+						} else {
+							f.updateItemStatus(event.Xlsx, 2, "✓ 成功")
+						}
 					}
-				}
-			})
-		},
-	})
+				})
+			},
+		})
+		f.StatusBar1.Panels().Items(2).SetText(fmt.Sprintf("总耗时(ms)：%d", core.ExportCost))
+	}()
 }
 
 //#endregion

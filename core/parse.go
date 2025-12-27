@@ -192,6 +192,7 @@ func Run(handler *ParseHandler) error {
 	}
 
 	// parse
+	startTime := time.Now()
 	var wg sync.WaitGroup
 	p, _ := ants.NewPoolWithFunc(10, func(i interface{}) {
 		xlsx := i.(*Xlsx)
@@ -214,5 +215,6 @@ func Run(handler *ParseHandler) error {
 		SaveI18nXlsx(GFlags.I18nPath, GFlags.I18nLang)
 	}
 
+	ExportCost = GetDurationMs(startTime)
 	return nil
 }

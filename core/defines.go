@@ -137,6 +137,7 @@ var (
 	EventChan   chan *ParseEvent                                   // 解析事件通道
 	MaxErrorCnt = 6                                                // 每个文件最大错误数
 	ExportYaml  = ".excelparser.temp"                              // 导出记录文件名
+	ExportCost  = 0                                                // 总耗时
 )
 
 //#endregion

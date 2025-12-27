@@ -6,7 +6,6 @@ import (
 	"excelparser/core"
 	"flag"
 	"fmt"
-	"time"
 )
 
 func main() {
@@ -16,8 +15,7 @@ func main() {
 		return
 	}
 
-	startTime := time.Now()
 	core.Run(nil)
-	fmt.Printf("Total Cost: %d ms\n", core.GetDurationMs(startTime))
+	fmt.Printf("Total Cost: %d ms\n", core.ExportCost)
 	// fmt.Printf("running goroutines: %d\n", p.Running())
 }
