@@ -131,11 +131,15 @@ func (f *TForm1) OnCheckBoxAllChange(sender vcl.IObject) {
 }
 
 func (f *TForm1) OnCheckBoxCompactChange(sender vcl.IObject) {
-	f.CheckBoxPretty.SetChecked(!f.CheckBoxCompact.Checked())
+	if f.CheckBoxCompact.Checked() {
+		f.CheckBoxPretty.SetChecked(false)
+	}
 }
 
 func (f *TForm1) OnCheckBoxPrettyChange(sender vcl.IObject) {
-	f.CheckBoxCompact.SetChecked(!f.CheckBoxPretty.Checked())
+	if f.CheckBoxPretty.Checked() {
+		f.CheckBoxCompact.SetChecked(false)
+	}
 }
 
 // 右键菜单 - 打开文件所在目录
