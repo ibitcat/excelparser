@@ -9,7 +9,7 @@ echo.
 
 :: 设置变量
 set PROJECT_NAME=excelparser
-set OUTPUT_DIR=.
+set OUTPUT_DIR=dist
 set OUTPUT_EXE=%PROJECT_NAME%.exe
 
 :: 清理之前的构建

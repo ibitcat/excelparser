@@ -32,7 +32,6 @@ golang 实现的 Excel 解析器。
 -   client, 指定 client 端生成约束，例如：--client=lua
 -   indent, 生成含有 json 类型的配置时，是否格式化(美化) json（默认关闭）
 -   force, 强制重新导出所有配置（默认关闭）
--   default, 若配置的基础数据类型字段（ `int`，`bool`, `string`，`float`）未配置时，使用默认值填充字段(例如：`0`, `false`, `0.0`, `0.0`)（默认开启）
 -   compact, 生成的配置成行压缩，减少文件大小（默认关闭）
 -   i18n，国际化翻译配置路径
 -   lang，国际化翻译目标语言(en=英文;jp=日文;kr=韩文等)
@@ -84,11 +83,11 @@ excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=.
 
 ### json
 
-使用 json 类型时，可以指定在`<>`内指定 json 真正导出的数据结构，支持定长数组、变长数组、map(支持嵌套)，但不支持 any 和 struct(_不好描述结构体原型_)。另外，需要注意的是，变长数组只适用于 json 中，表头描述的类型只支持定长数组。
+使用 json 类型时，可以在`:`后指定真正导出的数据结构，支持定长数组、变长数组、map(支持嵌套)，但不支持 any 和 struct(_不好描述结构体原型_)。另外，需要注意的是，变长数组只适用于 json 中，表头描述的类型只支持定长数组。
 
 | id          | jsonval     |
 | ----------- | ----------- |
-| int         | json<[]int> |
+| int         | json:[]int  |
 |             | s           |
 | 配置唯一 id | json 字符串 |
 | 1001        | [1,2,3]     |
@@ -146,3 +145,11 @@ excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=.
 |             | s                |        |        |        |     |     |     |           |        |     |     |     |        |     |     |     |        |
 | 配置唯一 id | 结构体           | 字段 a | 字段 b | 字段 c |     |     |     | 字段 d    |        |     |     |     |        |     |     |     | 字段 e |
 | 1001        |                  | 111    | 2222   |        | 1   | 2   | 3   |           |        | 122 | 222 | 333 |        | 122 | 222 | 333 | 1001   |
+
+## GUI 版本
+
+**GUI 版本只适用于 Windows 系统**。
+
+运行 `build_gui.bat` 脚本编译 GUI 版本，生成的可执行文件在 `excelparser_gui/dist` 目录下。
+
+![alt text](dist/screenshot.png)
