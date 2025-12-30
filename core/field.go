@@ -59,7 +59,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 			}
 		}
 	case TJson:
-		if f.Vtype != nil {
+		if f.Vtype != nil && len(val) > 0 {
 			ok = f.Vtype.checkJsonVal(val)
 		}
 	case TUint:
