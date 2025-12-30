@@ -89,6 +89,7 @@ type Xlsx struct {
 	Name         string         // 文件名（带文件扩展名）
 	FileName     string         // 文件名
 	PathName     string         // 文件完整路径
+	DirName      string         // 文件所在目录
 	OutName      string         // 输出文件名(item@道具.xlsx, 输出为 item)
 	SheetName    string         // 工作表名
 	Vertical     bool           // 纵向表

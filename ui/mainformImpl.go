@@ -149,7 +149,13 @@ func (f *TForm1) OnMenuItem1Click(sender vcl.IObject) {
 		return
 	}
 
-	rtl.SysOpen(f.Edit1.Text())
+	item := lv.Selected()
+	fileName := item.Caption()
+	xlsx := core.FindXlsxByName(fileName)
+	if xlsx == nil {
+		return
+	}
+	rtl.SysOpen(xlsx.DirName)
 }
 
 // 右键菜单 - 打开文件
@@ -163,7 +169,7 @@ func (f *TForm1) OnMenuItem2Click(sender vcl.IObject) {
 	item := lv.Selected()
 	fileName := item.Caption()
 	xlsx := core.FindXlsxByName(fileName)
-	fmt.Println(f.Edit1.Text(), fileName)
+	// fmt.Println(f.Edit1.Text(), fileName)
 	if xlsx != nil {
 		// 打开文件
 		rtl.SysOpen(f.Edit1.Text() + "\\" + fileName)

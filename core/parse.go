@@ -43,15 +43,16 @@ func WalkPath() error {
 		ok, mErr := filepath.Match("[^~$]*.xlsx", f.Name())
 		if ok {
 			modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
-			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator))
-			dirname := strings.TrimSuffix(fname, f.Name())
-			fileName := getFileName(f.Name())
-			outName := strings.SplitN(fileName, "@", 2)[0]
+			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator)) // eg.: tpl/item@道具.xlsx
+			dirname := strings.TrimSuffix(fname, f.Name())                         // eg.: tpl/
+			fileName := getFileName(f.Name())                                      // item@道具
+			outName := strings.SplitN(fileName, "@", 2)[0]                         // item
 			task := &Xlsx{
 				Idx:          len(XlsxList),
-				Name:         dirname + f.Name(),
-				PathName:     path,
-				FileName:     dirname + fileName,
+				Name:         dirname + f.Name(), // eg.: tpl/item@道具.xlsx
+				PathName:     path,               // eg.: D:/project/excelparser/tpl/item@道具.xlsx
+				FileName:     dirname + fileName, // eg.: tpl/item@道具
+				DirName:      filepath.Dir(path), // eg.: D:/project/excelparser/tpl/
 				OutName:      outName,
 				Errors:       make([]string, 0),
 				TimeCost:     0,
