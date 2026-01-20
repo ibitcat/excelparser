@@ -71,16 +71,17 @@ type Type struct {
 
 // 字段定义
 type Field struct {
-	*Type           // 字段数据类型
-	Parent *Field   // 父字段
-	Xlsx   *Xlsx    // 所属excel
-	Index  int      // 字段索引
-	Desc   string   // 字段描述
-	Rname  string   // 原始字段名
-	Name   string   // 字段名
-	Mode   string   // 生成方式(s=server,c=client,x=none)
-	Keys   []*Field // 键元素列表
-	Vals   []*Field // 值元素列表
+	*Type            // 字段数据类型
+	Parent  *Field   // 父字段
+	Xlsx    *Xlsx    // 所属excel
+	Index   int      // 字段索引
+	Desc    string   // 字段描述
+	Comment string   // 字段批注
+	Rname   string   // 原始字段名
+	Name    string   // 字段名
+	Mode    string   // 生成方式(s=server,c=client,x=none)
+	Keys    []*Field // 键元素列表
+	Vals    []*Field // 值元素列表
 }
 
 // Excel配置表结构体
@@ -98,6 +99,7 @@ type Xlsx struct {
 	Types        []string       // 类型列表
 	Modes        []string       // 导出模式列表
 	Descs        []string       // 字段描述列表
+	Comments     map[int]string // 字段批注列表
 	RootField    *Field         // 根字段
 	Rows         [][]string     // 合法的配置行
 	Datas        []string       // 导出数据缓存

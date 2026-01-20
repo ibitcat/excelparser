@@ -100,6 +100,9 @@ func (x *Xlsx) createField(i int) *Field {
 			f.Name = s[len(s)-1]
 		}
 	}
+	if comment, ok := x.Comments[i]; ok {
+		f.Comment = comment
+	}
 	return f
 }
 
@@ -142,6 +145,33 @@ func (x *Xlsx) readSheetHead() [][]string {
 		}
 	}
 	return results
+}
+
+// 获取字段批注
+func (x *Xlsx) getFieldComments() map[int]string {
+	commentMap := make(map[int]string)
+	comments, err := x.Excel.GetComments(x.SheetName)
+	if err != nil {
+		return commentMap
+	}
+
+	for _, comment := range comments {
+		col, row := splitAxis(comment.Cell)
+		if (x.Vertical && col == 4) || (!x.Vertical && row == 4) {
+			// 第4列是描述列
+			var textParts []string
+			for _, para := range comment.Paragraph {
+				if len(para.Text) > 0 {
+					textParts = append(textParts, para.Text)
+				}
+			}
+			commentText := strings.Join(textParts, "")
+			commentText = strings.ReplaceAll(commentText, "\n", " ")
+			commentMap[row-1] = commentText
+		}
+	}
+
+	return commentMap
 }
 
 func (x *Xlsx) parseField(parent *Field, sindex int) int {
@@ -453,6 +483,7 @@ func (x *Xlsx) parseExcel() bool {
 	x.Types = heads[TypeLine-1] // 字段类型行
 	x.Modes = heads[ModeLine-1] // 导出模式行
 	x.Descs = heads[DescLine-1] // 字段描述行
+	x.Comments = x.getFieldComments()
 	x.parseHeader()
 	x.checkFields()
 	x.checkRows()
@@ -562,7 +593,11 @@ func (x *Xlsx) formatLuaComment(mode string) string {
 	comments = append(comments, "---@class "+clsName)
 	for _, v := range x.RootField.Vals {
 		if v.isHitMode(mode) {
-			comments = append(comments, "---@field "+v.Name+" "+v.luaTypeName()+" "+v.Desc)
+			field := "---@field " + v.Name + " " + v.luaTypeName() + " " + v.Desc
+			if len(v.Comment) > 0 {
+				field += "  (" + v.Comment + ")"
+			}
+			comments = append(comments, field)
 		}
 	}
 	if x.Vertical {
