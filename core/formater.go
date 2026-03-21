@@ -10,6 +10,8 @@ func NewFormater(x *Xlsx, format, mode string) iFormater {
 		return &LuaFormater{Xlsx: x, mode: mode}
 	case "json":
 		return &JsonFormater{Xlsx: x, mode: mode}
+	case "csharp":
+		return &CSharpFormater{Xlsx: x, mode: mode}
 	default:
 		return nil
 	}

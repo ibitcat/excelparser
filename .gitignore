@@ -2,3 +2,4 @@
 .excelparser.config
 excelparser
 excelparser.exe
+tests/

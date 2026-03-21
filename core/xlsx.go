@@ -541,6 +541,8 @@ func (x *Xlsx) writeToFile(mode, format string) {
 		ext = "lua"
 	case "json":
 		ext = "json"
+	case "csharp":
+		ext = "bytes"
 	}
 	sep := string(filepath.Separator)
 	// linux: out/server/json
@@ -549,17 +551,45 @@ func (x *Xlsx) writeToFile(mode, format string) {
 	outFileName := fmt.Sprintf("%s%s.%s", outdir, x.OutName, ext)
 	err := os.MkdirAll(filepath.Dir(outFileName), 0o755)
 	if err == nil || os.IsExist(err) {
-		outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
-		if operr != nil {
-			return
+		if format == "csharp" {
+			x.writeCSharpFiles(outdir, outFileName)
+		} else {
+			outFile, operr := os.OpenFile(outFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+			if operr != nil {
+				return
+			}
+			defer outFile.Close()
+			outFile.WriteString(strings.Join(x.Datas, ""))
+			outFile.Sync()
 		}
-		defer outFile.Close()
-
-		outFile.WriteString(strings.Join(x.Datas, ""))
-		outFile.Sync()
 	} else {
 		x.appendError(fmt.Sprintf("输出目录[%s]创建失败: %v", outdir, err))
 	}
+}
+
+func (x *Xlsx) writeCSharpFiles(outdir, binFileName string) {
+	// .bytes 二进制数据文件
+	if len(x.BinaryDatas) > 0 {
+		binFile, err := os.OpenFile(binFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+		if err != nil {
+			x.appendError(fmt.Sprintf("创建二进制文件失败: %v", err))
+			return
+		}
+		binFile.Write(x.BinaryDatas)
+		binFile.Sync()
+		binFile.Close()
+	}
+
+	// .cs 类定义文件
+	csFileName := fmt.Sprintf("%s%s.cs", outdir, x.OutName)
+	csFile, err := os.OpenFile(csFileName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+	if err != nil {
+		x.appendError(fmt.Sprintf("创建C#类文件失败: %v", err))
+		return
+	}
+	defer csFile.Close()
+	csFile.WriteString(strings.Join(x.Datas, ""))
+	csFile.Sync()
 }
 
 func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string {

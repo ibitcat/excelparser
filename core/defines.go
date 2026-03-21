@@ -103,6 +103,7 @@ type Xlsx struct {
 	RootField    *Field         // 根字段
 	Rows         [][]string     // 合法的配置行
 	Datas        []string       // 导出数据缓存
+	BinaryDatas  []byte         // 二进制导出数据缓存
 	Errors       []string       // 错误信息
 	Exports      []ExportInfo   // 导出信息
 	LastModified uint64         // 最后修改时间
@@ -118,6 +119,13 @@ type LuaFormater struct {
 
 // JSON格式化器
 type JsonFormater struct {
+	*Xlsx
+	line int
+	mode string
+}
+
+// CSharp格式化器(MessagePack)
+type CSharpFormater struct {
 	*Xlsx
 	line int
 	mode string
