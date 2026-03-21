@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ExcelParser.Examples.CSharpExportLoad</RootNamespace>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" Version="2.5.192" />
+  </ItemGroup>
+
+  <!-- 与 tests/CSharpBytesLoad 一致：链接 out/server/csharp 下的生成类（tpl1 与 template 类型重名，不可同编） -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\error.cs" Link="generated\error.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\item.cs" Link="generated\item.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\system.cs" Link="generated\system.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\template.cs" Link="generated\template.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\tpl2.cs" Link="generated\tpl2.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\out\server\csharp\*.bytes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>csharp-export\%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+</Project>
