@@ -40,15 +40,16 @@ const (
 
 // 导出选项
 type Flags struct {
-	Pretty   bool   // json格式化
-	Force    bool   // 是否强制重新生成
-	Compact  bool   // 是否紧凑导出
-	Path     string // excel路径
-	Output   string // 导出路径
-	Server   string // server 导出格式
-	Client   string // client 导出格式
-	I18nPath string // 国际化配置路径
-	I18nLang string // 国际化语言
+	Pretty   bool     // json格式化
+	Force    bool     // 是否强制重新生成
+	Compact  bool     // 是否紧凑导出
+	Path     string   // excel路径
+	Output   string   // 导出路径
+	Server   string   // server 导出格式
+	Client   string   // client 导出格式
+	I18nPath string   // 国际化配置路径
+	I18nLang string   // 国际化语言
+	Files    []string // 指定导出的文件列表（空=导出全部）
 }
 
 // 结构体定义

@@ -123,6 +123,8 @@ func SaveExportTime() {
 }
 
 func StartParse(xlsx *Xlsx) {
+	// 清空 Errors，以免上次的错误影响本次结果
+	xlsx.Errors = xlsx.Errors[:0]
 	if xlsx.CanParse() {
 		startTime := time.Now()
 		xlsx.exportExcel()
@@ -173,7 +175,24 @@ func Run(handler *ParseHandler) error {
 		return err
 	}
 
-	xlsxCount := len(XlsxList)
+	// 过滤指定文件
+	parseList := XlsxList
+	if len(GFlags.Files) > 0 {
+		parseList = make([]*Xlsx, 0, len(GFlags.Files))
+		for _, x := range XlsxList {
+			for _, f := range GFlags.Files {
+				if x.Name == f || filepath.Base(x.PathName) == f {
+					parseList = append(parseList, x)
+					break
+				}
+			}
+		}
+		if len(parseList) == 0 {
+			return errors.New("no matching .xlsx files found for --files")
+		}
+	}
+
+	xlsxCount := len(parseList)
 	if xlsxCount == 0 {
 		return errors.New("no valid .xlsx files found")
 	}
@@ -204,7 +223,7 @@ func Run(handler *ParseHandler) error {
 	})
 	defer p.Release()
 
-	for _, xlsx := range XlsxList {
+	for _, xlsx := range parseList {
 		wg.Add(1)
 		_ = p.Invoke(xlsx)
 	}

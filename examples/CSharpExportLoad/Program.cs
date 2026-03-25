@@ -39,7 +39,13 @@ internal static class Program
         {
             var data = ReadBytes(dir, "item");
             var map = MessagePackSerializer.Deserialize<Dictionary<int, TItem>>(data);
-            Console.WriteLine($"  行数={map.Count}, [1001].name={map[1001].name}");
+            Console.WriteLine($"  行数={map.Count}");
+            foreach (var kvp in map)
+            {
+                var id = kvp.Key;
+                var item = kvp.Value;
+                Console.WriteLine($"    [{id}].name={item.name}");
+            }
         });
 
         failed |= !Run("error.bytes (横向表 + 基础验证)", () =>

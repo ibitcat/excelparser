@@ -4,3 +4,5 @@ excelparser
 excelparser.exe
 tests/
 .vs
+examples/CSharpExportLoad/bin
+examples/CSharpExportLoad/obj

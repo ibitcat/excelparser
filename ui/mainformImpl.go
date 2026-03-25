@@ -64,6 +64,7 @@ func (f *TForm1) OnFormCreate(sender vcl.IObject) {
 	f.initListView()
 	f.initAboutForm()
 	f.initComboBox()
+	f.CheckBox1.SetChecked(true) // 默认全选
 	if len(config.ConfigPath) > 0 {
 		f.refreshListView(config.ConfigPath)
 	}
@@ -124,6 +125,15 @@ func (f *TForm1) OnComboBox1Change(sender vcl.IObject) {
 
 func (f *TForm1) OnComboBox2Change(sender vcl.IObject) {
 	core.GFlags.Client = f.ComboBox2.Text()
+}
+
+func (f *TForm1) OnCheckBox1Change(sender vcl.IObject) {
+	// 全选/反选
+	lv := f.ListView1
+	for i := int32(0); i < lv.Items().Count(); i++ {
+		item := lv.Items().Item(i)
+		item.SetChecked(f.CheckBox1.Checked())
+	}
 }
 
 func (f *TForm1) OnCheckBoxAllChange(sender vcl.IObject) {
@@ -277,6 +287,7 @@ func (f *TForm1) initListView() {
 
 	// 启用整行选择
 	lv1.SetRowSelect(true)
+	lv1.SetCheckboxes(true)
 
 	// 关联右键菜单
 	lv1.SetPopupMenu(f.PopupMenu1)
@@ -367,12 +378,14 @@ func (f *TForm1) refreshListView(path string) {
 	}
 
 	changeCount := 0
+	selectAll := f.CheckBox1.Checked() // 是否全选
 	lv1 := f.ListView1
 	lv1.Items().BeginUpdate()
 	lv1.Items().Clear()
 	for _, xlsx := range core.XlsxList {
 		item := lv1.Items().Add()
 		item.SetCaption(xlsx.Name)
+		item.SetChecked(selectAll)
 
 		// 文件状态
 		if xlsx.CanParse() {
@@ -452,6 +465,24 @@ func (f *TForm1) StartExport() {
 	if i18nAbsPath, err := core.CheckPathValid(i18nPath); err == nil {
 		core.GFlags.I18nPath = i18nAbsPath
 		core.GFlags.I18nLang = f.ComboBox3.Text()
+	}
+
+	// 收集勾选的文件列表
+	core.GFlags.Files = nil
+	lv := f.ListView1
+	checkedNames := make([]string, 0)
+	for i := int32(0); i < lv.Items().Count(); i++ {
+		item := lv.Items().Item(i)
+		if item.Checked() {
+			checkedNames = append(checkedNames, item.Caption())
+		}
+	}
+	if len(checkedNames) == 0 {
+		vcl.ShowMessage("⚠️ 请至少勾选一个要导出的文件!")
+		return
+	}
+	if int(lv.Items().Count()) != len(checkedNames) {
+		core.GFlags.Files = checkedNames
 	}
 
 	f.switchEnable(false)

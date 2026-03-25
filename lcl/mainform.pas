@@ -18,6 +18,7 @@ type
     Button3: TButton;
     Button4: TButton;
     Button5: TButton;
+    CheckBox1: TCheckBox;
     CheckBoxCompact: TCheckBox;
     CheckBoxAll: TCheckBox;
     CheckBoxPretty: TCheckBox;

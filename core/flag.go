@@ -7,6 +7,7 @@ import (
 )
 
 var Flaghelp bool
+var FlagFiles string
 
 func init() {
 	// flag
@@ -20,6 +21,7 @@ func init() {
 	flag.StringVar(&GFlags.I18nPath, "i18n", "./locales", "I18n po file path.")
 	flag.StringVar(&GFlags.I18nLang, "lang", "", "I18n language.")
 	flag.StringVar(&GFlags.Output, "output", ".", "Export output path.")
+	flag.StringVar(&FlagFiles, "files", "", "Specify excel files to export, separated by comma. eg: item@道具.xlsx,hero@英雄.xlsx")
 
 	flag.Usage = usage
 }

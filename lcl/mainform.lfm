@@ -1,12 +1,11 @@
 object Form1: TForm1
   Left = 350
-  Height = 644
+  Height = 515
   Top = 250
-  Width = 1030
+  Width = 824
   Caption = 'Form1'
-  ClientHeight = 644
-  ClientWidth = 1030
-  DesignTimePPI = 120
+  ClientHeight = 515
+  ClientWidth = 824
   Menu = MainMenu1
   Position = poScreenCenter
   LCLVersion = '4.4.0.0'
@@ -18,13 +17,13 @@ object Form1: TForm1
     Width = 824
     Panels = <    
       item
-        Width = 125
+        Width = 100
       end    
       item
-        Width = 250
+        Width = 200
       end    
       item
-        Width = 125
+        Width = 100
       end>
     SimplePanel = False
   end
@@ -34,135 +33,137 @@ object Form1: TForm1
     Top = 122
     Width = 824
     Align = alClient
+    Checkboxes = True
     Columns = <>
     GridLines = True
     ReadOnly = True
+    RowSelect = True
     TabOrder = 1
     ViewStyle = vsReport
   end
   object Panel1: TPanel
     Left = 0
-    Height = 152
+    Height = 122
     Top = 0
     Width = 824
     Align = alTop
-    ClientHeight = 152
+    ClientHeight = 122
     ClientWidth = 824
     TabOrder = 2
     object Label1: TLabel
-      Left = 10
+      Left = 8
       Height = 17
-      Top = 20
+      Top = 16
       Width = 60
       Caption = '配置路径：'
     end
     object Label2: TLabel
-      Left = 10
+      Left = 8
       Height = 17
-      Top = 54
+      Top = 43
       Width = 60
       Caption = '输出路径：'
     end
     object Label3: TLabel
-      Left = 10
+      Left = 8
       Height = 17
-      Top = 90
+      Top = 72
       Width = 60
       Caption = '翻译路径：'
     end
     object Edit1: TEdit
-      Left = 110
+      Left = 88
       Height = 25
-      Top = 10
-      Width = 310
+      Top = 8
+      Width = 248
       ReadOnly = True
       TabOrder = 0
     end
     object Edit2: TEdit
-      Left = 110
+      Left = 88
       Height = 25
-      Top = 50
-      Width = 310
+      Top = 40
+      Width = 248
       ReadOnly = True
       TabOrder = 1
     end
     object Edit3: TEdit
-      Left = 110
+      Left = 88
       Height = 25
-      Top = 85
-      Width = 310
+      Top = 68
+      Width = 248
       ReadOnly = True
       TabOrder = 2
     end
     object Button1: TButton
       Tag = 1
-      Left = 440
-      Height = 31
-      Top = 10
-      Width = 94
+      Left = 352
+      Height = 25
+      Top = 8
+      Width = 75
       Caption = '打开'
       TabOrder = 3
       OnClick = Button1Click
     end
     object Button2: TButton
       Tag = 2
-      Left = 440
-      Height = 31
-      Top = 48
-      Width = 94
+      Left = 352
+      Height = 25
+      Top = 38
+      Width = 75
       Caption = '打开'
       TabOrder = 4
       OnClick = Button2Click
     end
     object Button3: TButton
       Tag = 3
-      Left = 440
-      Height = 31
-      Top = 85
-      Width = 94
+      Left = 352
+      Height = 25
+      Top = 68
+      Width = 75
       Caption = '打开'
       TabOrder = 5
       OnClick = Button3Click
     end
     object Label4: TLabel
-      Left = 560
+      Left = 448
       Height = 17
-      Top = 20
+      Top = 16
       Width = 96
       Caption = '服务器导出格式：'
     end
     object Label5: TLabel
-      Left = 560
+      Left = 448
       Height = 17
-      Top = 55
+      Top = 44
       Width = 96
       Caption = '客户端导出格式：'
     end
     object ComboBox1: TComboBox
-      Left = 680
+      Left = 544
       Height = 25
-      Top = 10
-      Width = 125
+      Top = 8
+      Width = 100
       ItemHeight = 17
       ReadOnly = True
       TabOrder = 6
       OnChange = ComboBox1Change
     end
     object ComboBox2: TComboBox
-      Left = 680
+      Left = 544
       Height = 25
-      Top = 50
-      Width = 125
+      Top = 40
+      Width = 100
       ItemHeight = 17
       ReadOnly = True
       TabOrder = 7
       OnChange = ComboBox2Change
     end
     object Button4: TButton
-      Left = 864
-      Height = 54
-      Top = 10
-      Width = 124
+      Left = 691
+      Height = 43
+      Top = 8
+      Width = 99
       Caption = '开始生成'
       Font.CharSet = GB2312_CHARSET
       Font.Pitch = fpVariable
@@ -172,70 +173,78 @@ object Form1: TForm1
       OnClick = Button4Click
     end
     object Label6: TLabel
-      Left = 568
+      Left = 454
       Height = 17
-      Top = 90
+      Top = 72
       Width = 84
       Caption = '翻译目标语言：'
     end
     object ComboBox3: TComboBox
-      Left = 680
+      Left = 544
       Height = 25
-      Top = 90
-      Width = 125
+      Top = 72
+      Width = 100
       ItemHeight = 17
       ReadOnly = True
       TabOrder = 9
       OnChange = ComboBox1Change
     end
     object CheckBoxAll: TCheckBox
-      Left = 10
+      Left = 112
       Height = 21
-      Top = 120
+      Top = 96
       Width = 66
       Caption = '强制导出'
       TabOrder = 10
       OnChange = CheckBoxAllChange
     end
     object CheckBoxCompact: TCheckBox
-      Left = 130
+      Left = 200
       Height = 21
-      Top = 120
+      Top = 96
       Width = 66
       Caption = '紧凑输出'
       TabOrder = 11
       OnChange = CheckBoxCompactChange
     end
     object CheckBoxPretty: TCheckBox
-      Left = 250
+      Left = 288
       Height = 21
-      Top = 120
+      Top = 96
       Width = 78
       Caption = 'json格式化'
       TabOrder = 12
       OnChange = CheckBoxPrettyChange
     end
     object Button5: TButton
-      Left = 864
-      Height = 51
-      Top = 70
-      Width = 124
+      Left = 691
+      Height = 41
+      Top = 56
+      Width = 99
       Caption = '重新加载'
       TabOrder = 13
       OnClick = Button5Click
     end
+    object CheckBox1: TCheckBox
+      Left = 8
+      Height = 21
+      Top = 96
+      Width = 42
+      Caption = '全选'
+      TabOrder = 14
+    end
   end
   object MainMenu1: TMainMenu
-    Left = 960
-    Top = 210
+    Left = 768
+    Top = 168
   end
   object SelectDirectoryDialog1: TSelectDirectoryDialog
-    Left = 870
-    Top = 210
+    Left = 696
+    Top = 168
   end
   object PopupMenu1: TPopupMenu
-    Left = 310
-    Top = 270
+    Left = 248
+    Top = 216
     object MenuItem1: TMenuItem
       Caption = '打开文件所在目录'
       OnClick = MenuItem1Click
