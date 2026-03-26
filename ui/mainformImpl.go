@@ -13,9 +13,11 @@ import (
 
 // 配置结构
 type AppConfig struct {
-	ConfigPath string `json:"config_path"`
-	OutputPath string `json:"output_path"`
-	I18nPath   string `json:"i18n_path"`
+	ConfigPath string   `json:"config_path"`
+	OutputPath string   `json:"output_path"`
+	I18nPath   string   `json:"i18n_path"`
+	ServerFmts []string `json:"server_fmts"`
+	ClientFmts []string `json:"client_fmts"`
 }
 
 var exporting bool = false
@@ -342,6 +344,72 @@ func (f *TForm1) initComboBox() {
 		f.ComboBox3.Items().Add("")
 		f.ComboBox3.SetItemIndex(0)
 	}
+
+	config := f.config
+	if len(config.ServerFmts) > 0 {
+		for _, fmt := range config.ServerFmts {
+			switch fmt {
+			case "lua":
+				f.serverChkLua.SetChecked(true)
+			case "json":
+				f.serverChkJson.SetChecked(true)
+			case "csharp":
+				f.serverChkCsharp.SetChecked(true)
+			}
+		}
+	}
+	if len(config.ClientFmts) > 0 {
+		for _, fmt := range config.ClientFmts {
+			switch fmt {
+			case "lua":
+				f.clientChkLua.SetChecked(true)
+			case "json":
+				f.clientChkJson.SetChecked(true)
+			case "csharp":
+				f.clientChkCsharp.SetChecked(true)
+			}
+		}
+	}
+
+	onExportFmtChange := func(vcl.IObject) {
+		f.saveExportFormatConfig()
+	}
+	for _, cb := range []*vcl.TCheckBox{
+		f.serverChkLua, f.serverChkJson, f.serverChkCsharp,
+		f.clientChkLua, f.clientChkJson, f.clientChkCsharp,
+	} {
+		cb.SetOnClick(onExportFmtChange)
+	}
+}
+
+// 将 server/client 勾选同步到配置并写入磁盘（初始化完成前不保存，避免加载配置时写回）
+func (f *TForm1) saveExportFormatConfig() {
+	if !f.isInit {
+		return
+	}
+	serverFmts := make([]string, 0, 3)
+	if f.serverChkLua.Checked() {
+		serverFmts = append(serverFmts, "lua")
+	}
+	if f.serverChkJson.Checked() {
+		serverFmts = append(serverFmts, "json")
+	}
+	if f.serverChkCsharp.Checked() {
+		serverFmts = append(serverFmts, "csharp")
+	}
+	clientFmts := make([]string, 0, 3)
+	if f.clientChkLua.Checked() {
+		clientFmts = append(clientFmts, "lua")
+	}
+	if f.clientChkJson.Checked() {
+		clientFmts = append(clientFmts, "json")
+	}
+	if f.clientChkCsharp.Checked() {
+		clientFmts = append(clientFmts, "csharp")
+	}
+	f.config.ServerFmts = serverFmts
+	f.config.ClientFmts = clientFmts
+	_ = saveConfig(f.config)
 }
 
 func (f *TForm1) refreshI18nComboBox(path string) {
