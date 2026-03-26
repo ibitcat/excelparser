@@ -470,7 +470,9 @@ func UpdateGameTableProxy(outdir, mode string) {
 			insertMarker := "\n    }\n}"
 			insertIdx := strings.LastIndex(content, insertMarker)
 			if insertIdx >= 0 {
-				content = content[:insertIdx] + "\n" + e.code + content[insertIdx:]
+				// insertIdx 落在「类结束」前的 \n 上，content[:insertIdx] 不含上一行 END 后的换行，
+				// 若只加一个 \n 会与全量生成不同：块与块之间少一空行。
+				content = content[:insertIdx] + "\n\n" + e.code + content[insertIdx:]
 			}
 		}
 	}
