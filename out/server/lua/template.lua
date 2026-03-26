@@ -10,7 +10,7 @@
 ---@field map2 table<integer,table<integer,string>> 嵌套map
 ---@field map3 table<integer,integer[]> 数组map
 ---@field s1 table 结构体
----@field xxx any[] 结构体列表
+---@field xxx table[] 结构体列表
 
 ---@type table<integer, TTemplate>
 local t = {

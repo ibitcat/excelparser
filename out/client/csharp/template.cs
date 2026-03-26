@@ -36,7 +36,7 @@ namespace Game.Table
 
         /// <summary>结构体列表</summary>
         [Key(7)]
-        public object[] Xxx { get; set; }
+        public SubType[] Xxx { get; set; }
 
     }
 
