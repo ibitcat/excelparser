@@ -9,15 +9,15 @@ namespace Game.Table
     {
         /// <summary>任务id</summary>
         [Key(0)]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>任务类型</summary>
         [Key(1)]
-        public int type { get; set; }
+        public int Type { get; set; }
 
         /// <summary>任务条件</summary>
         [Key(2)]
-        public int[][] conditions { get; set; }
+        public int[][] Conditions { get; set; }
 
     }
 }

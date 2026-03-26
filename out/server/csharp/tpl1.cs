@@ -9,38 +9,38 @@ namespace Game.Table
     {
         /// <summary>配置唯一id</summary>
         [Key(0)]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>json描述</summary>
         [Key(1)]
-        public TTpl1Jsonval jsonval { get; set; }
+        public TTpl1Jsonval Jsonval { get; set; }
 
         [Key(2)]
-        public string[] i18njson { get; set; }
+        public string[] I18njson { get; set; }
 
         /// <summary>奖励道具</summary>
         [Key(3)]
-        public object[] list1 { get; set; }
+        public object[] List1 { get; set; }
 
         /// <summary>简单map</summary>
         [Key(4)]
-        public Dictionary<int, string> map1 { get; set; }
+        public Dictionary<int, string> Map1 { get; set; }
 
         /// <summary>嵌套map</summary>
         [Key(5)]
-        public Dictionary<int, Dictionary<int, string>> map2 { get; set; }
+        public Dictionary<int, Dictionary<int, string>> Map2 { get; set; }
 
         /// <summary>数组map</summary>
         [Key(6)]
-        public Dictionary<int, int[]> map3 { get; set; }
+        public Dictionary<int, int[]> Map3 { get; set; }
 
         /// <summary>结构体</summary>
         [Key(7)]
-        public TaskType s1 { get; set; }
+        public TaskType S1 { get; set; }
 
         /// <summary>结构体列表</summary>
         [Key(8)]
-        public object[] xxx { get; set; }
+        public object[] Xxx { get; set; }
 
     }
 
@@ -48,10 +48,10 @@ namespace Game.Table
     public class TTpl1Jsonval
     {
         [Key("age")]
-        public int age { get; set; }
+        public int Age { get; set; }
 
         [Key("sites")]
-        public TTpl1JsonvalSites[] sites { get; set; }
+        public TTpl1JsonvalSites[] Sites { get; set; }
 
     }
 
@@ -59,10 +59,10 @@ namespace Game.Table
     public class TTpl1JsonvalSites
     {
         [Key("name")]
-        public string name { get; set; }
+        public string Name { get; set; }
 
         [Key("url")]
-        public string url { get; set; }
+        public string Url { get; set; }
 
     }
 
@@ -71,38 +71,38 @@ namespace Game.Table
     {
         /// <summary>字段a</summary>
         [Key(0)]
-        public int a { get; set; }
+        public int A { get; set; }
 
         /// <summary>字段b</summary>
         [Key(1)]
-        public string b { get; set; }
+        public string B { get; set; }
 
         /// <summary>字段c</summary>
         [Key(2)]
-        public int[] c { get; set; }
+        public int[] C { get; set; }
 
         /// <summary>字段d</summary>
         [Key(3)]
-        public int[][] d { get; set; }
+        public int[][] D { get; set; }
 
         /// <summary>字段e</summary>
         [Key(4)]
-        public int e { get; set; }
+        public int E { get; set; }
 
         /// <summary>字段x-子结构体</summary>
         [Key(5)]
-        public TaskType x { get; set; }
+        public TaskType X { get; set; }
 
         /// <summary>字段f-子结构体列表</summary>
         [Key(6)]
-        public SubType[] f { get; set; }
+        public SubType[] F { get; set; }
 
         /// <summary>子结构体字典</summary>
         [Key(7)]
-        public Dictionary<int, SubType> h { get; set; }
+        public Dictionary<int, SubType> H { get; set; }
 
         [Key(8)]
-        public string g { get; set; }
+        public string G { get; set; }
 
     }
 
@@ -110,10 +110,10 @@ namespace Game.Table
     public class SubType
     {
         [Key(0)]
-        public int a { get; set; }
+        public int A { get; set; }
 
         [Key(1)]
-        public string b { get; set; }
+        public string B { get; set; }
 
     }
 }

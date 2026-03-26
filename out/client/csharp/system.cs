@@ -9,35 +9,35 @@ namespace Game.Table
     {
         /// <summary>字段1</summary>
         [Key(0)]
-        public int key1 { get; set; }
+        public int Key1 { get; set; }
 
         /// <summary>字段2</summary>
         [Key(1)]
-        public string key2 { get; set; }
+        public string Key2 { get; set; }
 
         /// <summary>字段3</summary>
         [Key(2)]
-        public bool key3 { get; set; }
+        public bool Key3 { get; set; }
 
         /// <summary>字段4</summary>
         [Key(3)]
-        public uint key4 { get; set; }
+        public uint Key4 { get; set; }
 
         /// <summary>字段5</summary>
         [Key(4)]
-        public float key5 { get; set; }
+        public float Key5 { get; set; }
 
         /// <summary>简单数组</summary>
         [Key(5)]
-        public int[] key6 { get; set; }
+        public int[] Key6 { get; set; }
 
         /// <summary>二维数组</summary>
         [Key(6)]
-        public int[][] key7 { get; set; }
+        public int[][] Key7 { get; set; }
 
         /// <summary>json结构体</summary>
         [Key(7)]
-        public TSystemKey8 key8 { get; set; }
+        public TSystemKey8 Key8 { get; set; }
 
     }
 
@@ -45,10 +45,10 @@ namespace Game.Table
     public class TSystemKey8
     {
         [Key("age")]
-        public int age { get; set; }
+        public int Age { get; set; }
 
         [Key("sites")]
-        public TSystemKey8Sites[][] sites { get; set; }
+        public TSystemKey8Sites[][] Sites { get; set; }
 
     }
 
@@ -56,10 +56,10 @@ namespace Game.Table
     public class TSystemKey8Sites
     {
         [Key("id")]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         [Key("name")]
-        public string name { get; set; }
+        public string Name { get; set; }
 
     }
 }

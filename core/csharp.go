@@ -47,7 +47,8 @@ func (c *CSharpFormater) formatRows() {
 
 	data := c.buildMsgpackData()
 	var buf bytes.Buffer
-	enc := msgpack.NewEncoder(&buf).SetSortMapKeys(true)
+	enc := msgpack.NewEncoder(&buf)
+	enc.SetSortMapKeys(true)
 	if err := enc.Encode(data); err != nil {
 		c.appendError(fmt.Sprintf("MessagePack序列化失败: %v", err))
 		return
@@ -245,7 +246,7 @@ func (c *CSharpFormater) generateCSharpClass() {
 			}
 			c.appendData(fmt.Sprintf("        [Key(%d)]\n", keyIdx))
 			typeName := c.csharpTypeName(f.Type, clsName, f.Name)
-			c.appendData(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, f.Name))
+			c.appendData(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, toTitle(f.Name)))
 			keyIdx++
 		}
 	}
@@ -299,7 +300,7 @@ func (c *CSharpFormater) collectTypeNestedClasses(t *Type, parentClsName, fieldN
 				}
 				sb.WriteString(fmt.Sprintf("        [Key(%d)]\n", keyIdx))
 				typeName := c.csharpTypeName(sf.Type, clsName, sf.Name)
-				sb.WriteString(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, sf.Name))
+				sb.WriteString(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, toTitle(sf.Name)))
 				keyIdx++
 			}
 		}
@@ -353,7 +354,7 @@ func (c *CSharpFormater) collectJsonTypeClasses(t *Type, parentClsName, fieldNam
 			ftype := t.Ftypes[fname]
 			sb.WriteString(fmt.Sprintf("        [Key(\"%s\")]\n", fname))
 			typeName := c.csharpTypeName(ftype, clsName, fname)
-			sb.WriteString(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, fname))
+			sb.WriteString(fmt.Sprintf("        public %s %s { get; set; }\n\n", typeName, toTitle(fname)))
 		}
 		sb.WriteString("    }\n")
 		*out = append(*out, sb.String())

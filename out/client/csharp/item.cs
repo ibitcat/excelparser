@@ -9,11 +9,11 @@ namespace Game.Table
     {
         /// <summary>配置唯一id</summary>
         [Key(0)]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>道具名</summary>
         [Key(1)]
-        public string name { get; set; }
+        public string Name { get; set; }
 
     }
 }
