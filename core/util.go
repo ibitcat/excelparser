@@ -3,9 +3,11 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -282,4 +284,71 @@ func toTitle(s string) string {
 	r := []rune(s)
 	r[0] = unicode.ToUpper(r[0])
 	return string(r)
+}
+
+// jsonMapKeySortString 为 map 键生成稳定的全序键，用于排序导出，避免 Go map range 顺序不确定。
+func jsonMapKeySortString(k any) string {
+	switch x := k.(type) {
+	case string:
+		return "S:" + x
+	case json.Number:
+		return "N:" + string(x)
+	case int:
+		return fmt.Sprintf("I:%d", x)
+	case int8:
+		return fmt.Sprintf("I:%d", int64(x))
+	case int16:
+		return fmt.Sprintf("I:%d", int64(x))
+	case int32:
+		return fmt.Sprintf("I:%d", int64(x))
+	case int64:
+		return fmt.Sprintf("I:%d", x)
+	case uint:
+		return fmt.Sprintf("U:%d", uint64(x))
+	case uint8:
+		return fmt.Sprintf("U:%d", uint64(x))
+	case uint16:
+		return fmt.Sprintf("U:%d", uint64(x))
+	case uint32:
+		return fmt.Sprintf("U:%d", uint64(x))
+	case uint64:
+		return fmt.Sprintf("U:%d", x)
+	case float32:
+		return "F:" + strconv.FormatFloat(float64(x), 'g', -1, 32)
+	case float64:
+		return "F:" + strconv.FormatFloat(x, 'g', -1, 64)
+	case bool:
+		if x {
+			return "B:1"
+		}
+		return "B:0"
+	default:
+		return "Z:" + fmt.Sprint(x)
+	}
+}
+
+func lessJSONMapKey(a, b any) bool {
+	sa, sb := jsonMapKeySortString(a), jsonMapKeySortString(b)
+	if sa != sb {
+		return sa < sb
+	}
+	return fmt.Sprint(a) < fmt.Sprint(b)
+}
+
+func sortedKeysAnyMap(m map[any]any) []any {
+	keys := make([]any, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return lessJSONMapKey(keys[i], keys[j]) })
+	return keys
+}
+
+func sortedKeysStringMap(m map[string]any) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

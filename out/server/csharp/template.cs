@@ -2,115 +2,118 @@
 using System.Collections.Generic;
 using MessagePack;
 
-[MessagePackObject]
-public class TTemplate
+namespace Game.Table
 {
-    /// <summary>配置唯一id</summary>
-    [Key(0)]
-    public int id { get; set; }
+    [MessagePackObject]
+    public class TTemplate
+    {
+        /// <summary>配置唯一id</summary>
+        [Key(0)]
+        public int id { get; set; }
 
-    /// <summary>json描述</summary>
-    [Key(1)]
-    public TTemplateJsonval jsonval { get; set; }
+        /// <summary>json描述</summary>
+        [Key(1)]
+        public TTemplateJsonval jsonval { get; set; }
 
-    [Key(2)]
-    public string[] i18njson { get; set; }
+        [Key(2)]
+        public string[] i18njson { get; set; }
 
-    /// <summary>奖励道具</summary>
-    [Key(3)]
-    public object[] list1 { get; set; }
+        /// <summary>奖励道具</summary>
+        [Key(3)]
+        public object[] list1 { get; set; }
 
-    /// <summary>简单map</summary>
-    [Key(4)]
-    public Dictionary<int, string> map1 { get; set; }
+        /// <summary>简单map</summary>
+        [Key(4)]
+        public Dictionary<int, string> map1 { get; set; }
 
-    /// <summary>嵌套map</summary>
-    [Key(5)]
-    public Dictionary<int, Dictionary<int, string>> map2 { get; set; }
+        /// <summary>嵌套map</summary>
+        [Key(5)]
+        public Dictionary<int, Dictionary<int, string>> map2 { get; set; }
 
-    /// <summary>数组map</summary>
-    [Key(6)]
-    public Dictionary<int, int[]> map3 { get; set; }
+        /// <summary>数组map</summary>
+        [Key(6)]
+        public Dictionary<int, int[]> map3 { get; set; }
 
-    /// <summary>结构体</summary>
-    [Key(7)]
-    public TaskType s1 { get; set; }
+        /// <summary>结构体</summary>
+        [Key(7)]
+        public TaskType s1 { get; set; }
 
-    /// <summary>结构体列表</summary>
-    [Key(8)]
-    public object[] xxx { get; set; }
+        /// <summary>结构体列表</summary>
+        [Key(8)]
+        public object[] xxx { get; set; }
 
-}
+    }
 
-[MessagePackObject]
-public class TTemplateJsonval
-{
-    [Key("age")]
-    public int age { get; set; }
+    [MessagePackObject]
+    public class TTemplateJsonval
+    {
+        [Key("age")]
+        public int age { get; set; }
 
-    [Key("sites")]
-    public TTemplateJsonvalSites[] sites { get; set; }
+        [Key("sites")]
+        public TTemplateJsonvalSites[] sites { get; set; }
 
-}
+    }
 
-[MessagePackObject]
-public class TTemplateJsonvalSites
-{
-    [Key("name")]
-    public string name { get; set; }
+    [MessagePackObject]
+    public class TTemplateJsonvalSites
+    {
+        [Key("name")]
+        public string name { get; set; }
 
-    [Key("url")]
-    public string url { get; set; }
+        [Key("url")]
+        public string url { get; set; }
 
-}
+    }
 
-[MessagePackObject]
-public class TaskType
-{
-    /// <summary>字段a</summary>
-    [Key(0)]
-    public int a { get; set; }
+    [MessagePackObject]
+    public class TaskType
+    {
+        /// <summary>字段a</summary>
+        [Key(0)]
+        public int a { get; set; }
 
-    /// <summary>字段b</summary>
-    [Key(1)]
-    public string b { get; set; }
+        /// <summary>字段b</summary>
+        [Key(1)]
+        public string b { get; set; }
 
-    /// <summary>字段c</summary>
-    [Key(2)]
-    public int[] c { get; set; }
+        /// <summary>字段c</summary>
+        [Key(2)]
+        public int[] c { get; set; }
 
-    /// <summary>字段d</summary>
-    [Key(3)]
-    public int[][] d { get; set; }
+        /// <summary>字段d</summary>
+        [Key(3)]
+        public int[][] d { get; set; }
 
-    /// <summary>字段e</summary>
-    [Key(4)]
-    public int e { get; set; }
+        /// <summary>字段e</summary>
+        [Key(4)]
+        public int e { get; set; }
 
-    /// <summary>字段x-子结构体</summary>
-    [Key(5)]
-    public TaskType x { get; set; }
+        /// <summary>字段x-子结构体</summary>
+        [Key(5)]
+        public TaskType x { get; set; }
 
-    /// <summary>字段f-子结构体列表</summary>
-    [Key(6)]
-    public SubType[] f { get; set; }
+        /// <summary>字段f-子结构体列表</summary>
+        [Key(6)]
+        public SubType[] f { get; set; }
 
-    /// <summary>子结构体字典</summary>
-    [Key(7)]
-    public Dictionary<int, SubType> h { get; set; }
+        /// <summary>子结构体字典</summary>
+        [Key(7)]
+        public Dictionary<int, SubType> h { get; set; }
 
-    [Key(8)]
-    public string g { get; set; }
+        [Key(8)]
+        public string g { get; set; }
 
-}
+    }
 
-[MessagePackObject]
-public class SubType
-{
-    [Key(0)]
-    public int a { get; set; }
+    [MessagePackObject]
+    public class SubType
+    {
+        [Key(0)]
+        public int a { get; set; }
 
-    [Key(1)]
-    public string b { get; set; }
+        [Key(1)]
+        public string b { get; set; }
 
+    }
 }

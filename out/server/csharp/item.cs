@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using MessagePack;
 
-[MessagePackObject]
-public class TItem
+namespace Game.Table
 {
-    /// <summary>配置唯一id</summary>
-    [Key(0)]
-    public int id { get; set; }
+    [MessagePackObject]
+    public class TItem
+    {
+        /// <summary>配置唯一id</summary>
+        [Key(0)]
+        public int id { get; set; }
 
-    /// <summary>道具名</summary>
-    [Key(1)]
-    public string name { get; set; }
+        /// <summary>道具名</summary>
+        [Key(1)]
+        public string name { get; set; }
 
+    }
 }

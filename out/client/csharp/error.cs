@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using MessagePack;
 
-[MessagePackObject]
-public class TError
+namespace Game.Table
 {
-    /// <summary>错误码id</summary>
-    [Key(0)]
-    public int id { get; set; }
+    [MessagePackObject]
+    public class TError
+    {
+        /// <summary>错误码id</summary>
+        [Key(0)]
+        public int id { get; set; }
 
-    /// <summary>错误描述</summary>
-    [Key(1)]
-    public string msg { get; set; }
+        /// <summary>错误描述</summary>
+        [Key(1)]
+        public string msg { get; set; }
 
+    }
 }

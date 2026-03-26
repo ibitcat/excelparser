@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -48,7 +49,7 @@ func WalkPath() error {
 			fileName := getFileName(f.Name())                                      // item@道具
 			outName := strings.SplitN(fileName, "@", 2)[0]                         // item
 			task := &Xlsx{
-				Idx:          len(XlsxList),
+				// Idx:          len(XlsxList),
 				Name:         dirname + f.Name(), // eg.: tpl/item@道具.xlsx
 				PathName:     path,               // eg.: D:/project/excelparser/tpl/item@道具.xlsx
 				FileName:     dirname + fileName, // eg.: tpl/item@道具
@@ -68,6 +69,15 @@ func WalkPath() error {
 		}
 		return mErr
 	})
+
+	// 按 Name 排序 XlsxList
+	sort.Slice(XlsxList, func(i, j int) bool {
+		return XlsxList[i].Name < XlsxList[j].Name
+	})
+	// 重新设置 Idx 保证顺序正确
+	for i, x := range XlsxList {
+		x.Idx = i
+	}
 
 	Walked = true
 	LoadExportTime()

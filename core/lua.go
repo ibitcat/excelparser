@@ -157,7 +157,8 @@ func (l *LuaFormater) formatJsonValue(field *Field, t *Type, obj any, depth int)
 	case map[any]any:
 		l.appendData("{")
 		l.appendEOL()
-		for k, v := range val {
+		for _, k := range sortedKeysAnyMap(val) {
+			v := val[k]
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
 			l.appendSpace()
@@ -172,7 +173,8 @@ func (l *LuaFormater) formatJsonValue(field *Field, t *Type, obj any, depth int)
 	case map[string]any:
 		l.appendData("{")
 		l.appendEOL()
-		for k, v := range val {
+		for _, k := range sortedKeysStringMap(val) {
+			v := val[k]
 			l.appendIndent(depth + 1)
 			l.appendData(l.formatJsonKey(k))
 			l.appendSpace()

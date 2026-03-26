@@ -2,23 +2,26 @@
 using System.Collections.Generic;
 using MessagePack;
 
-[MessagePackObject]
-public class TTpl2
+namespace Game.Table
 {
-    /// <summary>任务id</summary>
-    [Key(0)]
-    public int id { get; set; }
+    [MessagePackObject]
+    public class TTpl2
+    {
+        /// <summary>任务id</summary>
+        [Key(0)]
+        public int id { get; set; }
 
-    /// <summary>任务类型</summary>
-    [Key(1)]
-    public int type { get; set; }
+        /// <summary>任务类型</summary>
+        [Key(1)]
+        public int type { get; set; }
 
-    /// <summary>任务名</summary>
-    [Key(2)]
-    public string name { get; set; }
+        /// <summary>任务名</summary>
+        [Key(2)]
+        public string name { get; set; }
 
-    /// <summary>任务条件</summary>
-    [Key(3)]
-    public int[][] conditions { get; set; }
+        /// <summary>任务条件</summary>
+        [Key(3)]
+        public int[][] conditions { get; set; }
 
+    }
 }
