@@ -18,7 +18,7 @@ func (j *JsonFormater) formatRows() {
 			j.formatData(j.RootField, col, 0)
 		}
 	} else {
-		j.appendData("[\n")
+		j.appendData("{\n")
 		for _, row := range j.Rows {
 			j.line++
 			key := row[0]
@@ -26,11 +26,14 @@ func (j *JsonFormater) formatRows() {
 				continue
 			}
 			j.appendIndent(1)
+			j.appendData("\"")
+			j.appendData(key)
+			j.appendData("\":")
 			j.formatData(j.RootField, row, 1)
 			j.appendData(",\n")
 		}
 		j.replaceTail("\n")
-		j.appendData("]")
+		j.appendData("}")
 	}
 }
 
