@@ -35,6 +35,7 @@ local t = {
     }
   },
   key8 = {
+    age = 123,
     sites = {
       [1] = {
         [1] = {
@@ -42,8 +43,7 @@ local t = {
           name = "test001"
         }
       }
-    },
-    age = 123
+    }
   }
 }
 return t

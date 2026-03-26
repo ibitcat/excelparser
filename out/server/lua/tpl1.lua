@@ -17,6 +17,7 @@ local t = {
   [1001] = {
     id = 1001,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
           name = "baidu",
@@ -30,8 +31,7 @@ local t = {
           name = "qq",
           url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
       [1] = "hello",
@@ -123,6 +123,7 @@ local t = {
   [1002] = {
     id = 1002,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
           name = "baidu",
@@ -136,8 +137,7 @@ local t = {
           name = "qq",
           url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
       [1] = "hello",
@@ -229,6 +229,7 @@ local t = {
   [1003] = {
     id = 1003,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
           name = "baidu",
@@ -239,11 +240,10 @@ local t = {
           url = "www.google.com"
         },
         [3] = {
-          url = "www.qq.com",
-          name = "qq"
+          name = "qq",
+          url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
       [1] = "hello",
@@ -335,21 +335,21 @@ local t = {
   [1004] = {
     id = 1004,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
-          url = "www.baidu.com",
-          name = "baidu"
+          name = "baidu",
+          url = "www.baidu.com"
         },
         [2] = {
-          url = "www.google.com",
-          name = "google"
+          name = "google",
+          url = "www.google.com"
         },
         [3] = {
-          url = "www.qq.com",
-          name = "qq"
+          name = "qq",
+          url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
       [1] = "hello",
@@ -441,6 +441,7 @@ local t = {
   [1005] = {
     id = 1005,
     jsonval = {
+      age = 100,
       sites = {
         [1] = {
           name = "baidu",
@@ -454,8 +455,7 @@ local t = {
           name = "qq",
           url = "www.qq.com"
         }
-      },
-      age = 100
+      }
     },
     i18njson = {
       [1] = "hello",
