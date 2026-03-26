@@ -10,6 +10,7 @@
 ---@field key6 integer[] 简单数组
 ---@field key7 integer[][] 二维数组
 ---@field key8 table json结构体
+---@field key9 table<integer,table<integer,string>> 嵌套map
 
 ---@type TSystem
 local t = {
@@ -43,6 +44,16 @@ local t = {
           name = "test001"
         }
       }
+    }
+  },
+  key9 = {
+    [1001] = {
+      [1] = "hello",
+      [2] = "world"
+    },
+    [1002] = {
+      [1] = "fuck",
+      [2] = "you"
     }
   }
 }

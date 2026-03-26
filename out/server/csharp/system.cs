@@ -39,6 +39,10 @@ namespace Game.Table
         [Key(7)]
         public TSystemKey8 Key8 { get; set; }
 
+        /// <summary>嵌套map</summary>
+        [Key(8)]
+        public Dictionary<int, Dictionary<int, string>> Key9 { get; set; }
+
     }
 
     [MessagePackObject]
