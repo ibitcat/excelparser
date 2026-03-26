@@ -40,12 +40,18 @@ func saveConfig(config *AppConfig) error {
 	return os.WriteFile(configFileName, data, 0644)
 }
 
-//::private::
+// ::private::
 type TForm1Fields struct {
-	isInit    bool
-	title     string
-	aboutForm *TForm2
-	config    *AppConfig
+	isInit          bool
+	title           string
+	aboutForm       *TForm2
+	config          *AppConfig
+	serverChkLua    *vcl.TCheckBox
+	serverChkJson   *vcl.TCheckBox
+	serverChkCsharp *vcl.TCheckBox
+	clientChkLua    *vcl.TCheckBox
+	clientChkJson   *vcl.TCheckBox
+	clientChkCsharp *vcl.TCheckBox
 }
 
 //#region 组件回调
@@ -120,11 +126,9 @@ func (f *TForm1) OnButton5Click(sender vcl.IObject) {
 }
 
 func (f *TForm1) OnComboBox1Change(sender vcl.IObject) {
-	core.GFlags.Server = f.ComboBox1.Text()
 }
 
 func (f *TForm1) OnComboBox2Change(sender vcl.IObject) {
-	core.GFlags.Client = f.ComboBox2.Text()
 }
 
 func (f *TForm1) OnCheckBox1Change(sender vcl.IObject) {
@@ -304,21 +308,30 @@ func (f *TForm1) initAboutForm() {
 }
 
 func (f *TForm1) initComboBox() {
-	f.ComboBox2.Items().Clear()
-	f.ComboBox1.Items().Add("lua")
-	f.ComboBox1.Items().Add("json")
-	f.ComboBox1.Items().Add("csharp")
-	f.ComboBox1.SetItemIndex(0)
-	f.ComboBox1.SetStyle(types.CsDropDownList)
-	f.ComboBox1.SetSelStart(int32(len(f.ComboBox1.Text())))
+	// server checkbox list
+	base := f.Label4
+	left, top, h := base.Left()+base.Width(), base.Top(), base.Height()
 
-	f.ComboBox2.Items().Clear()
-	f.ComboBox2.Items().Add("lua")
-	f.ComboBox2.Items().Add("json")
-	f.ComboBox2.Items().Add("csharp")
-	f.ComboBox2.SetItemIndex(0)
-	f.ComboBox2.SetStyle(types.CsDropDownList)
-	f.ComboBox2.SetSelStart(int32(len(f.ComboBox2.Text())))
+	makeChk := func(caption string, x int32) *vcl.TCheckBox {
+		cb := vcl.NewCheckBox(f.Panel1)
+		cb.SetParent(f.Panel1)
+		cb.SetCaption(caption)
+		cb.SetLeft(x)
+		cb.SetTop(top)
+		cb.SetHeight(h)
+		return cb
+	}
+
+	f.serverChkLua = makeChk("lua", left)
+	f.serverChkJson = makeChk("json", left+50)
+	f.serverChkCsharp = makeChk("csharp", left+100)
+
+	// client checkbox list
+	base = f.Label5
+	left, top, h = base.Left()+base.Width(), base.Top(), base.Height()
+	f.clientChkLua = makeChk("lua", left)
+	f.clientChkJson = makeChk("json", left+50)
+	f.clientChkCsharp = makeChk("csharp", left+100)
 
 	f.ComboBox3.SetStyle(types.CsDropDownList)
 	// 如果有配置的 i18n 路径，扫描文件夹列表
@@ -388,7 +401,7 @@ func (f *TForm1) refreshListView(path string) {
 		item.SetChecked(selectAll)
 
 		// 文件状态
-		if xlsx.CanParse() {
+		if len(xlsx.GetNeedParse()) > 0 {
 			changeCount++
 			item.SubItems().Add("就绪")
 		} else {
@@ -429,8 +442,6 @@ func (f *TForm1) switchEnable(enable bool) {
 	f.Button3.SetEnabled(enable)
 	f.Button4.SetEnabled(enable)
 	f.Button5.SetEnabled(enable)
-	f.ComboBox1.SetEnabled(enable)
-	f.ComboBox2.SetEnabled(enable)
 	f.ComboBox3.SetEnabled(enable)
 	f.CheckBoxAll.SetEnabled(enable)
 	f.CheckBoxCompact.SetEnabled(enable)
@@ -452,8 +463,6 @@ func (f *TForm1) StartExport() {
 	core.GFlags.Compact = f.CheckBoxCompact.Checked()
 	core.GFlags.Pretty = f.CheckBoxPretty.Checked()
 	core.GFlags.Force = f.CheckBoxAll.Checked()
-	core.GFlags.Server = f.ComboBox1.Text()
-	core.GFlags.Client = f.ComboBox2.Text()
 	if _, err := core.CheckPathValid(core.GFlags.Path); err != nil {
 		vcl.ShowMessage("⚠️ 配置路径无效,请重新选择!")
 		return
@@ -466,6 +475,34 @@ func (f *TForm1) StartExport() {
 		core.GFlags.I18nPath = i18nAbsPath
 		core.GFlags.I18nLang = f.ComboBox3.Text()
 	}
+
+	// 收集 server/client 勾选的导出格式
+	serverFmts := make([]string, 0, 3)
+	if f.serverChkLua.Checked() {
+		serverFmts = append(serverFmts, "lua")
+	}
+	if f.serverChkJson.Checked() {
+		serverFmts = append(serverFmts, "json")
+	}
+	if f.serverChkCsharp.Checked() {
+		serverFmts = append(serverFmts, "csharp")
+	}
+	clientFmts := make([]string, 0, 3)
+	if f.clientChkLua.Checked() {
+		clientFmts = append(clientFmts, "lua")
+	}
+	if f.clientChkJson.Checked() {
+		clientFmts = append(clientFmts, "json")
+	}
+	if f.clientChkCsharp.Checked() {
+		clientFmts = append(clientFmts, "csharp")
+	}
+	if len(serverFmts) == 0 && len(clientFmts) == 0 {
+		vcl.ShowMessage("⚠️ 请至少勾选一种导出格式!")
+		return
+	}
+	core.GFlags.Server = serverFmts
+	core.GFlags.Client = clientFmts
 
 	// 收集勾选的文件列表
 	core.GFlags.Files = nil

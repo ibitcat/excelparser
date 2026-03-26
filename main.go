@@ -6,7 +6,6 @@ import (
 	"excelparser/core"
 	"flag"
 	"fmt"
-	"strings"
 )
 
 func main() {
@@ -14,15 +13,6 @@ func main() {
 	if core.Flaghelp || flag.NFlag() <= 0 {
 		flag.Usage()
 		return
-	}
-
-	if core.FlagFiles != "" {
-		for _, f := range strings.Split(core.FlagFiles, ",") {
-			f = strings.TrimSpace(f)
-			if f != "" {
-				core.GFlags.Files = append(core.GFlags.Files, f)
-			}
-		}
 	}
 
 	core.Run(nil)

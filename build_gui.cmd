@@ -54,7 +54,7 @@ if %errorlevel% neq 0 (
 
 :: Compile as Windows GUI application (no console window)
 echo [6/7] Compiling as Windows GUI application (no console window)...
-go build -tags gui,tempdll -ldflags "-w -s -H=windowsgui" -o %OUTPUT_DIR%\%OUTPUT_EXE%
+go build -tags gui,tempdll -buildmode=exe -ldflags "-w -s -H=windowsgui" -o %OUTPUT_DIR%\%OUTPUT_EXE%
 if %errorlevel% neq 0 (
     echo Compilation failed!
     pause

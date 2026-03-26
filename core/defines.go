@@ -45,8 +45,8 @@ type Flags struct {
 	Compact  bool     // 是否紧凑导出
 	Path     string   // excel路径
 	Output   string   // 导出路径
-	Server   string   // server 导出格式
-	Client   string   // client 导出格式
+	Server   []string // server 导出格式（支持多个，逗号分隔）
+	Client   []string // client 导出格式（支持多个，逗号分隔）
 	I18nPath string   // 国际化配置路径
 	I18nLang string   // 国际化语言
 	Files    []string // 指定导出的文件列表（空=导出全部）

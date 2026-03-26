@@ -417,28 +417,33 @@ func (x *Xlsx) checkRows() {
 }
 
 // 是否文件已修改
-func (x *Xlsx) isModified(mode, format string) bool {
-	if GFlags.Force {
-		return true
-	}
-
+func (x *Xlsx) isModified(mode, format string) *ExportInfo {
 	for _, v := range x.Exports {
-		if v.Mode == mode && v.Format == format && v.LastTime == x.LastModified {
-			// 文件未修改
-			return false
+		if v.Mode == mode && v.Format == format {
+			if (v.LastTime != x.LastModified) || GFlags.Force {
+				// 文件已修改
+				return &v
+			} else {
+				return nil
+			}
 		}
 	}
-	return true
+	return &ExportInfo{mode, format, 0}
 }
 
-func (x *Xlsx) CanParse() bool {
-	if len(GFlags.Server) > 0 && x.isModified("server", GFlags.Server) {
-		return true
+func (x *Xlsx) GetNeedParse() []ExportInfo {
+	needParse := make([]ExportInfo, 0, len(GFlags.Server)+len(GFlags.Client))
+	for _, format := range GFlags.Server {
+		if v := x.isModified("server", format); v != nil {
+			needParse = append(needParse, *v)
+		}
 	}
-	if len(GFlags.Client) > 0 && x.isModified("client", GFlags.Client) {
-		return true
+	for _, format := range GFlags.Client {
+		if v := x.isModified("client", format); v != nil {
+			needParse = append(needParse, *v)
+		}
 	}
-	return false
+	return needParse
 }
 
 func (x *Xlsx) updateExportInfo(mode, format string) {
@@ -510,7 +515,7 @@ func (x *Xlsx) exportModeExcel(mode, format string) bool {
 	return true
 }
 
-func (x *Xlsx) exportExcel() {
+func (x *Xlsx) exportExcel(needParse []ExportInfo) {
 	f, err := excelize.OpenFile(x.PathName)
 	if err == nil {
 		defer func() {
@@ -522,11 +527,8 @@ func (x *Xlsx) exportExcel() {
 		ok := x.parseExcel()
 		if ok && len(x.Errors) == 0 && len(x.Rows) > 0 {
 			x.Datas = make([]string, 0)
-
-			sok := x.exportModeExcel("server", GFlags.Server)
-			cok := x.exportModeExcel("client", GFlags.Client)
-			if !sok && !cok {
-				x.appendError("无需生成")
+			for _, v := range needParse {
+				x.exportModeExcel(v.Mode, v.Format)
 			}
 		}
 	} else {

@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ExtCtrls,
-  StdCtrls, ComCtrls;
+  StdCtrls, ComCtrls, CheckLst, Buttons, ComboEx, ButtonPanel, CheckBoxThemed;
 
 type
 
@@ -18,11 +18,13 @@ type
     Button3: TButton;
     Button4: TButton;
     Button5: TButton;
+    CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
+    CheckBox3: TCheckBox;
+    ServerChkLua: TCheckBox;
     CheckBoxCompact: TCheckBox;
     CheckBoxAll: TCheckBox;
     CheckBoxPretty: TCheckBox;
-    ComboBox1: TComboBox;
-    ComboBox2: TComboBox;
     ComboBox3: TComboBox;
     Edit1: TEdit;
     Edit2: TEdit;
@@ -50,6 +52,7 @@ type
     procedure CheckBoxCompactChange(Sender: TObject);
     procedure CheckBoxAllChange(Sender: TObject);
     procedure CheckBoxPrettyChange(Sender: TObject);
+    procedure CheckComboBox1Change(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -123,7 +126,6 @@ procedure TForm1.CheckBoxPrettyChange(Sender: TObject);
 begin
 
 end;
-
 
 procedure TForm1.Button4Click(Sender: TObject);
 begin

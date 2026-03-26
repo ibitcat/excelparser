@@ -25,12 +25,38 @@ public class TSystem
     [Key(4)]
     public float key5 { get; set; }
 
-    /// <summary>简单字典</summary>
+    /// <summary>简单数组</summary>
     [Key(5)]
     public int[] key6 { get; set; }
 
     /// <summary>二维数组</summary>
     [Key(6)]
     public int[][] key7 { get; set; }
+
+    /// <summary>json结构体</summary>
+    [Key(7)]
+    public TSystemKey8 key8 { get; set; }
+
+}
+
+[MessagePackObject]
+public class TSystemKey8
+{
+    [Key("age")]
+    public int age { get; set; }
+
+    [Key("sites")]
+    public TSystemKey8Sites[][] sites { get; set; }
+
+}
+
+[MessagePackObject]
+public class TSystemKey8Sites
+{
+    [Key("id")]
+    public int id { get; set; }
+
+    [Key("name")]
+    public string name { get; set; }
 
 }

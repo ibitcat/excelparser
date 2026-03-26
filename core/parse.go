@@ -125,13 +125,14 @@ func SaveExportTime() {
 func StartParse(xlsx *Xlsx) {
 	// 清空 Errors，以免上次的错误影响本次结果
 	xlsx.Errors = xlsx.Errors[:0]
-	if xlsx.CanParse() {
-		startTime := time.Now()
-		xlsx.exportExcel()
-		xlsx.TimeCost = GetDurationMs(startTime)
-	} else {
+	needParse := xlsx.GetNeedParse()
+	if len(needParse) == 0 {
 		xlsx.appendError("文件未变化")
+		return
 	}
+
+	// 解析文件
+	xlsx.exportExcel(needParse)
 }
 
 func ProcessMsg() {
@@ -228,6 +229,21 @@ func Run(handler *ParseHandler) error {
 		_ = p.Invoke(xlsx)
 	}
 	wg.Wait()
+
+	// 生成/更新 GameTableProxy.cs（csharp 模式下）
+	sep := string(filepath.Separator)
+	for _, format := range GFlags.Server {
+		if format == "csharp" {
+			outdir := GFlags.Output + sep + "server" + sep + "csharp" + sep
+			UpdateGameTableProxy(outdir, "server")
+		}
+	}
+	for _, format := range GFlags.Client {
+		if format == "csharp" {
+			outdir := GFlags.Output + sep + "client" + sep + "csharp" + sep
+			UpdateGameTableProxy(outdir, "client")
+		}
+	}
 
 	close(EventChan)
 

@@ -7,8 +7,9 @@
 ---@field key3 boolean 字段3
 ---@field key4 integer 字段4
 ---@field key5 number 字段5
----@field key6 integer[] 简单字典
+---@field key6 integer[] 简单数组
 ---@field key7 integer[][] 二维数组
+---@field key8 table json结构体
 
 ---@type TSystem
 local t = {
@@ -32,6 +33,17 @@ local t = {
       [2] = 5,
       [3] = 6
     }
+  },
+  key8 = {
+    sites = {
+      [1] = {
+        [1] = {
+          id = 1,
+          name = "test001"
+        }
+      }
+    },
+    age = 123
   }
 }
 return t
