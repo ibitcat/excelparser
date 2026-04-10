@@ -35,7 +35,7 @@ local t = {
     },
     i18njson = {
       [1] = "hello",
-      [2] = "world"
+      [2] = "woooooorld"
     },
     list1 = {
       [1] = "this is a item",
@@ -141,10 +141,10 @@ local t = {
     },
     i18njson = {
       [1] = "hello",
-      [2] = "world"
+      [2] = "woooooorld"
     },
     list1 = {
-      [1] = "halo",
+      [1] = "你好好啊",
       [2] = 2,
       [3] = 3
     },
@@ -247,10 +247,10 @@ local t = {
     },
     i18njson = {
       [1] = "hello",
-      [2] = "world"
+      [2] = "woooooorld"
     },
     list1 = {
-      [1] = "halo",
+      [1] = "你好好啊",
       [2] = 2,
       [3] = 3
     },
@@ -353,10 +353,10 @@ local t = {
     },
     i18njson = {
       [1] = "hello",
-      [2] = "world"
+      [2] = "woooooorld"
     },
     list1 = {
-      [1] = "halo",
+      [1] = "你好好啊",
       [2] = 2,
       [3] = 3
     },
@@ -459,10 +459,10 @@ local t = {
     },
     i18njson = {
       [1] = "hello",
-      [2] = "world"
+      [2] = "woooooorld"
     },
     list1 = {
-      [1] = "halo",
+      [1] = "你好好啊",
       [2] = 2,
       [3] = 3
     },

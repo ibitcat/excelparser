@@ -1,9 +1,9 @@
 {
   "1001":{
     "id":1001,
-    "i18njson":["你好","世界"],
+    "i18njson":["hello","woooooorld"],
     "list1":[
-      "这是一个道具",
+      "this is a item",
       2,
       3
     ],
@@ -87,9 +87,9 @@
   },
   "1002":{
     "id":1002,
-    "i18njson":["你好","世界"],
+    "i18njson":["hello","woooooorld"],
     "list1":[
-      "hello",
+      "你好好啊",
       2,
       3
     ],
@@ -173,9 +173,9 @@
   },
   "1003":{
     "id":1003,
-    "i18njson":["你好","世界"],
+    "i18njson":["hello","woooooorld"],
     "list1":[
-      "hello",
+      "你好好啊",
       2,
       3
     ],
@@ -259,9 +259,9 @@
   },
   "1004":{
     "id":1004,
-    "i18njson":["你好","世界"],
+    "i18njson":["hello","woooooorld"],
     "list1":[
-      "hello",
+      "你好好啊",
       2,
       3
     ],
@@ -345,9 +345,9 @@
   },
   "1005":{
     "id":1005,
-    "i18njson":["你好","世界"],
+    "i18njson":["hello","woooooorld"],
     "list1":[
-      "hello",
+      "你好好啊",
       2,
       3
     ],
