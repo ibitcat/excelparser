@@ -148,8 +148,4 @@ excelparser.exe --force=true --path=./xlsx --output=./out --server=json --i18n=.
 
 ## GUI 版本
 
-**GUI 版本只适用于 Windows 系统**。
-
-运行 `build_gui.bat` 脚本编译 GUI 版本，生成的可执行文件在 `excelparser_gui/dist` 目录下。
-
-![alt text](dist/screenshot.png)
+![alt text](/screenshot.png)
