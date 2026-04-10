@@ -135,8 +135,10 @@ func SaveExportTime() {
 func StartParse(xlsx *Xlsx) {
 	// 清空 Errors，以免上次的错误影响本次结果
 	xlsx.Errors = xlsx.Errors[:0]
+	xlsx.Skipped = false
 	needParse := xlsx.GetNeedParse()
 	if len(needParse) == 0 {
+		xlsx.Skipped = true
 		xlsx.appendError("文件未变化")
 		return
 	}

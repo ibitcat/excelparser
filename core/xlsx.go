@@ -428,6 +428,7 @@ func (x *Xlsx) isModified(mode, format string) *ExportInfo {
 			}
 		}
 	}
+
 	return &ExportInfo{mode, format, 0}
 }
 

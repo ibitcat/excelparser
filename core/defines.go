@@ -106,6 +106,7 @@ type Xlsx struct {
 	Datas        []string       // 导出数据缓存
 	BinaryDatas  []byte         // 二进制导出数据缓存
 	Errors       []string       // 错误信息
+	Skipped      bool           // 是否跳过（文件无变化）
 	Exports      []ExportInfo   // 导出信息
 	LastModified uint64         // 最后修改时间
 	TimeCost     int            // 耗时
@@ -148,7 +149,7 @@ var (
 	XlsxList    []*Xlsx                                            // Excel配置表列表
 	EventChan   chan *ParseEvent                                   // 解析事件通道
 	MaxErrorCnt = 6                                                // 每个文件最大错误数
-	ExportYaml  = ".excelparser.temp"                              // 导出记录文件名
+	ExportYaml  = ".excelparser.cache"                             // 导出记录文件名
 	ExportCost  = 0                                                // 总耗时
 )
 

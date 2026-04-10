@@ -5,25 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Package",
+            "name": "Launch ExcelParse (Stable Step)",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceRoot}",
-            "showLog": true,
+            "program": "${workspaceFolder}/main.go",
+            "buildFlags": "-gcflags=all=\"-N -l\"",
             "env": {
-                //"GOPATH": "D:/Develop/vscodegolang"
-            },
-            "args": [
-                "--path=./xlsx/tpl",
-                "--output=./out",
-                "--server=lua",
-                "--client=json",
-                "--i18n=./locales",
-                "--lang=en_US",
-                "--force",
-                "--compact"
-            ] // 启动参数
+                "GO111MODULE": "on"
+            }
+        },
+        {
+            "name": "Attach ExcelParse Process",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
+            "processId": "${command:pickProcess}"
         }
     ]
 }
