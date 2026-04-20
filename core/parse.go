@@ -44,24 +44,28 @@ func WalkPath() error {
 		ok, mErr := filepath.Match("[^~$]*.xlsx", f.Name())
 		if ok {
 			modifyTime := uint64(f.ModTime().UnixNano() / 1000000)
-			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator)) // eg.: tpl/item@道具.xlsx
+			fname := strings.TrimPrefix(path, xlsxPath+string(filepath.Separator)) // eg.: tpl/D道具表@item.xlsx
 			dirname := strings.TrimSuffix(fname, f.Name())                         // eg.: tpl/
-			fileName := getFileName(f.Name())                                      // item@道具
-			outName := strings.SplitN(fileName, "@", 2)[0]                         // item
+			fileName := getFileName(f.Name())                                      // eg.: D道具表@item
+			outName := fileName                                                    // eg.: item
+			if s := strings.SplitN(outName, "@", 2); len(s) > 1 {
+				outName = s[1]
+			}
+
 			task := &Xlsx{
 				// Idx:          len(XlsxList),
-				Name:         dirname + f.Name(), // eg.: tpl/item@道具.xlsx
-				PathName:     path,               // eg.: D:/project/excelparser/tpl/item@道具.xlsx
-				FileName:     dirname + fileName, // eg.: tpl/item@道具
+				Name:         dirname + f.Name(), // eg.: tpl/D道具表@item.xlsx
+				PathName:     path,               // eg.: D:/project/excelparser/tpl/D道具表@item.xlsx
+				FileName:     dirname + fileName, // eg.: tpl/D道具表@item
 				DirName:      filepath.Dir(path), // eg.: D:/project/excelparser/tpl/
-				OutName:      outName,
+				OutName:      outName,            // eg.: item
 				Errors:       make([]string, 0),
 				TimeCost:     0,
 				LastModified: modifyTime,
 				Exports:      make([]ExportInfo, 0),
 			}
 			if _, ok := OutNames[outName]; ok {
-				return errors.New(outName + " 导出名冲突")
+				return errors.New(outName + " 导出名冲突: " + task.Name + " 和 " + OutNames[outName])
 			}
 			OutNames[outName] = task.Name
 			MaxFileLen = max(MaxFileLen, len(task.FileName))

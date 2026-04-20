@@ -34,27 +34,32 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 	}
 
 	ok := true
+	errStr := "配置字段值错误"
 	switch f.Kind {
 	case TArray:
 		for _, v := range f.Vals {
 			if !v.checkRow(row, line, x) {
+				errStr = "数组元素配置值错误"
 				ok = false
 			}
 		}
 	case TMap:
 		for _, k := range f.Keys {
 			if !k.checkRow(row, line, x) {
+				errStr = "映射键配置值错误,key: " + k.Name
 				ok = false
 			}
 		}
 		for _, v := range f.Vals {
 			if !v.checkRow(row, line, x) {
+				errStr = "映射值配置值错误,val: " + v.Name
 				ok = false
 			}
 		}
 	case TStruct:
 		for _, v := range f.Vals {
 			if !v.checkRow(row, line, x) {
+				errStr = "结构体字段配置值错误,field: " + v.Name
 				ok = false
 			}
 		}
@@ -66,6 +71,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 		if len(val) > 0 {
 			_, err := strconv.ParseUint(val, 10, 64)
 			if err != nil {
+				errStr = "无效的无符号整数值: " + err.Error()
 				ok = false
 			}
 		}
@@ -73,6 +79,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 		if len(val) > 0 {
 			_, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
+				errStr = "无效的整数值: " + err.Error()
 				ok = false
 			}
 		}
@@ -80,12 +87,14 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 		if len(val) > 0 {
 			_, err := strconv.ParseFloat(val, 64)
 			if err != nil {
+				errStr = "无效的浮点数值: " + err.Error()
 				ok = false
 			}
 		}
 	case TBool:
 		if len(val) > 0 {
 			if !(val == "0" || val == "1" || val == "true" || val == "false") {
+				errStr = "无效的布尔值: " + val
 				ok = false
 			}
 		}
@@ -99,7 +108,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 	}
 
 	if !ok && (f.isBuiltin() || f.Kind == TJson) {
-		x.sprintfCellError(line, f.Index+1, "配置值错误")
+		x.sprintfCellError(line, f.Index+1, errStr)
 	}
 	return ok
 }

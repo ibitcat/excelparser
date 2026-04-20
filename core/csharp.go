@@ -427,11 +427,11 @@ type proxyEntry struct {
 func proxyMethodBlock(x *Xlsx, mode string) string {
 	clsName := "T" + toTitle(x.OutName)
 
-	// 从文件名中提取显示名（如 "task@任务表" 取 "任务表"）
+	// 从文件名中提取显示名（如 "任务表@task" 取 "任务表"）
 	base := filepath.Base(x.FileName)
 	desc := x.OutName
 	if idx := strings.Index(base, "@"); idx >= 0 {
-		desc = base[idx+1:]
+		desc = base[:idx]
 	}
 
 	var returnType string

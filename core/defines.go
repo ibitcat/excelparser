@@ -92,7 +92,7 @@ type Xlsx struct {
 	FileName     string         // 文件名
 	PathName     string         // 文件完整路径
 	DirName      string         // 文件所在目录
-	OutName      string         // 输出文件名(item@道具.xlsx, 输出为 item)
+	OutName      string         // 输出文件名(道具@item.xlsx, 输出为 item)
 	SheetName    string         // 工作表名
 	Vertical     bool           // 纵向表
 	Excel        *excelize.File // 打开的excel文件句柄

@@ -10,7 +10,6 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/main.go",
-            "buildFlags": "-gcflags=all=\"-N -l\"",
             "env": {
                 "GO111MODULE": "on"
             }
