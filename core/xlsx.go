@@ -467,10 +467,23 @@ func (x *Xlsx) updateExportInfo(mode, format string) {
 func (x *Xlsx) parseExcel() bool {
 	var vertical bool
 	f := x.Excel
-	sheetIdx, _ := f.GetSheetIndex("data")
+
+	sheetIdx := -1
+	sheetNames := f.GetSheetList()
+	for _, name := range sheetNames {
+		if name == "data" || strings.HasPrefix(name, "data@") {
+			sheetIdx, _ = f.GetSheetIndex(name)
+			break
+		}
+	}
 	if sheetIdx == -1 {
 		vertical = true
-		sheetIdx, _ = f.GetSheetIndex("vdata")
+		for _, name := range sheetNames {
+			if name == "vdata" || strings.HasPrefix(name, "vdata@") {
+				sheetIdx, _ = f.GetSheetIndex(name)
+				break
+			}
+		}
 	}
 	if sheetIdx == -1 {
 		x.appendError("data/vdata sheet 不存在")
