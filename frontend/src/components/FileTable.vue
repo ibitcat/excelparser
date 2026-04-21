@@ -4,8 +4,8 @@ import { h } from 'vue'
 import { NCheckbox, NDataTable, NDropdown, NPopover } from 'naive-ui'
 
 const CONTEXT_MENU_OPTIONS = [
-  { label: '打开文件所在目录', key: 'open-dir' },
   { label: '打开文件', key: 'open-file' },
+  { label: '打开文件所在目录', key: 'open-dir' },
 ]
 
 const props = defineProps({

@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"syscall"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -102,7 +103,12 @@ func validatePath(path string) (string, os.FileInfo, error) {
 func buildOpenFileCmd(path string) (*exec.Cmd, error) {
 	switch runtime.GOOS {
 	case "windows":
-		return exec.Command("cmd", "/C", "start", "", path), nil
+		cmd := exec.Command("cmd", "/C", "start", "", path)
+		// 隐藏命令行窗口
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow: true,
+		}
+		return cmd, nil
 	case "darwin":
 		return exec.Command("open", path), nil
 	default:
