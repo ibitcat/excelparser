@@ -95,21 +95,25 @@ export function useExcelParser() {
         }, 300);
     };
 
-    const loadXlsxList = async (path) => {
+    const loadXlsxList = async (path, preserveSelection = false) => {
         if (!path) {
             fileList.value = [];
             return;
         }
         try {
+            const oldSelectionMap = new Map();
+            if (preserveSelection) {
+                fileList.value.forEach((f) => oldSelectionMap.set(f.key, f.selected));
+            }
             const list = await FileService.GetXlsxList(path);
             fileList.value = (list || []).map((item) => ({
                 key: item.path,
-                selected: true,
+                selected: oldSelectionMap.has(item.path) ? oldSelectionMap.get(item.path) : true,
                 filename: item.name,
                 filepath: item.path,
                 fileStatus: item.need_parse ? "就绪" : "-",
-                exportStatus: 0,
-                exportResult: "-",
+                exportStage: "",
+                exportResult: 0,
                 exportErrors: [],
             }));
         } catch (err) {
@@ -225,7 +229,7 @@ export function useExcelParser() {
             message.warning("请先选择有效的配置路径");
             return;
         }
-        await loadXlsxList(configPath.value);
+        await loadXlsxList(configPath.value, true);
         message.success("配置表列表已刷新");
     };
 
@@ -258,20 +262,28 @@ export function useExcelParser() {
 
         isExporting.value = true;
         statusText.value = "导出中...";
+        const selectedFiles = fileList.value.filter((f) => f.selected).map((f) => f.filepath);
         fileList.value.forEach((row) => {
-            row.exportStatus = 0;
-            row.exportResult = "-";
-            row.exportErrors = [];
+            if (row.selected) {
+                row.exportStage = "start";
+                row.exportResult = 0;
+                row.exportErrors = [];
+            } else {
+                row.exportStage = "";
+                row.exportResult = 0;
+                row.exportErrors = [];
+            }
         });
 
         try {
-            await FileService.StartExport();
+            await FileService.StartExport(selectedFiles);
             message.success("导出已完成");
+            statusText.value = "导出完毕";
         } catch (err) {
             message.error(`导出失败: ${String(err)}`);
+            statusText.value = "导出失败";
         } finally {
             isExporting.value = false;
-            statusText.value = "就绪";
         }
     };
 
@@ -322,14 +334,13 @@ export function useExcelParser() {
             // 按 seq 顺序应用：先 start 后 finish
             const sorted = [events.start, events.finish].sort((a, b) => a.seq - b.seq);
             for (const payload of sorted) {
-                row.exportStatus = payload.status;
-                row.exportResult = payload.message;
+                row.exportStage = payload.stage;
+                row.exportResult = payload.result;
                 // 存储所有错误信息
                 if (payload.messages && payload.messages.length > 0) {
                     row.exportErrors = payload.messages;
                 }
             }
-            console.log(`row updated for ${path}:`, row.exportStatus, row.exportResult);
         }
         fileEvents.delete(path);
     };
@@ -338,7 +349,11 @@ export function useExcelParser() {
         const payload = event?.data || event;
         if (!payload || !payload.stage) return;
 
-        console.log("Export Progress:", payload.stage, payload.path, "seq:", payload.seq);
+        //console.log("Export Progress:", payload.stage, payload.path, "seq:", payload.seq);
+        if (payload.stage === "clear") {
+            fileEvents.clear();
+            return;
+        }
 
         if (payload.stage === "start" || payload.stage === "finish") {
             if (!fileEvents.has(payload.path)) {
@@ -346,17 +361,8 @@ export function useExcelParser() {
             }
             fileEvents.get(payload.path)[payload.stage] = payload;
             tryFlushFile(payload.path);
-            return;
         }
-
-        if (payload.stage === "error") {
-            statusText.value = "导出失败";
-        }
-
-        if (payload.stage === "done") {
-            fileEvents.clear();
-        }
-    };
+    };;
 
     // ── 生命周期 ──
     onMounted(() => {

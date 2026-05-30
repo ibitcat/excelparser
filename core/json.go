@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"strings"
 )
 
 func (j *JsonFormater) formatRows() {
@@ -21,13 +20,9 @@ func (j *JsonFormater) formatRows() {
 		j.appendData("{\n")
 		for _, row := range j.Rows {
 			j.line++
-			key := row[0]
-			if strings.HasPrefix(key, "//") || key == "" {
-				continue
-			}
 			j.appendIndent(1)
 			j.appendData("\"")
-			j.appendData(key)
+			j.appendData(row[0])
 			j.appendData("\":")
 			j.formatData(j.RootField, row, 1)
 			j.appendData(",\n")

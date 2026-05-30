@@ -55,15 +55,20 @@ const columns = [
     width: 110,
     align: 'center',
     render(row) {
-      //console.log('render exportStatus', row.filename, row.exportStatus)
-      if (row.exportStatus === 1) {
+      //console.log('render exportStatus', row.filename, row.exportResult);
+      if (row.exportStage === 'start') {
         return statusChip('导出中', 'exporting')
-      }else if (row.exportStatus === 2) {
-        return statusChip('成功', 'ready')
-      }else if (row.exportStatus === 3) {
-        return statusChip('失败', 'error')
-      }else if (row.exportStatus === 4) {
-        return statusChip('跳过', 'pending')
+      }else if (row.exportStage === 'finish') {
+        if (row.exportResult === 0) {
+          // 成功
+          return statusChip('成功', 'ready')
+        } else if (row.exportResult === 2) {
+          // 跳过
+          return statusChip('跳过', 'pending')
+        } else {
+          // 失败但无错误详情（理论上不应该出现）
+          return statusChip('失败', 'error')
+        }
       }else {
         return statusChip('—', 'idle')
       }
@@ -71,47 +76,52 @@ const columns = [
   },
   {
     key: 'exportResult',
-    title: '导出结果',
+    title: '详情',
     minWidth: 120,
     align: 'center',
     render(row) {
-      if (row.exportStatus === 3) {
-        // 失败时，如果有多个错误，显示弹出层查看详情
-        const errors = row.exportErrors || [row.exportResult]
-        if (errors.length > 1) {
-          return h(
-            NPopover,
-            {
-              trigger: 'hover',
-              placement: 'left',
-              style: { maxWidth: '400px' },
-            },
-            {
-              trigger: () =>
-                h(
-                  'span',
-                  {
-                    class: 'status-chip status-chip--error status-chip--clickable',
-                    style: 'cursor: pointer',
-                  },
-                  `${errors.length} 个错误`
+      //console.log('render exportResult', row.filename, row.exportResult, row.exportErrors);
+      const errors = row.exportErrors
+      if (errors.length > 1) {
+        return h(
+          NPopover,
+          {
+            trigger: 'hover',
+            placement: 'left',
+            style: { maxWidth: '400px' },
+          },
+          {
+            trigger: () =>
+              h(
+                'span',
+                {
+                  class: 'status-chip status-chip--error status-chip--clickable',
+                  style: 'cursor: pointer',
+                },
+                `${errors.length} 个错误`
+              ),
+            default: () =>
+              h('div', { class: 'error-list' }, [
+                h('div', { class: 'error-list-title' }, '错误详情：'),
+                ...errors.map((err, i) =>
+                  h('div', { class: 'error-list-item' }, `${i + 1}. ${err}`)
                 ),
-              default: () =>
-                h('div', { class: 'error-list' }, [
-                  h('div', { class: 'error-list-title' }, '错误详情：'),
-                  ...errors.map((err, i) =>
-                    h('div', { class: 'error-list-item' }, `${i + 1}. ${err}`)
-                  ),
-                ]),
-            }
-          )
-        }
-        return statusChip(row.exportResult, 'error')
-      }else{
-        return statusChip('—', 'idle')
+              ]),
+          }
+        )
       }
-    },
-  },
+
+      if (row.exportResult === 0) {
+        // 成功
+        return statusChip(errors[0], 'ready')
+      } else if (row.exportResult === 2) {
+        // 跳过
+        return statusChip(errors[0], 'pending')
+      } else {
+        return statusChip(errors[0], 'error')
+      }
+    }
+  }
 ]
 
 const tableRowProps = (row) => ({

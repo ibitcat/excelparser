@@ -139,10 +139,10 @@ func SaveExportTime() {
 func StartParse(xlsx *Xlsx) {
 	// 清空 Errors，以免上次的错误影响本次结果
 	xlsx.Errors = xlsx.Errors[:0]
-	xlsx.Skipped = false
+	xlsx.Result = ExportResultFailed
 	needParse := xlsx.GetNeedParse()
 	if len(needParse) == 0 {
-		xlsx.Skipped = true
+		xlsx.Result = ExportResultSkipped
 		xlsx.appendError("文件未变化")
 		return
 	}
@@ -198,7 +198,7 @@ func Run(handler *ParseHandler) error {
 		parseList = make([]*Xlsx, 0, len(GFlags.Files))
 		for _, x := range XlsxList {
 			for _, f := range GFlags.Files {
-				if x.Name == f || filepath.Base(x.PathName) == f {
+				if x.Name == f || x.PathName == f || filepath.Base(x.PathName) == f {
 					parseList = append(parseList, x)
 					break
 				}

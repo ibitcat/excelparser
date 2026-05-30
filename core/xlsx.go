@@ -300,6 +300,9 @@ func (x *Xlsx) parseHeader() {
 }
 
 func (x *Xlsx) checkField(field *Field) {
+	if field.Mode == "x" {
+		return
+	}
 	if !field.isVaild(false) {
 		x.sprintfCellError(TypeLine, field.Index+1, "字段类型错误(类型不合法)")
 	}
@@ -379,6 +382,8 @@ func (x *Xlsx) checkRows() {
 				if x.RootField.checkRow(col, line, x) {
 					x.Rows = append(x.Rows, col)
 				}
+
+				// 纵向表只检查第一列
 				break
 			}
 		}
@@ -498,11 +503,16 @@ func (x *Xlsx) parseExcel() bool {
 		return false
 	}
 
-	x.Names = heads[NameLine-1] // 字段名行
-	x.Types = heads[TypeLine-1] // 字段类型行
-	x.Modes = heads[ModeLine-1] // 导出模式行
-	x.Descs = heads[DescLine-1] // 字段描述行
-	x.Comments = x.getFieldComments()
+	x.Names = heads[NameLine-1]       // 字段名行
+	x.Types = heads[TypeLine-1]       // 字段类型行
+	x.Modes = heads[ModeLine-1]       // 导出模式行
+	x.Descs = heads[DescLine-1]       // 字段描述行
+	x.Comments = x.getFieldComments() // 字段批注
+	for len(x.Types) > 0 && strings.TrimSpace(x.Types[len(x.Types)-1]) == "" {
+		// 裁剪末尾空值，避免 used range 导致多余字段
+		x.Types = x.Types[:len(x.Types)-1]
+	}
+
 	x.parseHeader()
 	x.checkFields()
 	x.checkRows()
@@ -544,6 +554,11 @@ func (x *Xlsx) exportExcel(needParse []ExportInfo) {
 			for _, v := range needParse {
 				x.exportModeExcel(v.Mode, v.Format)
 			}
+		}
+
+		if len(x.Errors) == 0 {
+			x.Result = ExportResultSuccess
+			x.Errors = append(x.Errors, fmt.Sprintf("导出成功(列:%d,行:%d)", len(x.Types), len(x.Rows)))
 		}
 	} else {
 		x.appendError("xlsx文件打开失败")
@@ -608,6 +623,7 @@ func (x *Xlsx) writeCSharpFiles(outdir, binFileName string) {
 	csFile.Sync()
 }
 
+// 收集导出结果
 func (x *Xlsx) collectResult(costFormat, infoFormat, splitline string) []string {
 	results := make([]string, 0)
 	results = append(results, splitline)

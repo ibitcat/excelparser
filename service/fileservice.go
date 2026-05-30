@@ -16,14 +16,6 @@ import (
 
 const configFileName = ".excelparser.json"
 
-const (
-	ExportStatusIdle      = iota // 空闲
-	ExportStatusExporting        // 导出中
-	ExportStatusSuccess          // 导出成功
-	ExportStatusFailed           // 导出失败
-	ExportStatusSkipped          // 导出跳过（文件无变化）
-)
-
 // 配置结构
 type AppConfig struct {
 	ConfigPath string   `json:"config_path"`
@@ -44,9 +36,8 @@ type ExportProgressEvent struct {
 	Stage    string   `json:"stage"`    // 阶段：start, finish, error, done
 	Name     string   `json:"name"`     // 文件名
 	Path     string   `json:"path"`     // 文件完整路径
-	Status   int      `json:"status"`   // 导出状态：0=空闲, 1=导出中, 2=成功, 3=失败, 4=跳过
-	Message  string   `json:"message"`  // 结果消息，成功时可为空，失败时包含错误信息
 	Messages []string `json:"messages"` // 所有错误消息列表
+	Result   int      `json:"result"`   // 导出结果（成功/失败/跳过）
 	Seq      int64    `json:"seq"`      // 事件序列号，用于前端排序
 }
 
@@ -280,7 +271,9 @@ func (f *FileService) SetI18nLang(lang string) {
 }
 
 // 开始导出
-func (f *FileService) StartExport() error {
+func (f *FileService) StartExport(files []string) error {
+	core.GFlags.Files = files
+
 	var eventSeq int64
 	emitProgress := func(payload ExportProgressEvent) {
 		eventSeq++
@@ -288,6 +281,7 @@ func (f *FileService) StartExport() error {
 		application.Get().Event.Emit("export-progress", payload)
 	}
 
+	emitProgress(ExportProgressEvent{Stage: "clear"})
 	err := core.Run(&core.ParseHandler{
 		OnEvent: func(event *core.ParseEvent) {
 			if event == nil || event.Xlsx == nil {
@@ -298,48 +292,24 @@ func (f *FileService) StartExport() error {
 			switch event.Status {
 			case "start":
 				emitProgress(ExportProgressEvent{
-					Stage:   "start",
-					Name:    event.Xlsx.Name,
-					Path:    event.Xlsx.PathName,
-					Status:  ExportStatusExporting,
-					Message: "-",
+					Stage:    "start",
+					Name:     event.Xlsx.Name,
+					Path:     event.Xlsx.PathName,
+					Result:   -1,
+					Messages: []string{""},
 				})
 			case "finish":
-				status := ExportStatusSuccess
-				message := ""
-				var messages []string
-				if len(event.Xlsx.Errors) > 0 {
-					if event.Xlsx.Skipped {
-						status = ExportStatusSkipped
-					} else {
-						status = ExportStatusFailed
-					}
-					message = event.Xlsx.Errors[0]
-					messages = event.Xlsx.Errors
-				}
-
 				emitProgress(ExportProgressEvent{
 					Stage:    "finish",
 					Name:     event.Xlsx.Name,
 					Path:     event.Xlsx.PathName,
-					Status:   status,
-					Message:  message,
-					Messages: messages,
+					Result:   event.Xlsx.Result,
+					Messages: event.Xlsx.Errors,
 				})
 			}
 		},
 	})
-	if err != nil {
-		emitProgress(ExportProgressEvent{
-			Stage:   "error",
-			Status:  ExportStatusFailed,
-			Message: err.Error(),
-		})
-		return err
-	}
-
-	emitProgress(ExportProgressEvent{Stage: "done"})
-	return nil
+	return err
 }
 
 // 获取翻译列表

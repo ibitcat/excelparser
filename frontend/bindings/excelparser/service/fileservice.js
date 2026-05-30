@@ -104,10 +104,11 @@ export function SetI18nLang(lang) {
 
 /**
  * 开始导出
+ * @param {string[]} files
  * @returns {$CancellablePromise<void>}
  */
-export function StartExport() {
-    return $Call.ByID(1898708896);
+export function StartExport(files) {
+    return $Call.ByID(1898708896, files);
 }
 
 // Private type creation functions

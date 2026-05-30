@@ -47,6 +47,7 @@ func GetDurationMs(t time.Time) int {
 	return int(time.Since(t).Nanoseconds() / 1e6)
 }
 
+// 将行列转置，适用于需要按列处理的场景
 func rotateRows(rows [][]string) [][]string {
 	ret := make([][]string, 0)
 	for i := 0; i < len(rows[0]); i++ {

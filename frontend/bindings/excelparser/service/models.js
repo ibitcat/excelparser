@@ -110,22 +110,6 @@ export class ExportProgressEvent {
              */
             this["path"] = "";
         }
-        if (!("status" in $$source)) {
-            /**
-             * 导出状态：0=空闲, 1=导出中, 2=成功, 3=失败, 4=跳过
-             * @member
-             * @type {number}
-             */
-            this["status"] = 0;
-        }
-        if (!("message" in $$source)) {
-            /**
-             * 结果消息，成功时可为空，失败时包含错误信息
-             * @member
-             * @type {string}
-             */
-            this["message"] = "";
-        }
         if (!("messages" in $$source)) {
             /**
              * 所有错误消息列表
@@ -133,6 +117,14 @@ export class ExportProgressEvent {
              * @type {string[]}
              */
             this["messages"] = [];
+        }
+        if (!("result" in $$source)) {
+            /**
+             * 导出结果（成功/失败/跳过）
+             * @member
+             * @type {number}
+             */
+            this["result"] = 0;
         }
         if (!("seq" in $$source)) {
             /**
@@ -152,10 +144,10 @@ export class ExportProgressEvent {
      * @returns {ExportProgressEvent}
      */
     static createFrom($$source = {}) {
-        const $$createField5_0 = $$createType0;
+        const $$createField3_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("messages" in $$parsedSource) {
-            $$parsedSource["messages"] = $$createField5_0($$parsedSource["messages"]);
+            $$parsedSource["messages"] = $$createField3_0($$parsedSource["messages"]);
         }
         return new ExportProgressEvent(/** @type {Partial<ExportProgressEvent>} */($$parsedSource));
     }

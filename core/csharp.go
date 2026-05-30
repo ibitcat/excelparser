@@ -71,9 +71,6 @@ func (c *CSharpFormater) buildMsgpackData() any {
 	for _, row := range c.Rows {
 		c.line++
 		key := row[0]
-		if strings.HasPrefix(key, "//") || key == "" {
-			continue
-		}
 		keyField := c.RootField.Vals[0]
 		keyVal := c.convertPrimitive(keyField.Type, key)
 		result[keyVal] = c.buildValue(c.RootField, row)
@@ -467,7 +464,7 @@ func UpdateGameTableProxy(outdir, mode string) {
 	// 仅处理本次成功解析的文件（RootField != nil 说明本次有解析）
 	entries := make([]proxyEntry, 0)
 	for _, x := range XlsxList {
-		if x.RootField == nil || len(x.Errors) > 0 {
+		if x.RootField == nil || x.Result != ExportResultSuccess {
 			continue
 		}
 		entries = append(entries, proxyEntry{x.OutName, proxyMethodBlock(x, mode)})

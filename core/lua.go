@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 // 类型检查(例如: int 类型的字段填了 string， 耗性能)
@@ -28,10 +27,6 @@ func (l *LuaFormater) formatRows() {
 		l.appendData("\nlocal t = {\n")
 		for _, row := range l.Rows {
 			l.line++
-			key := row[0]
-			if strings.HasPrefix(key, "//") || key == "" {
-				continue
-			}
 			l.appendIndent(1)
 			l.appendData("[")
 			l.appendData(row[0])

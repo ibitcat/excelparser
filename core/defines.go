@@ -34,6 +34,13 @@ const (
 	DescLine
 )
 
+// 导出结果
+const (
+	ExportResultSuccess int = iota
+	ExportResultFailed
+	ExportResultSkipped
+)
+
 //#endregion
 
 //#region structs
@@ -106,7 +113,7 @@ type Xlsx struct {
 	Datas        []string       // 导出数据缓存
 	BinaryDatas  []byte         // 二进制导出数据缓存
 	Errors       []string       // 错误信息
-	Skipped      bool           // 是否跳过（文件无变化）
+	Result       int            // 导出结果（成功/失败/跳过）
 	Exports      []ExportInfo   // 导出信息
 	LastModified uint64         // 最后修改时间
 	TimeCost     int            // 耗时

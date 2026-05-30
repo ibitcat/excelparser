@@ -108,7 +108,7 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 	}
 
 	if !ok && (f.isBuiltin() || f.Kind == TJson) {
-		x.sprintfCellError(line, f.Index+1, errStr)
+		x.sprintfCellError(line, f.Index+1, "%s", errStr)
 	}
 	return ok
 }
