@@ -80,7 +80,9 @@ const columns = [
     minWidth: 120,
     align: 'center',
     render(row) {
-      //console.log('render exportResult', row.filename, row.exportResult, row.exportErrors);
+      if (row.exportStage !== 'finish') {
+        return statusChip('—', 'idle')
+      }
       const errors = row.exportErrors
       if (errors.length > 1) {
         return h(
@@ -186,6 +188,7 @@ const tableRowProps = (row) => ({
   border-bottom: 1px solid var(--border) !important;
   padding-top: 5px !important;
   padding-bottom: 5px !important;
+  vertical-align: middle !important;
 }
 
 :deep(.n-data-table-tr--striped .n-data-table-td) {
@@ -201,17 +204,25 @@ const tableRowProps = (row) => ({
 :deep(.status-chip) {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 2px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
+  line-height: 1.2;
+  min-height: 22px;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :deep(.status-chip--ready)     { background: rgba(52,199,89,0.12); color: #1a7a32; }
-:deep(.status-chip--idle)      { color: var(--text-3); font-size: 13px; line-height: 1; }
+:deep(.status-chip--idle)      { color: var(--text-3); background: transparent; }
 :deep(.status-chip--exporting) { background: rgba(0,122,255,0.1); color: var(--blue); }
-:deep(.status-chip--pending)   { background: rgba(255,149,0,0.1); color: #8a5200; font-size: 10.5px; }
+:deep(.status-chip--pending)   { background: rgba(255,149,0,0.1); color: #8a5200; }
 :deep(.status-chip--error)     { background: rgba(255,59,48,0.12); color: #b2261e; }
 :deep(.status-chip--clickable:hover) { background: rgba(255,59,48,0.2); }
 </style>
