@@ -15,8 +15,8 @@ import (
 const (
 	TNone   int = -1   // 非法类型
 	TAny    int = iota // any
-	TInt               // 有符号整数
-	TUint              // 无符号整数
+	TInt               // 有符号整数（int32）
+	TUint              // 无符号整数（uint32）
 	TFloat             // 浮点数
 	TBool              // 布尔型
 	TString            // 字符串
@@ -24,6 +24,8 @@ const (
 	TMap               // map
 	TStruct            // 结构体
 	TJson              // json
+	TInt64             // 64 位有符号整数（C# long）
+	TUint64            // 64 位无符号整数（C# ulong）
 )
 
 // 配置表头行定义
@@ -150,7 +152,7 @@ var (
 	IndentStr   map[int]string                                     // 缩进字符串映射
 	ArrayRe     = regexp.MustCompile(`^\[(\d*?)\](.+)`)            // 数组类型正则表达式
 	MapRe       = regexp.MustCompile(`^map\[(.+?)\](.+)`)          // map类型正则表达式
-	BasicTypes  = []string{"int", "uint", "bool", "string", "var"} // 基本类型列表
+	BasicTypes  = []string{"int", "uint", "int64", "uint64", "bool", "string", "var"} // 基本类型列表
 	I18nMap     sync.Map                                           // 国际化字符串映射
 	I18nLocale  *gotext.Locale                                     // 国际化对象
 	XlsxList    []*Xlsx                                            // Excel配置表列表

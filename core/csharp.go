@@ -135,13 +135,13 @@ func (c *CSharpFormater) buildValue(field *Field, row []string) any {
 func (c *CSharpFormater) convertPrimitive(t *Type, val string) any {
 	val = strings.TrimSpace(val)
 	switch t.Kind {
-	case TInt:
+	case TInt, TInt64:
 		if len(val) == 0 {
 			return int64(0)
 		}
 		v, _ := strconv.ParseInt(val, 10, 64)
 		return v
-	case TUint:
+	case TUint, TUint64:
 		if len(val) == 0 {
 			return uint64(0)
 		}
@@ -169,12 +169,12 @@ func (c *CSharpFormater) convertJsonTypedValue(t *Type, val any) any {
 		return val
 	}
 	switch t.Kind {
-	case TInt:
+	case TInt, TInt64:
 		if f, ok := val.(float64); ok {
 			return int64(f)
 		}
 		return val
-	case TUint:
+	case TUint, TUint64:
 		if f, ok := val.(float64); ok {
 			return uint64(f)
 		}
@@ -378,8 +378,12 @@ func (c *CSharpFormater) csharpTypeName(t *Type, parentClsName, fieldName string
 	switch t.Kind {
 	case TInt:
 		return "int"
+	case TInt64:
+		return "long"
 	case TUint:
 		return "uint"
+	case TUint64:
+		return "ulong"
 	case TFloat:
 		return "float"
 	case TBool:

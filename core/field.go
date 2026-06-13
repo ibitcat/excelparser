@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -69,17 +70,39 @@ func (f *Field) checkRow(row []string, line int, x *Xlsx) bool {
 		}
 	case TUint:
 		if len(val) > 0 {
-			_, err := strconv.ParseUint(val, 10, 64)
+			v, err := strconv.ParseUint(val, 10, 64)
 			if err != nil {
 				errStr = "无效的无符号整数值: " + err.Error()
+				ok = false
+			} else if v > 0xFFFFFFFF {
+				errStr = fmt.Sprintf("uint 值 %s 超出 uint32 范围，请使用 uint64 类型", val)
+				ok = false
+			}
+		}
+	case TUint64:
+		if len(val) > 0 {
+			_, err := strconv.ParseUint(val, 10, 64)
+			if err != nil {
+				errStr = "无效的 uint64 值: " + err.Error()
 				ok = false
 			}
 		}
 	case TInt:
 		if len(val) > 0 {
-			_, err := strconv.ParseInt(val, 10, 64)
+			v, err := strconv.ParseInt(val, 10, 64)
 			if err != nil {
 				errStr = "无效的整数值: " + err.Error()
+				ok = false
+			} else if v > 0x7FFFFFFF || v < -0x80000000 {
+				errStr = fmt.Sprintf("int 值 %s 超出 int32 范围，请使用 int64 类型", val)
+				ok = false
+			}
+		}
+	case TInt64:
+		if len(val) > 0 {
+			_, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				errStr = "无效的 int64 值: " + err.Error()
 				ok = false
 			}
 		}

@@ -47,7 +47,7 @@ func (t *Type) isAny() bool {
 
 func (t *Type) isBuiltin() bool {
 	switch t.Kind {
-	case TInt, TUint, TFloat, TBool, TString:
+	case TInt, TInt64, TUint, TUint64, TFloat, TBool, TString:
 		return true
 	}
 	return false
@@ -55,7 +55,7 @@ func (t *Type) isBuiltin() bool {
 
 func (t *Type) isNumber() bool {
 	switch t.Kind {
-	case TInt, TUint, TFloat:
+	case TInt, TInt64, TUint, TUint64, TFloat:
 		return true
 	}
 	return false
@@ -63,7 +63,7 @@ func (t *Type) isNumber() bool {
 
 func (t *Type) isInteger() bool {
 	switch t.Kind {
-	case TInt, TUint:
+	case TInt, TInt64, TUint, TUint64:
 		return true
 	}
 	return false
@@ -84,7 +84,7 @@ func (t *Type) isRecursice() bool {
 
 func (t *Type) defaultValue() string {
 	switch t.Kind {
-	case TInt, TUint:
+	case TInt, TInt64, TUint, TUint64:
 		return "0"
 	case TFloat:
 		return "0.0"
@@ -160,7 +160,7 @@ func (t *Type) checkJsonObj(obj any) bool {
 				}
 			}
 		}
-	case TInt, TUint:
+	case TInt, TInt64, TUint, TUint64:
 		_, ok := obj.(float64)
 		return ok
 	case TBool:
@@ -218,9 +218,7 @@ func (t *Type) isI18nJson() bool {
 
 func (t *Type) luaTypeName() string {
 	switch t.Kind {
-	case TInt:
-		return "integer"
-	case TUint:
+	case TInt, TInt64, TUint, TUint64:
 		return "integer"
 	case TFloat:
 		return "number"

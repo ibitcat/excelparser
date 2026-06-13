@@ -139,8 +139,12 @@ func parseType(typ string) *Type {
 	switch typ {
 	case "int":
 		t.Kind = TInt
+	case "int64":
+		t.Kind = TInt64
 	case "uint":
 		t.Kind = TUint
+	case "uint64":
+		t.Kind = TUint64
 	case "float":
 		t.Kind = TFloat
 	case "bool":

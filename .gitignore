@@ -1,4 +1,6 @@
 .task
+out/
+xlsx/
 bin
 frontend/dist
 frontend/node_modules
