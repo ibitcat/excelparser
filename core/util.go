@@ -353,3 +353,31 @@ func sortedKeysStringMap(m map[string]any) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// jsonEmptyDefault 当 json 字段内容为空且有类型别名时返回对应的默认空值字符串
+func jsonEmptyDefault(t *Type) string {
+	if t == nil {
+		return "null"
+	}
+	switch t.Kind {
+	case TArray:
+		return "[]"
+	case TMap, TStruct:
+		return "{}"
+	default:
+		return "null"
+	}
+}
+
+// luaEmptyDefault 当 json 字段内容为空且有类型别名时返回对应的 Lua 默认空值字符串
+func luaEmptyDefault(t *Type) string {
+	if t == nil {
+		return "nil"
+	}
+	switch t.Kind {
+	case TArray, TMap, TStruct:
+		return "{}"
+	default:
+		return "nil"
+	}
+}

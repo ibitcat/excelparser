@@ -69,16 +69,23 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		l.appendData("{")
 		l.appendEOL()
 		for i, k := range field.Keys {
+			keyVal := ""
+			if len(row) > k.Index {
+				keyVal = row[k.Index]
+			}
+			if keyVal == "" {
+				continue
+			}
 			l.appendIndent(depth + 1)
 			if k.isNumber() {
 				l.appendData("[")
-				l.appendData(row[k.Index])
+				l.appendData(keyVal)
 				l.appendData("]")
 				l.appendSpace()
 				l.appendData("=")
 				l.appendSpace()
 			} else {
-				l.appendData(row[k.Index])
+				l.appendData(keyVal)
 				l.appendSpace()
 				l.appendData("=")
 				l.appendSpace()
@@ -112,6 +119,10 @@ func (l *LuaFormater) formatData(field *Field, row []string, depth int) {
 		s := ""
 		if len(row) > field.Index {
 			s = row[field.Index]
+		}
+		if s == "" {
+			l.appendData(luaEmptyDefault(field.Vtype))
+			break
 		}
 
 		// https://github.com/ChimeraCoder/gojson/blob/master/json-to-struct.go

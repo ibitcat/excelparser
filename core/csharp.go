@@ -90,6 +90,9 @@ func (c *CSharpFormater) buildValue(field *Field, row []string) any {
 	case TMap:
 		m := make(map[any]any)
 		for i, k := range field.Keys {
+			if len(row) <= k.Index || row[k.Index] == "" {
+				continue
+			}
 			kval := c.buildValue(k, row)
 			v := field.Vals[i]
 			vval := c.buildValue(v, row)

@@ -51,9 +51,16 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 		j.appendData("{")
 		j.appendEOL()
 		for i, k := range field.Keys {
+			keyVal := ""
+			if len(row) > k.Index {
+				keyVal = row[k.Index]
+			}
+			if keyVal == "" {
+				continue
+			}
 			j.appendIndent(depth + 1)
 			j.appendData("\"")
-			j.appendData(row[k.Index])
+			j.appendData(keyVal)
 			j.appendData("\":")
 
 			v := field.Vals[i]
@@ -82,6 +89,10 @@ func (j *JsonFormater) formatData(field *Field, row []string, depth int) {
 	case TJson:
 		if len(row) > field.Index {
 			s := row[field.Index]
+			if s == "" {
+				j.appendData(jsonEmptyDefault(field.Vtype))
+				break
+			}
 			if field.I18n {
 				var result any
 				json.Unmarshal([]byte(s), &result)
